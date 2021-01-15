@@ -1,0 +1,146 @@
+# Copyright 2020 Cambricon, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+cndev:
+  temperature:
+    name: "temperature_celsius"
+    help: "The temperature of Cambricon MLU, unit is 'celsius'"
+    labels:
+      slot: "slot"
+      model: "model"
+      sn: "boardid"
+      cluster: "coregroup"
+      nodeName: "nodeHostname"
+  board_health:
+    name: "board_health"
+    help: "The health state of Cambricon MLU, 1 means health, 0 means sick"
+    labels:
+      slot: "slot"
+      model: "model"
+      sn: "boardid"
+      nodeName: "nodeHostname"
+  physical_memory_total:
+    name: "mem_total_bytes"
+    help: "The total physical memory of Cambricon MLU, unit is 'B'"
+    labels:
+      slot: "slot"
+      model: "model"
+      sn: "boardid"
+      nodeName: "nodeHostname"
+  physical_memory_used:
+    name: "mem_used_bytes"
+    help: "The used physical memory of Cambricon MLU, unit is 'B'"
+    labels:
+      slot: "slot"
+      model: "model"
+      sn: "boardid"
+      nodeName: "nodeHostname"
+  memory_utilization:
+    name: "mem_utilization"
+    help: "The memory utilization of Cambricon MLU, unit is '%'"
+    labels:
+      slot: "slot"
+      model: "model"
+      sn: "boardid"
+      nodeName: "nodeHostname"
+  board_utilization:
+    name: "board_utilization"
+    help: "The utilization of Cambricon MLU, unit is '%'"
+    labels:
+      slot: "slot"
+      model: "model"
+      sn: "boardid"
+      nodeName: "nodeHostname"
+  board_capacity:
+    name: "board_capacity"
+    help: "The capacity metric of Cambricon MLU, unit is 'T'"
+    labels:
+      slot: "slot"
+      model: "model"
+      sn: "boardid"
+      nodeName: "nodeHostname"
+  board_usage:
+    name: "board_usage"
+    help: "The usage metric of Cambricon MLU, unit is 'T'"
+    labels:
+      slot: "slot"
+      model: "model"
+      sn: "boardid"
+      nodeName: "nodeHostname"
+  core_utilization:
+    name: "core"
+    help: "The utilization metric of Cambricon MLU core, unit is '%'"
+    labels:
+      core: "core"
+      slot: "slot"
+      model: "model"
+      sn: "boardid"
+      nodeName: "nodeHostname"
+  fan_speed:
+    name: "fan"
+    help: "Fan speed of Cambricon MLU, unit is 'rpm', '-1' means no fan on MLU"
+    labels:
+      slot: "slot"
+      model: "model"
+      sn: "boardid"
+      nodeName: "nodeHostname"
+  board_power:
+    name: "board_power"
+    help: "The power usage of Cambricon MLU, unit is 'w'"
+    labels:
+      slot: "slot"
+      model: "model"
+      sn: "boardid"
+      nodeName: "nodeHostname"
+podresources:
+  board_allocated:
+    name: "board_allocated"
+    help: "The allocated number of Cambricon MLUs in a node"
+    labels:
+      model: "model"
+      nodeName: "nodeHostname"
+  container_mlu_utilization:
+    name: "container_resource_mlu_utilization"
+    help: "The utilization metric of Cambricon MLU in container, unit is '%'"
+    labels:
+      slot: "slot"
+      model: "model"
+      sn: "board_id"
+      nodeName: "nodeHostname"
+      namespace: "namespace"
+      pod: "pod"
+      container: "containerName"
+  container_mlu_vf_utilization:
+    name: "container_resource_mlu_vf_utilization"
+    help: "The utilization metric of Cambricon MLU VF in container, unit is '%'"
+    labels:
+      slot: "slot"
+      model: "model"
+      sn: "board_id"
+      vfID: "vfid"
+      nodeName: "nodeHostname"
+      namespace: "namespace"
+      pod: "pod"
+      container: "containerName"
+  container_mlu_memory_utilization:
+    name: "container_resource_mlu_memory_utilization"
+    help: "The memory utilization metric of Cambricon MLU in container, unit is '%'"
+    labels:
+      slot: "slot"
+      model: "model"
+      sn: "board_id"
+      nodeName: "nodeHostname"
+      namespace: "namespace"
+      pod: "pod"
+      container: "containerName"
