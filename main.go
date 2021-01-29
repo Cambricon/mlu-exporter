@@ -19,7 +19,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/cambricon/mlu-exporter/pkg/collector"
+	"github.com/Cambricon/mlu-exporter/pkg/collector"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )

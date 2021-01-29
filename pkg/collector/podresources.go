@@ -23,8 +23,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cambricon/mlu-exporter/pkg/metrics"
-	"github.com/cambricon/mlu-exporter/pkg/podresources"
+	"github.com/Cambricon/mlu-exporter/pkg/metrics"
+	"github.com/Cambricon/mlu-exporter/pkg/podresources"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -33,7 +33,6 @@ var (
 	socket    = "/var/lib/kubelet/pod-resources/kubelet.sock"
 	resources = []string{
 		"cambricon.com/mlu",
-		"cambricon.com/mlu-mem",
 		"cambricon.com/whole-mlu-vf-count",
 		"cambricon.com/half-mlu-vf-count",
 		"cambricon.com/quarter-mlu-vf-count",
@@ -83,6 +82,10 @@ func (c *podResourcesCollector) collect(ch chan<- prometheus.Metric, mluInfo map
 			c.collectMLUUtil(ch, metric, mluInfo)
 		case metrics.ContainerMLUMemUtil:
 			c.collectMLUMemUtil(ch, metric, mluInfo)
+		case metrics.ContainerMLUBoardPower:
+			c.collectMLUBoardPower(ch, metric, mluInfo)
+		case metrics.MLUContainer:
+			c.collectMLUContainer(ch, metric, mluInfo)
 		}
 	}
 }
@@ -116,6 +119,21 @@ func (c *podResourcesCollector) collectMLUMemUtil(ch chan<- prometheus.Metric, m
 	}
 }
 
+func (c *podResourcesCollector) collectMLUBoardPower(ch chan<- prometheus.Metric, m metric, mluInfo map[string]mluStat) {
+	for device, podInfo := range c.devicePodInfo {
+		if strings.Contains(device, sriovSubString) {
+			continue
+		}
+		uuid := strings.TrimLeft(device, uuidPrefix)
+		if strings.Contains(uuid, envShareSubString) {
+			uuid = strings.Split(uuid, envShareSubString)[0]
+		}
+		power := float64(mluInfo[uuid].power)
+		labelValues := getLabelValues(m.labels, labelInfo{stat: mluInfo[uuid], host: c.host, podInfo: podInfo})
+		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, power, labelValues...)
+	}
+}
+
 func (c *podResourcesCollector) collectBoardAllocated(ch chan<- prometheus.Metric, m metric, mluInfo map[string]mluStat) {
 	mlus := make(map[string]bool)
 	for device := range c.devicePodInfo {
@@ -128,13 +146,28 @@ func (c *podResourcesCollector) collectBoardAllocated(ch chan<- prometheus.Metri
 		}
 		mlus[uuid] = true
 	}
-	model := ""
+	var model, driver string
 	for _, info := range mluInfo {
 		model = info.model
+		driver = info.driver
 		break
 	}
-	labelValues := getLabelValues(m.labels, labelInfo{stat: mluStat{model: model}, host: c.host})
+	labelValues := getLabelValues(m.labels, labelInfo{stat: mluStat{model: model, driver: driver}, host: c.host})
 	ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(len(mlus)), labelValues...)
+}
+
+func (c *podResourcesCollector) collectMLUContainer(ch chan<- prometheus.Metric, m metric, mluInfo map[string]mluStat) {
+	for device, podInfo := range c.devicePodInfo {
+		if strings.Contains(device, sriovSubString) {
+			continue
+		}
+		uuid := strings.TrimLeft(device, uuidPrefix)
+		if strings.Contains(uuid, envShareSubString) {
+			uuid = strings.Split(uuid, envShareSubString)[0]
+		}
+		labelValues := getLabelValues(m.labels, labelInfo{stat: mluInfo[uuid], host: c.host, podInfo: podInfo})
+		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, 1, labelValues...)
+	}
 }
 
 func (c *podResourcesCollector) collectVFUtil(ch chan<- prometheus.Metric, m metric, mluInfo map[string]mluStat) {

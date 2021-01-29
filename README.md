@@ -54,7 +54,7 @@ Use the following command to start the exporter.
 docker run -d \
 -p 30108:30108 \
 --privileged=true \
-cambricon-mlu-exporter:v1.5.0
+cambricon-mlu-exporter:v1.5.1
 ```
 
 Then use the following command to get the metrics.
@@ -70,7 +70,7 @@ docker run -d \
 -p 30108:30108 \
 -v examples/metrics.yaml:/var/lib/mlu-exporter/metrics.yaml \
 --privileged=true \
-cambricon-mlu-exporter:v1.5.0 \
+cambricon-mlu-exporter:v1.5.1 \
 mlu-exporter \
 --metrics-config=/var/lib/mlu-exporter/metrics.yaml \
 --metrics-path=/metrics \
@@ -124,3 +124,7 @@ kubectl apply -f examples/cambricon-mlu-exporter-sm.yaml
 Then checkout your Prometheus to get the MLU metrics.
 
 You can also set the command args described above in the MLU exporter daemonset spec. And set the metrics configuration in the MLU exporter configMap.
+
+## Upgrade Notice
+
+**Please see [changelog](CHANGELOG.md) for deprecation and breaking changes.**

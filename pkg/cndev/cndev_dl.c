@@ -156,6 +156,16 @@ cndevRet_t cndevGetPCIeInfo(cndevPCIeInfo_t *deviceInfo, int devId)
     return cndevGetPCIeInfoFunc(deviceInfo, devId);
 }
 
+cndevRet_t (*cndevGetVersionInfoFunc)(cndevVersionInfo_t *versInfo, int devId);
+cndevRet_t cndevGetVersionInfo(cndevVersionInfo_t *versInfo, int devId)
+{
+    if (cndevGetVersionInfoFunc == NULL)
+    {
+        return CNDEV_ERROR_UNKNOWN;
+    }
+    return cndevGetVersionInfoFunc(versInfo, devId);
+}
+
 cndevRet_t CNDEV_DL(cndevInit)(void)
 {
     cndevHandle = dlopen("libcndev.so", RTLD_LAZY);
@@ -235,6 +245,11 @@ cndevRet_t CNDEV_DL(cndevInit)(void)
     }
     cndevGetPCIeInfoFunc = dlsym(cndevHandle, "cndevGetPCIeInfo");
     if (cndevGetPCIeInfoFunc == NULL)
+    {
+        return CNDEV_ERROR_UNKNOWN;
+    }
+    cndevGetVersionInfoFunc = dlsym(cndevHandle, "cndevGetVersionInfo");
+    if (cndevGetVersionInfoFunc == NULL)
     {
         return CNDEV_ERROR_UNKNOWN;
     }

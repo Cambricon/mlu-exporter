@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc"
@@ -87,7 +88,7 @@ func listPods(socket string, timeout time.Duration, maxSize int) (*podresourcesa
 
 func contains(set []string, s string) bool {
 	for i := range set {
-		if set[i] == s {
+		if strings.Contains(s, set[i]) {
 			return true
 		}
 	}

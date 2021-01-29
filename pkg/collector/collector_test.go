@@ -19,9 +19,9 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/cambricon/mlu-exporter/pkg/metrics"
-	"github.com/cambricon/mlu-exporter/pkg/mock"
-	"github.com/cambricon/mlu-exporter/pkg/podresources"
+	"github.com/Cambricon/mlu-exporter/pkg/metrics"
+	"github.com/Cambricon/mlu-exporter/pkg/mock"
+	"github.com/Cambricon/mlu-exporter/pkg/podresources"
 	"github.com/golang/mock/gomock"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
@@ -31,7 +31,10 @@ import (
 var (
 	cardNum             = uint(4)
 	sn                  = []string{"sn0", "sn1", "sn2", "sn3"}
+	mcu                 = "v1.1.1"
+	driver              = "v2.2.2"
 	model               = "MLU270-X5K"
+	mluType             = "MLU270-X5K"
 	pcie                = "0000:1c:00.0"
 	boardUtil           = []uint{11, 12, 13, 14}
 	coreUtil            = []uint{11, 12, 13, 14}
@@ -82,20 +85,21 @@ func TestCollect(t *testing.T) {
 		cndevOuter.EXPECT().GetDevicePCIeID(i).Return(pcie, nil).Times(1)
 		cndevOuter.EXPECT().GetDeviceUtil(i).Return(boardUtil[i], coreUtil, nil).Times(1)
 		cndevOuter.EXPECT().GetDeviceMemory(i).Return(memUsed[i], memTotal, nil).Times(1)
+		cndevOuter.EXPECT().GetDevicePower(i).Return(power[i], nil).Times(1)
+		cndevOuter.EXPECT().GetDeviceVersion(i).Return(mcu, driver, nil).Times(1)
 	}
 	cndevInner := mock.NewCndev(ctrl)
 	for i := uint(0); i < cardNum; i++ {
 		cndevInner.EXPECT().GetDeviceTemperature(i).Return(temperature[i], clusterTemperatures, nil).Times(1)
 		cndevInner.EXPECT().GetDeviceHealth(i).Return(health, nil).Times(1)
 		cndevInner.EXPECT().GetDeviceFanSpeed(i).Return(uint(0), nil).Times(1)
-		cndevInner.EXPECT().GetDevicePower(i).Return(power[i], nil).Times(1)
 	}
 	podresources := mock.NewPodResources(ctrl)
 	podresources.EXPECT().GetDeviceToPodInfo().Return(devicePodInfo, nil).Times(1)
 	m := getMetrics(metrics.GetOrDie("../../examples/metrics.yaml"), "")
 	expected := map[*prometheus.Desc][]metricValue{}
 	for i := uint(0); i < cardNum; i++ {
-		l := []string{sn[i], model, nodeName, fmt.Sprintf("%d", i)}
+		l := []string{sn[i], model, mluType, nodeName, fmt.Sprintf("%d", i), mcu, driver}
 		expected[m[metrics.Cndev][metrics.Temperature].desc] = append(expected[m[metrics.Cndev][metrics.Temperature].desc], append(l, "", fmt.Sprintf("%v", temperature[i])))
 		for cluster, temp := range clusterTemperatures {
 			expected[m[metrics.Cndev][metrics.Temperature].desc] = append(expected[m[metrics.Cndev][metrics.Temperature].desc], append(l, fmt.Sprintf("%d", cluster), fmt.Sprintf("%v", temp)))
@@ -112,12 +116,17 @@ func TestCollect(t *testing.T) {
 		}
 		expected[m[metrics.Cndev][metrics.FanSpeed].desc] = append(expected[m[metrics.Cndev][metrics.FanSpeed].desc], append(l, fmt.Sprintf("%v", -1)))
 		expected[m[metrics.Cndev][metrics.BoardPower].desc] = append(expected[m[metrics.Cndev][metrics.BoardPower].desc], append(l, fmt.Sprintf("%v", power[i])))
+		expected[m[metrics.Cndev][metrics.BoardVersion].desc] = append(expected[m[metrics.Cndev][metrics.BoardVersion].desc], append(l, "1"))
 	}
-	expected[m[metrics.PodResources][metrics.BoardAllocated].desc] = append(expected[m[metrics.PodResources][metrics.BoardAllocated].desc], []string{model, nodeName, "2"})
-	expected[m[metrics.PodResources][metrics.ContainerMLUUtil].desc] = append(expected[m[metrics.PodResources][metrics.ContainerMLUUtil].desc], []string{"1", model, sn[1], nodeName, "namespace1", "pod1", "container1", fmt.Sprintf("%v", boardUtil[1])})
-	expected[m[metrics.PodResources][metrics.ContainerMLUUtil].desc] = append(expected[m[metrics.PodResources][metrics.ContainerMLUUtil].desc], []string{"2", model, sn[2], nodeName, "namespace2", "pod2", "container2", fmt.Sprintf("%v", boardUtil[2])})
-	expected[m[metrics.PodResources][metrics.ContainerMLUMemUtil].desc] = append(expected[m[metrics.PodResources][metrics.ContainerMLUMemUtil].desc], []string{"1", model, sn[1], nodeName, "namespace1", "pod1", "container1", fmt.Sprintf("%v", float64(memUsed[1])/float64(memTotal)*100)})
-	expected[m[metrics.PodResources][metrics.ContainerMLUMemUtil].desc] = append(expected[m[metrics.PodResources][metrics.ContainerMLUMemUtil].desc], []string{"2", model, sn[2], nodeName, "namespace2", "pod2", "container2", fmt.Sprintf("%v", float64(memUsed[2])/float64(memTotal)*100)})
+	expected[m[metrics.PodResources][metrics.BoardAllocated].desc] = append(expected[m[metrics.PodResources][metrics.BoardAllocated].desc], []string{model, mluType, driver, nodeName, "2"})
+	expected[m[metrics.PodResources][metrics.ContainerMLUUtil].desc] = append(expected[m[metrics.PodResources][metrics.ContainerMLUUtil].desc], []string{"1", model, mluType, sn[1], nodeName, "namespace1", "pod1", "container1", fmt.Sprintf("%v", boardUtil[1])})
+	expected[m[metrics.PodResources][metrics.ContainerMLUUtil].desc] = append(expected[m[metrics.PodResources][metrics.ContainerMLUUtil].desc], []string{"2", model, mluType, sn[2], nodeName, "namespace2", "pod2", "container2", fmt.Sprintf("%v", boardUtil[2])})
+	expected[m[metrics.PodResources][metrics.ContainerMLUMemUtil].desc] = append(expected[m[metrics.PodResources][metrics.ContainerMLUMemUtil].desc], []string{"1", model, mluType, sn[1], nodeName, "namespace1", "pod1", "container1", fmt.Sprintf("%v", float64(memUsed[1])/float64(memTotal)*100)})
+	expected[m[metrics.PodResources][metrics.ContainerMLUMemUtil].desc] = append(expected[m[metrics.PodResources][metrics.ContainerMLUMemUtil].desc], []string{"2", model, mluType, sn[2], nodeName, "namespace2", "pod2", "container2", fmt.Sprintf("%v", float64(memUsed[2])/float64(memTotal)*100)})
+	expected[m[metrics.PodResources][metrics.ContainerMLUBoardPower].desc] = append(expected[m[metrics.PodResources][metrics.ContainerMLUBoardPower].desc], []string{"1", model, mluType, sn[1], nodeName, "namespace1", "pod1", "container1", fmt.Sprintf("%v", power[1])})
+	expected[m[metrics.PodResources][metrics.ContainerMLUBoardPower].desc] = append(expected[m[metrics.PodResources][metrics.ContainerMLUBoardPower].desc], []string{"2", model, mluType, sn[2], nodeName, "namespace2", "pod2", "container2", fmt.Sprintf("%v", power[2])})
+	expected[m[metrics.PodResources][metrics.MLUContainer].desc] = append(expected[m[metrics.PodResources][metrics.MLUContainer].desc], []string{"1", sn[1], model, mluType, mcu, driver, nodeName, "namespace1", "pod1", "container1", "1"})
+	expected[m[metrics.PodResources][metrics.MLUContainer].desc] = append(expected[m[metrics.PodResources][metrics.MLUContainer].desc], []string{"2", sn[2], model, mluType, mcu, driver, nodeName, "namespace2", "pod2", "container2", "1"})
 	for desc, values := range expected {
 		sortMetricValues(values)
 		expected[desc] = values

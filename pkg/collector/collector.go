@@ -17,11 +17,12 @@ package collector
 import (
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 
-	"github.com/cambricon/mlu-exporter/pkg/cndev"
-	"github.com/cambricon/mlu-exporter/pkg/metrics"
-	"github.com/cambricon/mlu-exporter/pkg/podresources"
+	"github.com/Cambricon/mlu-exporter/pkg/cndev"
+	"github.com/Cambricon/mlu-exporter/pkg/metrics"
+	"github.com/Cambricon/mlu-exporter/pkg/podresources"
 	"github.com/hashicorp/go-multierror"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -53,6 +54,9 @@ type mluStat struct {
 	coreUtil  []uint
 	memTotal  uint
 	memUsed   uint
+	power     uint
+	mcu       string
+	driver    string
 }
 
 type Collectors struct {
@@ -119,6 +123,10 @@ func (c *Collectors) collectSharedInfo() {
 		errs = multierror.Append(errs, err)
 		used, total, err := c.cndev.GetDeviceMemory(i)
 		errs = multierror.Append(errs, err)
+		power, err := c.cndev.GetDevicePower(i)
+		errs = multierror.Append(errs, err)
+		mcu, driver, err := c.cndev.GetDeviceVersion(i)
+		errs = multierror.Append(errs, err)
 		info[sn] = mluStat{
 			sn:        sn,
 			model:     model,
@@ -128,6 +136,9 @@ func (c *Collectors) collectSharedInfo() {
 			coreUtil:  core,
 			memTotal:  total,
 			memUsed:   used,
+			power:     power,
+			mcu:       mcu,
+			driver:    driver,
 		}
 	}
 	check(errs.ErrorOrNil())
@@ -188,6 +199,13 @@ func getLabelValues(labels []string, info labelInfo) []string {
 			values = append(values, fmt.Sprintf("%d", info.stat.slot))
 		case metrics.Model:
 			values = append(values, info.stat.model)
+		case metrics.MluType:
+			// suffix needs to be stripped except for "mlu270-x5k"
+			if strings.EqualFold(info.stat.model, "mlu270-x5k") {
+				values = append(values, info.stat.model)
+			} else {
+				values = append(values, strings.Split(info.stat.model, "-")[0])
+			}
 		case metrics.SN:
 			values = append(values, info.stat.sn)
 		case metrics.Hostname:
@@ -196,6 +214,10 @@ func getLabelValues(labels []string, info labelInfo) []string {
 			values = append(values, info.cluster)
 		case metrics.Core:
 			values = append(values, fmt.Sprintf("%d", info.core))
+		case metrics.MCU:
+			values = append(values, info.stat.mcu)
+		case metrics.Driver:
+			values = append(values, info.stat.driver)
 		case metrics.Namespace:
 			values = append(values, info.podInfo.Namespace)
 		case metrics.Pod:

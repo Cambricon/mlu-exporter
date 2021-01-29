@@ -43,6 +43,7 @@ type Cndev interface {
 	GetDeviceUtil(idx uint) (uint, []uint, error)
 	GetDeviceFanSpeed(idx uint) (uint, error)
 	GetDevicePCIeID(idx uint) (string, error)
+	GetDeviceVersion(idx uint) (string, string, error)
 }
 
 type cndev struct{}
@@ -195,4 +196,18 @@ func (c *cndev) GetDevicePCIeID(idx uint) (string, error) {
 		return "", err
 	}
 	return getPCIeID(int64(pcieInfo.domain), int64(pcieInfo.bus), int64(pcieInfo.device), int64(pcieInfo.function)), nil
+}
+
+func getVersion(major uint, minor uint, build uint) string {
+	return fmt.Sprintf("v%d.%d.%d", major, minor, build)
+}
+
+func (c *cndev) GetDeviceVersion(idx uint) (string, string, error) {
+	var versionInfo C.cndevVersionInfo_t
+	versionInfo.version = C.int(version)
+	r := C.cndevGetVersionInfo(&versionInfo, C.int(idx))
+	if err := errorString(r); err != nil {
+		return "", "", err
+	}
+	return getVersion(uint(versionInfo.MCUMajorVersion), uint(versionInfo.MCUMinorVersion), uint(versionInfo.MCUBuildVersion)), getVersion(uint(versionInfo.DriverMajorVersion), uint(versionInfo.DriverMinorVersion), uint(versionInfo.DriverBuildVersion)), nil
 }

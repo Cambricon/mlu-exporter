@@ -1,4 +1,4 @@
-module github.com/cambricon/mlu-exporter
+module github.com/Cambricon/mlu-exporter
 
 go 1.13
 

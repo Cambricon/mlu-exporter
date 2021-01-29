@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cambricon/mlu-exporter/pkg/cndev"
-	"github.com/cambricon/mlu-exporter/pkg/metrics"
+	"github.com/Cambricon/mlu-exporter/pkg/cndev"
+	"github.com/Cambricon/mlu-exporter/pkg/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -92,6 +92,8 @@ func (c *cndevCollector) collect(ch chan<- prometheus.Metric, mluInfo map[string
 			c.collectBoardCapacity(ch, metric, mluInfo)
 		case metrics.BoardUsage:
 			c.collectBoardUsage(ch, metric, mluInfo)
+		case metrics.BoardVersion:
+			c.collectBoardVersion(ch, metric, mluInfo)
 		}
 	}
 }
@@ -173,10 +175,8 @@ func (c *cndevCollector) collectFanSpeed(ch chan<- prometheus.Metric, m metric, 
 
 func (c *cndevCollector) collectBoardPower(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
 	for _, stat := range info {
-		power, err := c.cndev.GetDevicePower(stat.slot)
-		check(err)
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(power), labelValues...)
+		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(stat.power), labelValues...)
 	}
 }
 
@@ -194,5 +194,12 @@ func (c *cndevCollector) collectBoardUsage(ch chan<- prometheus.Metric, m metric
 		usage := float64(modelCapacity) * float64(stat.boardUtil) / 100
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
 		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, usage, labelValues...)
+	}
+}
+
+func (c *cndevCollector) collectBoardVersion(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
+	for _, stat := range info {
+		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
+		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, 1, labelValues...)
 	}
 }

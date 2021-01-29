@@ -21,8 +21,8 @@ export CC=aarch64-linux-gnu-gcc
 endif
 
 generate:
-	mockgen -package mock -destination pkg/mock/cndev.go -mock_names=Cndev=Cndev github.com/cambricon/mlu-exporter/pkg/cndev Cndev
-	mockgen -package mock -destination pkg/mock/podrsources.go -mock_names=PodResources=PodResources github.com/cambricon/mlu-exporter/pkg/podresources PodResources
+	mockgen -package mock -destination pkg/mock/cndev.go -mock_names=Cndev=Cndev github.com/Cambricon/mlu-exporter/pkg/cndev Cndev
+	mockgen -package mock -destination pkg/mock/podrsources.go -mock_names=PodResources=PodResources github.com/Cambricon/mlu-exporter/pkg/podresources PodResources
 
 lint:
 	golangci-lint run -v
