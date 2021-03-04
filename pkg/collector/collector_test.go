@@ -57,6 +57,16 @@ var (
 			Container: "container2",
 		},
 	}
+	pcieRead     = []uint64{1073741824, 1073741824 * 2, 1073741824 * 3, 1073741824 * 4}
+	pcieWrite    = []uint64{1073741824, 1073741824 * 2, 1073741824 * 3, 1073741824 * 4}
+	dramRead     = []uint64{1073741824, 1073741824 * 2, 1073741824 * 3, 1073741824 * 4}
+	dramWrite    = []uint64{1073741824, 1073741824 * 2, 1073741824 * 3, 1073741824 * 4}
+	mlulinkRead  = []uint64{1073741824, 1073741824 * 2, 1073741824 * 3, 1073741824 * 4}
+	mlulinkWrite = []uint64{1073741824, 1073741824 * 2, 1073741824 * 3, 1073741824 * 4}
+	hostCPUTotal = float64(6185912)
+	hostCPUIdle  = float64(34459)
+	hostMemTotal = float64(24421820)
+	hostMemFree  = float64(18470732)
 )
 
 func TestInit(t *testing.T) {
@@ -89,13 +99,24 @@ func TestCollect(t *testing.T) {
 		cndevOuter.EXPECT().GetDeviceVersion(i).Return(mcu, driver, nil).Times(1)
 	}
 	cndevInner := mock.NewCndev(ctrl)
+	cnpapi := mock.NewCnpapi(ctrl)
 	for i := uint(0); i < cardNum; i++ {
 		cndevInner.EXPECT().GetDeviceTemperature(i).Return(temperature[i], clusterTemperatures, nil).Times(1)
 		cndevInner.EXPECT().GetDeviceHealth(i).Return(health, nil).Times(1)
 		cndevInner.EXPECT().GetDeviceFanSpeed(i).Return(uint(0), nil).Times(1)
+		cnpapi.EXPECT().PmuFlushData(i).Return(nil).Times(1)
+		cnpapi.EXPECT().GetPCIeReadBytes(i).Return(pcieRead[i], nil).Times(1)
+		cnpapi.EXPECT().GetPCIeWriteBytes(i).Return(pcieWrite[i], nil).Times(1)
+		cnpapi.EXPECT().GetDramReadBytes(i).Return(dramRead[i], nil).Times(1)
+		cnpapi.EXPECT().GetDramWriteBytes(i).Return(dramWrite[i], nil).Times(1)
+		cnpapi.EXPECT().GetMLULinkReadBytes(i).Return(mlulinkRead[i], nil).Times(1)
+		cnpapi.EXPECT().GetMLULinkWriteBytes(i).Return(mlulinkWrite[i], nil).Times(1)
 	}
 	podresources := mock.NewPodResources(ctrl)
 	podresources.EXPECT().GetDeviceToPodInfo().Return(devicePodInfo, nil).Times(1)
+	host := mock.NewHost(ctrl)
+	host.EXPECT().GetCPUStats().Return(hostCPUTotal, hostCPUIdle, nil).Times(2)
+	host.EXPECT().GetMemoryStats().Return(hostMemTotal, hostMemFree, nil).Times(2)
 	m := getMetrics(metrics.GetOrDie("../../examples/metrics.yaml"), "")
 	expected := map[*prometheus.Desc][]metricValue{}
 	for i := uint(0); i < cardNum; i++ {
@@ -117,6 +138,13 @@ func TestCollect(t *testing.T) {
 		expected[m[metrics.Cndev][metrics.FanSpeed].desc] = append(expected[m[metrics.Cndev][metrics.FanSpeed].desc], append(l, fmt.Sprintf("%v", -1)))
 		expected[m[metrics.Cndev][metrics.BoardPower].desc] = append(expected[m[metrics.Cndev][metrics.BoardPower].desc], append(l, fmt.Sprintf("%v", power[i])))
 		expected[m[metrics.Cndev][metrics.BoardVersion].desc] = append(expected[m[metrics.Cndev][metrics.BoardVersion].desc], append(l, "1"))
+		expected[m[metrics.Cnpapi][metrics.PCIeRead].desc] = append(expected[m[metrics.Cnpapi][metrics.PCIeRead].desc], append(l, fmt.Sprintf("%v", pcieRead[i]/1024/1024/1024)))
+		expected[m[metrics.Cnpapi][metrics.PCIeWrite].desc] = append(expected[m[metrics.Cnpapi][metrics.PCIeWrite].desc], append(l, fmt.Sprintf("%v", pcieWrite[i]/1024/1024/1024)))
+		expected[m[metrics.Cnpapi][metrics.DramRead].desc] = append(expected[m[metrics.Cnpapi][metrics.DramRead].desc], append(l, fmt.Sprintf("%v", dramRead[i]/1024/1024/1024)))
+		expected[m[metrics.Cnpapi][metrics.DramWrite].desc] = append(expected[m[metrics.Cnpapi][metrics.DramWrite].desc], append(l, fmt.Sprintf("%v", dramWrite[i]/1024/1024/1024)))
+		expected[m[metrics.Cnpapi][metrics.MLULinkRead].desc] = append(expected[m[metrics.Cnpapi][metrics.MLULinkRead].desc], append(l, fmt.Sprintf("%v", mlulinkRead[i]/1024/1024/1024)))
+		expected[m[metrics.Cnpapi][metrics.MLULinkWrite].desc] = append(expected[m[metrics.Cnpapi][metrics.MLULinkWrite].desc], append(l, fmt.Sprintf("%v", mlulinkWrite[i]/1024/1024/1024)))
+
 	}
 	expected[m[metrics.PodResources][metrics.BoardAllocated].desc] = append(expected[m[metrics.PodResources][metrics.BoardAllocated].desc], []string{model, mluType, driver, nodeName, "2"})
 	expected[m[metrics.PodResources][metrics.ContainerMLUUtil].desc] = append(expected[m[metrics.PodResources][metrics.ContainerMLUUtil].desc], []string{"1", model, mluType, sn[1], nodeName, "namespace1", "pod1", "container1", fmt.Sprintf("%v", boardUtil[1])})
@@ -127,6 +155,10 @@ func TestCollect(t *testing.T) {
 	expected[m[metrics.PodResources][metrics.ContainerMLUBoardPower].desc] = append(expected[m[metrics.PodResources][metrics.ContainerMLUBoardPower].desc], []string{"2", model, mluType, sn[2], nodeName, "namespace2", "pod2", "container2", fmt.Sprintf("%v", power[2])})
 	expected[m[metrics.PodResources][metrics.MLUContainer].desc] = append(expected[m[metrics.PodResources][metrics.MLUContainer].desc], []string{"1", sn[1], model, mluType, mcu, driver, nodeName, "namespace1", "pod1", "container1", "1"})
 	expected[m[metrics.PodResources][metrics.MLUContainer].desc] = append(expected[m[metrics.PodResources][metrics.MLUContainer].desc], []string{"2", sn[2], model, mluType, mcu, driver, nodeName, "namespace2", "pod2", "container2", "1"})
+	expected[m[metrics.Host][metrics.MemoryTotal].desc] = append(expected[m[metrics.Host][metrics.MemoryFree].desc], []string{fmt.Sprintf("%v", hostMemTotal/1024/1024), nodeName})
+	expected[m[metrics.Host][metrics.MemoryFree].desc] = append(expected[m[metrics.Host][metrics.MemoryFree].desc], []string{fmt.Sprintf("%v", hostMemFree/1024/1024), nodeName})
+	expected[m[metrics.Host][metrics.CPUIdle].desc] = append(expected[m[metrics.Host][metrics.CPUIdle].desc], []string{fmt.Sprintf("%v", hostCPUIdle), nodeName})
+	expected[m[metrics.Host][metrics.CPUTotal].desc] = append(expected[m[metrics.Host][metrics.CPUTotal].desc], []string{fmt.Sprintf("%v", hostCPUTotal), nodeName})
 	for desc, values := range expected {
 		sortMetricValues(values)
 		expected[desc] = values
@@ -142,6 +174,16 @@ func TestCollect(t *testing.T) {
 				metrics: m["podresources"],
 				host:    nodeName,
 				client:  podresources,
+			},
+			"cnpapi": &cnpapiCollector{
+				metrics: m["cnpapi"],
+				host:    nodeName,
+				cnpapi:  cnpapi,
+			},
+			"host": &hostCollector{
+				metrics: m["host"],
+				host:    nodeName,
+				client:  host,
 			},
 		},
 		metrics: m,

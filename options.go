@@ -26,7 +26,7 @@ type Options struct {
 	MetricsPath   string   `long:"metrics-path" description:"metrics path of the exporter service" default:"/metrics"`
 	Hostname      string   `long:"hostname" description:"machine hostname" env:"ENV_NODE_NAME"`
 	Port          uint     `long:"port" description:"exporter service port" default:"30108" env:"ENV_SERVE_PORT"`
-	Collector     []string `long:"collector" description:"enabled collectors" choice:"cndev" choice:"podresources" default:"cndev"`
+	Collector     []string `long:"collector" description:"enabled collectors" choice:"cndev" choice:"podresources" choice:"host" choice:"cnpapi" default:"cndev"`
 	MetricsPrefix string   `long:"metrics-prefix" description:"prefix of all metric names" env:"ENV_METRICS_PREFIX"`
 }
 

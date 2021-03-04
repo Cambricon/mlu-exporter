@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: cambricon-mlu-monitor
-        image: cambricon-mlu-exporter:v1.5.1
+        image: cambricon-mlu-exporter:v1.5.2
         imagePullPolicy: IfNotPresent
         command:
         - /usr/bin/mlu-exporter
@@ -39,6 +39,8 @@ spec:
         - --port=30108
         - --collector=cndev
         - --collector=podresources
+        #- --collector=host
+        #- --collector=cnpapi
         - --metrics-prefix=ai 
         env:
         - name: ENV_NODE_NAME

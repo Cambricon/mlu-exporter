@@ -17,6 +17,8 @@ package metrics
 const (
 	Cndev        = "cndev"
 	PodResources = "podresources"
+	Cnpapi       = "cnpapi"
+	Host         = "host"
 
 	Temperature   = "temperature"
 	BoardHealth   = "board_health"
@@ -37,6 +39,18 @@ const (
 	ContainerMLUVFUtil     = "container_mlu_vf_utilization"
 	ContainerMLUMemUtil    = "container_mlu_memory_utilization"
 	ContainerMLUBoardPower = "container_mlu_board_power"
+
+	PCIeRead     = "pcie_read"
+	PCIeWrite    = "pcie_write"
+	DramRead     = "dram_read"
+	DramWrite    = "dram_write"
+	MLULinkRead  = "mlulink_read"
+	MLULinkWrite = "mlulink_write"
+
+	CPUTotal    = "cpu_total"
+	CPUIdle     = "cpu_idle"
+	MemoryTotal = "memory_total"
+	MemoryFree  = "memory_free"
 
 	Slot     = "slot"
 	Model    = "model"

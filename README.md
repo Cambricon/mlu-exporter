@@ -23,6 +23,7 @@ Set the following environment variables if you need.
 | GOPROXY   | golang proxy address                                                          |
 | ARCH      | target platform architecture, amd64 or arm64, amd64 by default                |
 | LIBCNDEV  | absolute path of the libcndev.so binary, neuware installation path by default |
+| LIBCNPAPI  | absolute path of the libcnpapi.so binary, neuware installation path by default |
 
 > If you want to cross build, make sure docker version >= 19.03.
 
@@ -54,7 +55,7 @@ Use the following command to start the exporter.
 docker run -d \
 -p 30108:30108 \
 --privileged=true \
-cambricon-mlu-exporter:v1.5.1
+cambricon-mlu-exporter:v1.5.2
 ```
 
 Then use the following command to get the metrics.
@@ -70,13 +71,15 @@ docker run -d \
 -p 30108:30108 \
 -v examples/metrics.yaml:/var/lib/mlu-exporter/metrics.yaml \
 --privileged=true \
-cambricon-mlu-exporter:v1.5.1 \
+cambricon-mlu-exporter:v1.5.2 \
 mlu-exporter \
 --metrics-config=/var/lib/mlu-exporter/metrics.yaml \
 --metrics-path=/metrics \
 --port=30108 \
 --hostname=hostname \
---metrics-prefix=ai
+--metrics-prefix=ai \
+--collector=cndev \
+--collector=host
 ```
 
 Command Args Description
@@ -94,8 +97,10 @@ available collectors:
 
 - cndev: collects basic MLU metrics
 - podresources: collects MLU usage metrics in containers managed by Kubernetes
+- cnpapi: collects cnpapi pmu api metrics. **Please note that cnpapi can only be used by one single process on a machine. Not recommended for production scenarios.**
+- host: collects host machine metrics
 
-And set the metrics configuration file as you like, see examples/metrics.yaml for an example.
+And set the metrics configuration file passed by your metrics-config arg as you like, see examples/metrics.yaml for an example.
 
 #### Kubernetes And Prometheus
 

@@ -222,6 +222,94 @@ data:
           namespace: "namespace"
           pod: "pod"
           container: "containerName"
+    cnpapi:
+      pcie_read:
+        name: "pcie_read"
+        help: "The pcie read io metric of Cambircon MLU, unit is 'GB'"
+        labels:
+          slot: "mlu"
+          model: "model"
+          mluType: "mlu_type"
+          sn: "uuid"
+          nodeName: "nodeHostname"
+          mcu: "mcu"
+          driver: "driver"
+      pcie_write:
+        name: "pcie_write"
+        help: "The pcie write io metric of Cambircon MLU, unit is 'GB'"
+        labels:
+          slot: "mlu"
+          model: "model"
+          mluType: "mlu_type"
+          sn: "uuid"
+          nodeName: "nodeHostname"
+          mcu: "mcu"
+          driver: "driver"
+      dram_read:
+        name: "dram_read"
+        help: "The dram read io metric of Cambircon MLU, unit is 'GB'"
+        labels:
+          slot: "mlu"
+          model: "model"
+          mluType: "mlu_type"
+          sn: "uuid"
+          nodeName: "nodeHostname"
+          mcu: "mcu"
+          driver: "driver"
+      dram_write:
+        name: "dram_write"
+        help: "The dram write io metric of Cambircon MLU, unit is 'GB'"
+        labels:
+          slot: "mlu"
+          model: "model"
+          mluType: "mlu_type"
+          sn: "uuid"
+          nodeName: "nodeHostname"
+          mcu: "mcu"
+          driver: "driver"
+      mlulink_read:
+        name: "mlulink_read"
+        help: "The mlulink read io metric of Cambircon MLU, unit is 'GB'"
+        labels:
+          slot: "mlu"
+          model: "model"
+          mluType: "mlu_type"
+          sn: "uuid"
+          nodeName: "nodeHostname"
+          mcu: "mcu"
+          driver: "driver"
+      mlulink_write:
+        name: "mlulink_write"
+        help: "The mlulink write io metric of Cambircon MLU, unit is 'GB'"
+        labels:
+          slot: "mlu"
+          model: "model"
+          mluType: "mlu_type"
+          sn: "uuid"
+          nodeName: "nodeHostname"
+          mcu: "mcu"
+          driver: "driver"
+    host:
+      cpu_total:
+        name: "cpu_total"
+        help: "The cpu total metric of host machine, unit is the same as which in /proc/stat"
+        labels:
+          nodeName: "nodeHostname"
+      cpu_idle:
+        name: "cpu_idle"
+        help: "The cpu idle metric of host machine, unit is the same as which in /proc/stat"
+        labels:
+          nodeName: "nodeHostname"
+      memory_total:
+        name: "memory_total"
+        help: "The memory total metric of host machine, unit is 'GB'"
+        labels:
+          nodeName: "nodeHostname"
+      memory_free:
+        name: "memory_free"
+        help: "The memory idle metric of host machine, unit is 'GB'"
+        labels:
+          nodeName: "nodeHostname"
 kind: ConfigMap
 metadata:
   labels:

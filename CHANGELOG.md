@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.5.2
+
++ Add host and cnpapi collectors
+
 ## v1.5.1
 
 + Add MLU driver, mcu and mlu type labels

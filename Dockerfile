@@ -27,6 +27,6 @@ RUN make build
 FROM ubuntu:18.04
 ARG TARGETPLATFORM
 COPY --from=build /work/mlu-exporter /usr/bin/
-COPY libs/$TARGETPLATFORM/libcndev.so /usr/lib
+COPY libs/$TARGETPLATFORM/*.so /usr/lib/
 COPY examples/metrics.yaml /var/lib/mlu-exporter/metrics.yaml
 CMD ["/usr/bin/mlu-exporter"]
