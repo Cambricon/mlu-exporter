@@ -44,6 +44,10 @@ func (c *cnpapiCollector) init() error {
 	return c.cnpapi.Init()
 }
 
+func (c *cnpapiCollector) updateMetrics(m collectorMetrics) {
+	c.metrics = m
+}
+
 func (c *cnpapiCollector) collect(ch chan<- prometheus.Metric, mluInfo map[string]mluStat) {
 	for i := 0; i < len(mluInfo); i++ {
 		if err := c.cnpapi.PmuFlushData(uint(i)); err != nil {

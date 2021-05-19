@@ -28,5 +28,5 @@ FROM ubuntu:18.04
 ARG TARGETPLATFORM
 COPY --from=build /work/mlu-exporter /usr/bin/
 COPY libs/$TARGETPLATFORM/*.so /usr/lib/
-COPY examples/metrics.yaml /var/lib/mlu-exporter/metrics.yaml
+COPY examples/metrics.yaml /etc/mlu-exporter/metrics.yaml
 CMD ["/usr/bin/mlu-exporter"]

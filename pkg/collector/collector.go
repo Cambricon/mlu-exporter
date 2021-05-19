@@ -23,6 +23,7 @@ import (
 	"github.com/Cambricon/mlu-exporter/pkg/cndev"
 	"github.com/Cambricon/mlu-exporter/pkg/metrics"
 	"github.com/Cambricon/mlu-exporter/pkg/podresources"
+	"github.com/fsnotify/fsnotify"
 	"github.com/hashicorp/go-multierror"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -30,6 +31,7 @@ import (
 type Collector interface {
 	collect(ch chan<- prometheus.Metric, mluInfo map[string]mluStat)
 	init() error
+	updateMetrics(m collectorMetrics)
 }
 
 var factories = make(map[string]func(m collectorMetrics, host string) Collector)
@@ -81,6 +83,7 @@ func NewCollectors(host string, config string, enabled []string, prefix string) 
 		cndev:      cndev.NewCndevClient(),
 	}
 	c.init()
+	go c.syncMetrics(config, prefix)
 	return c
 }
 
@@ -143,6 +146,42 @@ func (c *Collectors) collectSharedInfo() {
 	}
 	check(errs.ErrorOrNil())
 	c.sharedInfo = info
+}
+
+func (c *Collectors) syncMetrics(config string, prefix string) {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Printf("failed to create watcher, err %v", err)
+		return
+	}
+	defer watcher.Close()
+	err = watcher.Add(config)
+	if err != nil {
+		log.Printf("failed to add config to watcher, err %v", err)
+		return
+	}
+	log.Printf("start watching metrics config %s", config)
+	defer log.Printf("stop watching metrics config %s", config)
+	for {
+		select {
+		case event := <-watcher.Events:
+			if event.Name == config && event.Op&fsnotify.Remove == fsnotify.Remove {
+				log.Printf("inotify: %v, reload config", event.String())
+				c.mutex.Lock()
+				watcher.Remove(event.Name)
+				watcher.Add(config)
+				cfg := metrics.GetOrDie(config)
+				m := getMetrics(cfg, prefix)
+				c.metrics = m
+				for name, collector := range c.collectors {
+					collector.updateMetrics(m[name])
+				}
+				c.mutex.Unlock()
+			}
+		case err := <-watcher.Errors:
+			log.Printf("watcher error: %v", err)
+		}
+	}
 }
 
 func (c *Collectors) init() {
@@ -226,6 +265,8 @@ func getLabelValues(labels []string, info labelInfo) []string {
 			values = append(values, info.podInfo.Container)
 		case metrics.VFID:
 			values = append(values, fmt.Sprintf("%d", info.vfID))
+		default:
+			values = append(values, "") // configured label not applicable, add this to prevent panic
 		}
 	}
 	return values

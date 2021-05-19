@@ -42,6 +42,10 @@ func (c *hostCollector) init() error {
 	return nil
 }
 
+func (c *hostCollector) updateMetrics(m collectorMetrics) {
+	c.metrics = m
+}
+
 func (c *hostCollector) collect(ch chan<- prometheus.Metric, mluInfo map[string]mluStat) {
 	for name, metric := range c.metrics {
 		switch name {

@@ -27,8 +27,7 @@ var capacity = map[string]int{
 	"MLU100":     64,
 	"MLU270":     128,
 	"MLU270-X5K": 140,
-	"MLU220":     16,
-	"MLU220-M2":  8,
+	"MLU220":     32,
 	"MLU290":     512,
 }
 
@@ -65,6 +64,10 @@ func NewCndevCollector(m collectorMetrics, host string) Collector {
 
 func (c *cndevCollector) init() error {
 	return c.cndev.Init()
+}
+
+func (c *cndevCollector) updateMetrics(m collectorMetrics) {
+	c.metrics = m
 }
 
 func (c *cndevCollector) collect(ch chan<- prometheus.Metric, mluInfo map[string]mluStat) {

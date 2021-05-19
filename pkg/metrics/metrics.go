@@ -62,6 +62,6 @@ func GetOrDie(path string) Conf {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Starting with:\n%s", actual)
+	log.Printf("Get config:\n%s", actual)
 	return conf
 }

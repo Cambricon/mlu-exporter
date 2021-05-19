@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.3
+
++ Watch and reload metrics config dynamically
++ Fix MLU220 capacity error
++ Fix exporter panics when configured label not applicable
+
 ## v1.5.2
 
 + Add host and cnpapi collectors

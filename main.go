@@ -18,23 +18,56 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/Cambricon/mlu-exporter/pkg/collector"
+	flags "github.com/jessevdk/go-flags"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func newHandler(host string, cfg string, collectors []string, prefix string) http.Handler {
-	c := collector.NewCollectors(host, cfg, collectors, prefix)
-	r := prometheus.NewRegistry()
-	r.MustRegister(c)
-	handler := promhttp.HandlerFor(r, promhttp.HandlerOpts{})
-	return handler
+type Options struct {
+	MetricsConfig string   `long:"metrics-config" description:"configuration file of MLU exporter metrics" default:"/etc/mlu-exporter/metrics.yaml"`
+	MetricsPath   string   `long:"metrics-path" description:"metrics path of the exporter service" default:"/metrics"`
+	Hostname      string   `long:"hostname" description:"machine hostname" env:"ENV_NODE_NAME"`
+	Port          uint     `long:"port" description:"exporter service port" default:"30108" env:"ENV_SERVE_PORT"`
+	Collector     []string `long:"collector" description:"enabled collectors" choice:"cndev" choice:"podresources" choice:"host" choice:"cnpapi" default:"cndev"`
+	MetricsPrefix string   `long:"metrics-prefix" description:"prefix of all metric names" env:"ENV_METRICS_PREFIX"`
+}
+
+func ParseFlags() Options {
+	options := Options{}
+	parser := flags.NewParser(&options, flags.Default)
+	if _, err := parser.Parse(); err != nil {
+		code := 1
+		if fe, ok := err.(*flags.Error); ok {
+			if fe.Type == flags.ErrHelp {
+				code = 0
+			}
+		}
+		os.Exit(code)
+	}
+	log.Printf("Options: %v\n", options)
+	return options
 }
 
 func main() {
 	options := ParseFlags()
-	http.Handle(options.MetricsPath, newHandler(options.Hostname, options.MetricsConfig, options.Collector, options.MetricsPrefix))
-	log.Printf("Start serving at http://0.0.0.0:%d%s", options.Port, options.MetricsPath)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", options.Port), nil))
+
+	c := collector.NewCollectors(
+		options.Hostname,
+		options.MetricsConfig,
+		options.Collector,
+		options.MetricsPrefix,
+	)
+	r := prometheus.NewRegistry()
+	r.MustRegister(c)
+
+	http.Handle(options.MetricsPath, promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
+	server := &http.Server{
+		Addr: fmt.Sprintf("0.0.0.0:%d", options.Port),
+	}
+
+	log.Printf("start serving at %s", server.Addr)
+	log.Fatal(server.ListenAndServe())
 }

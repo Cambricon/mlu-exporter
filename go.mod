@@ -3,6 +3,7 @@ module github.com/Cambricon/mlu-exporter
 go 1.13
 
 require (
+	github.com/fsnotify/fsnotify v1.4.7
 	github.com/golang/mock v1.4.3
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/jessevdk/go-flags v1.4.0

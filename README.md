@@ -55,7 +55,7 @@ Use the following command to start the exporter.
 docker run -d \
 -p 30108:30108 \
 --privileged=true \
-cambricon-mlu-exporter:v1.5.2
+cambricon-mlu-exporter:v1.5.3
 ```
 
 Then use the following command to get the metrics.
@@ -69,11 +69,11 @@ If you want to configure command args by yourself , see the following example:
 ```shell
 docker run -d \
 -p 30108:30108 \
--v examples/metrics.yaml:/var/lib/mlu-exporter/metrics.yaml \
+-v examples/metrics.yaml:/etc/mlu-exporter/metrics.yaml \
 --privileged=true \
-cambricon-mlu-exporter:v1.5.2 \
+cambricon-mlu-exporter:v1.5.3 \
 mlu-exporter \
---metrics-config=/var/lib/mlu-exporter/metrics.yaml \
+--metrics-config=/etc/mlu-exporter/metrics.yaml \
 --metrics-path=/metrics \
 --port=30108 \
 --hostname=hostname \

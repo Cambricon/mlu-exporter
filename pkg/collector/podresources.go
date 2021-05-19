@@ -67,6 +67,10 @@ func (c *podResourcesCollector) init() error {
 	return err
 }
 
+func (c *podResourcesCollector) updateMetrics(m collectorMetrics) {
+	c.metrics = m
+}
+
 func (c *podResourcesCollector) collect(ch chan<- prometheus.Metric, mluInfo map[string]mluStat) {
 	info, err := c.client.GetDeviceToPodInfo()
 	check(err)
