@@ -14,10 +14,14 @@
 
 linters:
   enable:
-    - govet
+    - exportloopref
+    - gci
     - gofmt
     - goimports
     - golint
+    - gosimple
+    - govet
+    - unused
   disable-all: true
 issues:
   exclude-use-default: false

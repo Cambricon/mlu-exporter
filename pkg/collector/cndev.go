@@ -16,25 +16,31 @@ package collector
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/Cambricon/mlu-exporter/pkg/cndev"
-	"github.com/Cambricon/mlu-exporter/pkg/metrics"
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-var capacity = map[string]int{
-	"MLU100":     64,
-	"MLU270":     128,
-	"MLU270-X5K": 140,
-	"MLU220":     32,
-	"MLU290":     512,
+var capacity = map[string]float64{
+	"MLU100":      64,
+	"MLU270":      128,
+	"MLU270-X5K":  140,
+	"MLU220":      16,
+	"MLU220-M2":   8,
+	"MLU290":      512,
+	"MLU370-EVBS": 131,
+	"MLU370-S4":   192,
+	"MLU370-M8":   332.8,
+	"MLU370":      256,
 }
 
 const maxFanSpeed = 5400
 
-func getModelCapacity(model string) int {
-	var modelCapacity int
+func getModelCapacity(model string) float64 {
+	var modelCapacity float64
 	if c, ok := capacity[model]; ok {
 		modelCapacity = c
 	} else {
@@ -45,24 +51,44 @@ func getModelCapacity(model string) int {
 }
 
 func init() {
-	registerCollector(metrics.Cndev, NewCndevCollector)
+	registerCollector(Cndev, NewCndevCollector)
 }
 
 type cndevCollector struct {
-	metrics collectorMetrics
-	host    string
-	cndev   cndev.Cndev
+	metrics    collectorMetrics
+	host       string
+	cndev      cndev.Cndev
+	sharedInfo map[string]mluStat
+	fnMap      map[string]interface{}
 }
 
 func NewCndevCollector(m collectorMetrics, host string) Collector {
-	return &cndevCollector{
+	c := &cndevCollector{
 		metrics: m,
 		host:    host,
 		cndev:   cndev.NewCndevClient(),
 	}
+	c.fnMap = map[string]interface{}{
+		Temperature:         c.collectTemperature,
+		Health:              c.collectHealth,
+		MemTotal:            c.collectMemTotal,
+		MemUsed:             c.collectMemUsed,
+		MemUtil:             c.collectMemUtil,
+		Util:                c.collectUtil,
+		CoreUtil:            c.collectCoreUtil,
+		FanSpeed:            c.collectFanSpeed,
+		PowerUsage:          c.collectPowerUsage,
+		Capacity:            c.collectCapacity,
+		Usage:               c.collectUsage,
+		Version:             c.collectVersion,
+		VirtualMemUtil:      c.collectVirtualMemUtil,
+		VirtualFunctionUtil: c.collectVirtualFunctionUtil,
+	}
+	return c
 }
 
-func (c *cndevCollector) init() error {
+func (c *cndevCollector) init(info map[string]mluStat) error {
+	c.sharedInfo = info
 	return c.cndev.Init()
 }
 
@@ -70,41 +96,79 @@ func (c *cndevCollector) updateMetrics(m collectorMetrics) {
 	c.metrics = m
 }
 
-func (c *cndevCollector) collect(ch chan<- prometheus.Metric, mluInfo map[string]mluStat) {
-	for name, metric := range c.metrics {
-		switch name {
-		case metrics.Temperature:
-			c.collectTemperature(ch, metric, mluInfo)
-		case metrics.BoardHealth:
-			c.collectBoardHealth(ch, metric, mluInfo)
-		case metrics.MemTotal:
-			c.collectMemTotal(ch, metric, mluInfo)
-		case metrics.MemUsed:
-			c.collectMemUsed(ch, metric, mluInfo)
-		case metrics.MemUtil:
-			c.collectMemUtil(ch, metric, mluInfo)
-		case metrics.BoardUtil:
-			c.collectBoardUtil(ch, metric, mluInfo)
-		case metrics.CoreUtil:
-			c.collectCoreUtil(ch, metric, mluInfo)
-		case metrics.FanSpeed:
-			c.collectFanSpeed(ch, metric, mluInfo)
-		case metrics.BoardPower:
-			c.collectBoardPower(ch, metric, mluInfo)
-		case metrics.BoardCapacity:
-			c.collectBoardCapacity(ch, metric, mluInfo)
-		case metrics.BoardUsage:
-			c.collectBoardUsage(ch, metric, mluInfo)
-		case metrics.BoardVersion:
-			c.collectBoardVersion(ch, metric, mluInfo)
+func (c *cndevCollector) collect(ch chan<- prometheus.Metric) {
+	for name, m := range c.metrics {
+		fn := c.fnMap[name]
+		f, ok := fn.(func(chan<- prometheus.Metric, metric))
+		if !ok {
+			log.Printf("type assertion for fn %s failed, skip", name)
+		} else {
+			f(ch, m)
 		}
 	}
 }
 
-func (c *cndevCollector) collectTemperature(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
-	for _, stat := range info {
+func (c *cndevCollector) collectVirtualMemUtil(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
+		state, err := c.cndev.GetDeviceVfState(stat.slot)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetDeviceVfState", stat.slot))
+			continue
+		}
+		vf := 0
+		for state != 0 {
+			vf++
+			if (state & 0x1) != 0 {
+				_, _, used, total, err := c.cndev.GetDeviceMemory(uint(vf<<8 | int(stat.slot)))
+				if err != nil {
+					log.Println(errors.Wrapf(err, "Slot %d VF %d GetDeviceMemory", stat.slot, vf))
+					continue
+				}
+				util := float64(used) / float64(total) * 100
+				labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host, vf: fmt.Sprintf("%d", vf)})
+				ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, util, labelValues...)
+			}
+			state >>= 1
+		}
+	}
+}
+
+func (c *cndevCollector) collectVirtualFunctionUtil(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
+		state, err := c.cndev.GetDeviceVfState(stat.slot)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetDeviceVfState", stat.slot))
+			continue
+		}
+		vfNum := 0
+		for state != 0 {
+			vfNum++
+			state >>= 1
+		}
+		_, coreUtil, err := c.cndev.GetDeviceUtil(stat.slot)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetDeviceUtil", stat.slot))
+			continue
+		}
+		for vfID := 1; vfID < vfNum+1; vfID++ {
+			util, err := calcVFUtil(coreUtil, vfNum, vfID)
+			if err != nil {
+				log.Println(errors.Wrapf(err, "vf %d calcVFUtil, util %v, vfNum: %d", vfID, coreUtil, vfNum))
+				continue
+			}
+			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host, vf: fmt.Sprintf("%d", vfID)})
+			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, util, labelValues...)
+		}
+	}
+}
+
+func (c *cndevCollector) collectTemperature(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
 		board, clusters, err := c.cndev.GetDeviceTemperature(stat.slot)
-		check(err)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetDeviceTemperature", stat.slot))
+			continue
+		}
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host, cluster: ""})
 		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(board), labelValues...)
 		for index, cluster := range clusters {
@@ -114,55 +178,83 @@ func (c *cndevCollector) collectTemperature(ch chan<- prometheus.Metric, m metri
 	}
 }
 
-func (c *cndevCollector) collectBoardHealth(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
-	for _, stat := range info {
+func (c *cndevCollector) collectHealth(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
 		health, err := c.cndev.GetDeviceHealth(stat.slot)
-		check(err)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetDeviceHealth", stat.slot))
+			continue
+		}
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
 		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(health), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectMemTotal(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
-	for _, stat := range info {
+func (c *cndevCollector) collectMemTotal(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
+		_, total, _, _, err := c.cndev.GetDeviceMemory(stat.slot)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
+			continue
+		}
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(stat.memTotal*1024*1024), labelValues...)
+		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(total*1024*1024), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectMemUsed(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
-	for _, stat := range info {
+func (c *cndevCollector) collectMemUsed(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
+		used, _, _, _, err := c.cndev.GetDeviceMemory(stat.slot)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
+			continue
+		}
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(stat.memUsed*1024*1024), labelValues...)
+		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(used*1024*1024), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectMemUtil(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
-	for _, stat := range info {
-		util := float64(stat.memUsed) / float64(stat.memTotal) * 100
+func (c *cndevCollector) collectMemUtil(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
+		used, total, _, _, err := c.cndev.GetDeviceMemory(stat.slot)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
+			continue
+		}
+		util := float64(used) / float64(total) * 100
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
 		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, util, labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectBoardUtil(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
-	for _, stat := range info {
+func (c *cndevCollector) collectUtil(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
+		board, _, err := c.cndev.GetDeviceUtil(stat.slot)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetDeviceUtil", stat.slot))
+			continue
+		}
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(stat.boardUtil), labelValues...)
+		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(board), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectCoreUtil(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
-	for _, stat := range info {
-		for core, util := range stat.coreUtil {
+func (c *cndevCollector) collectCoreUtil(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
+		_, coreUtil, err := c.cndev.GetDeviceUtil(stat.slot)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetDeviceUtil", stat.slot))
+			continue
+		}
+		for core, util := range coreUtil {
 			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host, core: core})
 			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectFanSpeed(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
-	for _, stat := range info {
+func (c *cndevCollector) collectFanSpeed(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
 		fan, err := c.cndev.GetDeviceFanSpeed(stat.slot)
 		var speed float64
 		if fan == 0 {
@@ -170,39 +262,65 @@ func (c *cndevCollector) collectFanSpeed(ch chan<- prometheus.Metric, m metric, 
 		} else {
 			speed = float64(maxFanSpeed) * float64(fan) / 100
 		}
-		check(err)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetDeviceFanSpeed", stat.slot))
+			continue
+		}
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
 		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, speed, labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectBoardPower(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
-	for _, stat := range info {
+func (c *cndevCollector) collectPowerUsage(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
+		power, err := c.cndev.GetDevicePower(stat.slot)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetDevicePower", stat.slot))
+			continue
+		}
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(stat.power), labelValues...)
+		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(power), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectBoardCapacity(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
-	for _, stat := range info {
-		modelCapacity := getModelCapacity(stat.model)
+func (c *cndevCollector) collectCapacity(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(modelCapacity), labelValues...)
+		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, getModelCapacity(stat.model), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectBoardUsage(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
-	for _, stat := range info {
-		modelCapacity := getModelCapacity(stat.model)
-		usage := float64(modelCapacity) * float64(stat.boardUtil) / 100
+func (c *cndevCollector) collectUsage(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
+		board, _, err := c.cndev.GetDeviceUtil(stat.slot)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetDeviceUtil", stat.slot))
+			continue
+		}
+		usage := getModelCapacity(stat.model) * float64(board) / 100
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
 		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, usage, labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectBoardVersion(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
-	for _, stat := range info {
+func (c *cndevCollector) collectVersion(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
 		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, 1, labelValues...)
 	}
+}
+
+func calcVFUtil(utils []uint, vfNum int, vfID int) (float64, error) {
+	sum := uint(0)
+	offset := 0
+	switch vfNum {
+	case 1, 2, 4, 8:
+		offset = len(utils) / vfNum
+	default:
+		return 0, fmt.Errorf("invalid vfNum %d", vfNum)
+	}
+	for i := (vfID - 1) * offset; i < vfID*offset; i++ {
+		sum += utils[i]
+	}
+	return float64(sum) / float64(offset), nil
 }

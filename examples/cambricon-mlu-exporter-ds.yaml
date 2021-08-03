@@ -29,55 +29,55 @@ spec:
         app: mlu-monitoring
     spec:
       containers:
-      - name: cambricon-mlu-monitor
-        image: cambricon-mlu-exporter:v1.5.3
-        imagePullPolicy: IfNotPresent
-        command:
-        - /usr/bin/mlu-exporter
-        - --metrics-config=/etc/mlu-exporter/metrics.yaml
-        - --metrics-path=/metrics
-        - --port=30108
-        - --collector=cndev
-        - --collector=podresources
-        #- --collector=host
-        #- --collector=cnpapi
-        - --metrics-prefix=ai 
-        env:
-        - name: ENV_NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        securityContext:
-          privileged: true
-        volumeMounts:
-        - mountPath: /var/lib/kubelet/pod-resources/
-          name: pod-resources
-        - mountPath: /etc/mlu-exporter
-          name: mlu-exporter
+        - name: cambricon-mlu-monitor
+          image: cambricon-mlu-exporter:v1.6.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - /usr/bin/mlu-exporter
+            - --metrics-config=/etc/mlu-exporter/metrics.yaml
+            - --metrics-path=/metrics
+            - --port=30108
+            - --collector=cndev
+            - --collector=podresources
+            #- --collector=host
+            #- --collector=cnpapi
+            - --metrics-prefix=mlu
+          env:
+            - name: ENV_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /var/lib/kubelet/pod-resources/
+              name: pod-resources
+            - mountPath: /etc/mlu-exporter
+              name: mlu-exporter
       volumes:
-      - name: pod-resources
-        hostPath:
-          path: /var/lib/kubelet/pod-resources/
-      - name: mlu-exporter
-        configMap:
-          defaultMode: 420
-          name: cambricon-mlu-exporter
+        - name: pod-resources
+          hostPath:
+            path: /var/lib/kubelet/pod-resources/
+        - name: mlu-exporter
+          configMap:
+            defaultMode: 420
+            name: cambricon-mlu-exporter
       tolerations:
-      - effect: NoExecute
-        key: node.kubernetes.io/not-ready
-        operator: Exists
-      - effect: NoExecute
-        key: node.kubernetes.io/unreachable
-        operator: Exists
-      - effect: NoSchedule
-        key: node.kubernetes.io/disk-pressure
-        operator: Exists
-      - effect: NoSchedule
-        key: node.kubernetes.io/memory-pressure
-        operator: Exists
-      - effect: NoSchedule
-        key: node.kubernetes.io/unschedulable
-        operator: Exists
-      - effect: NoSchedule
-        key: node.kubernetes.io/network-unavailable
-        operator: Exists
+        - effect: NoExecute
+          key: node.kubernetes.io/not-ready
+          operator: Exists
+        - effect: NoExecute
+          key: node.kubernetes.io/unreachable
+          operator: Exists
+        - effect: NoSchedule
+          key: node.kubernetes.io/disk-pressure
+          operator: Exists
+        - effect: NoSchedule
+          key: node.kubernetes.io/memory-pressure
+          operator: Exists
+        - effect: NoSchedule
+          key: node.kubernetes.io/unschedulable
+          operator: Exists
+        - effect: NoSchedule
+          key: node.kubernetes.io/network-unavailable
+          operator: Exists

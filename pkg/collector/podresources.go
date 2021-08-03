@@ -15,15 +15,11 @@
 package collector
 
 import (
-	"bytes"
-	"fmt"
-	"io/ioutil"
+	"log"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
-	"github.com/Cambricon/mlu-exporter/pkg/metrics"
 	"github.com/Cambricon/mlu-exporter/pkg/podresources"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -44,7 +40,7 @@ var (
 )
 
 func init() {
-	registerCollector(metrics.PodResources, NewPodResourcesCollector)
+	registerCollector(PodResources, NewPodResourcesCollector)
 }
 
 type podResourcesCollector struct {
@@ -52,17 +48,25 @@ type podResourcesCollector struct {
 	host          string
 	devicePodInfo map[string]podresources.PodInfo
 	client        podresources.PodResources
+	sharedInfo    map[string]mluStat
+	fnMap         map[string]interface{}
 }
 
 func NewPodResourcesCollector(m collectorMetrics, host string) Collector {
-	return &podResourcesCollector{
+	c := &podResourcesCollector{
 		metrics: m,
 		host:    host,
 		client:  podresources.NewPodResourcesClient(timeout, socket, resources, maxSize),
 	}
+	c.fnMap = map[string]interface{}{
+		Allocated: c.collectBoardAllocated,
+		Container: c.collectMLUContainer,
+	}
+	return c
 }
 
-func (c *podResourcesCollector) init() error {
+func (c *podResourcesCollector) init(info map[string]mluStat) error {
+	c.sharedInfo = info
 	_, err := os.Stat(socket)
 	return err
 }
@@ -71,74 +75,25 @@ func (c *podResourcesCollector) updateMetrics(m collectorMetrics) {
 	c.metrics = m
 }
 
-func (c *podResourcesCollector) collect(ch chan<- prometheus.Metric, mluInfo map[string]mluStat) {
+func (c *podResourcesCollector) collect(ch chan<- prometheus.Metric) {
 	info, err := c.client.GetDeviceToPodInfo()
-	check(err)
+	if err != nil {
+		log.Printf("GetDeviceToPodInfo err: %v", err)
+		return
+	}
 	c.devicePodInfo = info
-
-	for name, metric := range c.metrics {
-		switch name {
-		case metrics.ContainerMLUVFUtil:
-			c.collectVFUtil(ch, metric, mluInfo)
-		case metrics.BoardAllocated:
-			c.collectBoardAllocated(ch, metric, mluInfo)
-		case metrics.ContainerMLUUtil:
-			c.collectMLUUtil(ch, metric, mluInfo)
-		case metrics.ContainerMLUMemUtil:
-			c.collectMLUMemUtil(ch, metric, mluInfo)
-		case metrics.ContainerMLUBoardPower:
-			c.collectMLUBoardPower(ch, metric, mluInfo)
-		case metrics.MLUContainer:
-			c.collectMLUContainer(ch, metric, mluInfo)
+	for name, m := range c.metrics {
+		fn := c.fnMap[name]
+		f, ok := fn.(func(chan<- prometheus.Metric, metric))
+		if !ok {
+			log.Printf("type assertion for fn %s failed, skip", name)
+		} else {
+			f(ch, m)
 		}
 	}
 }
 
-func (c *podResourcesCollector) collectMLUUtil(ch chan<- prometheus.Metric, m metric, mluInfo map[string]mluStat) {
-	for device, podInfo := range c.devicePodInfo {
-		if strings.Contains(device, sriovSubString) {
-			continue
-		}
-		uuid := strings.TrimLeft(device, uuidPrefix)
-		if strings.Contains(uuid, envShareSubString) {
-			uuid = strings.Split(uuid, envShareSubString)[0]
-		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: mluInfo[uuid], host: c.host, podInfo: podInfo})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(mluInfo[uuid].boardUtil), labelValues...)
-	}
-}
-
-func (c *podResourcesCollector) collectMLUMemUtil(ch chan<- prometheus.Metric, m metric, mluInfo map[string]mluStat) {
-	for device, podInfo := range c.devicePodInfo {
-		if strings.Contains(device, sriovSubString) {
-			continue
-		}
-		uuid := strings.TrimLeft(device, uuidPrefix)
-		if strings.Contains(uuid, envShareSubString) {
-			uuid = strings.Split(uuid, envShareSubString)[0]
-		}
-		util := float64(mluInfo[uuid].memUsed) / float64(mluInfo[uuid].memTotal) * 100
-		labelValues := getLabelValues(m.labels, labelInfo{stat: mluInfo[uuid], host: c.host, podInfo: podInfo})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, util, labelValues...)
-	}
-}
-
-func (c *podResourcesCollector) collectMLUBoardPower(ch chan<- prometheus.Metric, m metric, mluInfo map[string]mluStat) {
-	for device, podInfo := range c.devicePodInfo {
-		if strings.Contains(device, sriovSubString) {
-			continue
-		}
-		uuid := strings.TrimLeft(device, uuidPrefix)
-		if strings.Contains(uuid, envShareSubString) {
-			uuid = strings.Split(uuid, envShareSubString)[0]
-		}
-		power := float64(mluInfo[uuid].power)
-		labelValues := getLabelValues(m.labels, labelInfo{stat: mluInfo[uuid], host: c.host, podInfo: podInfo})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, power, labelValues...)
-	}
-}
-
-func (c *podResourcesCollector) collectBoardAllocated(ch chan<- prometheus.Metric, m metric, mluInfo map[string]mluStat) {
+func (c *podResourcesCollector) collectBoardAllocated(ch chan<- prometheus.Metric, m metric) {
 	mlus := make(map[string]bool)
 	for device := range c.devicePodInfo {
 		uuid := device
@@ -151,7 +106,7 @@ func (c *podResourcesCollector) collectBoardAllocated(ch chan<- prometheus.Metri
 		mlus[uuid] = true
 	}
 	var model, driver string
-	for _, info := range mluInfo {
+	for _, info := range c.sharedInfo {
 		model = info.model
 		driver = info.driver
 		break
@@ -160,72 +115,19 @@ func (c *podResourcesCollector) collectBoardAllocated(ch chan<- prometheus.Metri
 	ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(len(mlus)), labelValues...)
 }
 
-func (c *podResourcesCollector) collectMLUContainer(ch chan<- prometheus.Metric, m metric, mluInfo map[string]mluStat) {
+func (c *podResourcesCollector) collectMLUContainer(ch chan<- prometheus.Metric, m metric) {
 	for device, podInfo := range c.devicePodInfo {
-		if strings.Contains(device, sriovSubString) {
-			continue
-		}
+		vf := ""
 		uuid := strings.TrimLeft(device, uuidPrefix)
 		if strings.Contains(uuid, envShareSubString) {
 			uuid = strings.Split(uuid, envShareSubString)[0]
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: mluInfo[uuid], host: c.host, podInfo: podInfo})
+		if strings.Contains(device, sriovSubString) {
+			s := strings.Split(uuid, sriovSubString)
+			uuid = s[0]
+			vf = s[1]
+		}
+		labelValues := getLabelValues(m.labels, labelInfo{stat: c.sharedInfo[uuid], host: c.host, podInfo: podInfo, vf: vf})
 		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, 1, labelValues...)
 	}
-}
-
-func (c *podResourcesCollector) collectVFUtil(ch chan<- prometheus.Metric, m metric, mluInfo map[string]mluStat) {
-	for device, podInfo := range c.devicePodInfo {
-		if !strings.Contains(device, sriovSubString) {
-			continue
-		}
-		uuid, vfNum, vfID, err := getSriovDeviceInfo(device, mluInfo)
-		check(err)
-		util, err := calcVFUtil(mluInfo[uuid].coreUtil, vfNum, vfID)
-		check(err)
-		labelValues := getLabelValues(m.labels, labelInfo{stat: mluInfo[uuid], host: c.host, vfID: vfID, podInfo: podInfo})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, util, labelValues...)
-	}
-}
-
-func getSriovDeviceInfo(device string, mluInfo map[string]mluStat) (string, int, int, error) {
-	uuid := strings.TrimLeft(device, uuidPrefix)
-	uuid = strings.Split(uuid, sriovSubString)[0]
-	vf := strings.Split(device, sriovSubString)[1]
-	vfID, err := strconv.ParseInt(vf, 10, 64)
-	if err != nil {
-		return "", 0, 0, err
-	}
-	pcie := mluInfo[uuid].pcie
-	path := "/sys/bus/pci/devices/" + pcie + "/sriov_numvfs"
-	vfNum, err := getNumFromFile(path)
-	if err != nil {
-		return "", 0, 0, err
-	}
-	return uuid, vfNum, int(vfID), nil
-}
-
-func getNumFromFile(path string) (int, error) {
-	output, err := ioutil.ReadFile(path)
-	if err != nil {
-		return 0, err
-	}
-	output = bytes.Trim(output, "\n")
-	num, err := strconv.ParseInt(string(output), 10, 64)
-	return int(num), err
-}
-
-func calcVFUtil(utils []uint, vfNum int, vfID int) (float64, error) {
-	sum := uint(0)
-	offset := 0
-	switch vfNum {
-	case 1, 2, 4:
-		offset = len(utils) / vfNum
-	default:
-		return 0, fmt.Errorf("invalid vfNum %d", vfNum)
-	}
-	for i := (vfID - 1) * offset; i < vfID*offset; i++ {
-		sum += utils[i]
-	}
-	return float64(sum) / float64(offset), nil
 }

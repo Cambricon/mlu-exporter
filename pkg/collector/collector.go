@@ -24,13 +24,13 @@ import (
 	"github.com/Cambricon/mlu-exporter/pkg/metrics"
 	"github.com/Cambricon/mlu-exporter/pkg/podresources"
 	"github.com/fsnotify/fsnotify"
-	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 type Collector interface {
-	collect(ch chan<- prometheus.Metric, mluInfo map[string]mluStat)
-	init() error
+	collect(ch chan<- prometheus.Metric)
+	init(info map[string]mluStat) error
 	updateMetrics(m collectorMetrics)
 }
 
@@ -48,25 +48,19 @@ type metric struct {
 }
 
 type mluStat struct {
-	slot      uint
-	model     string
-	sn        string
-	pcie      string
-	boardUtil uint
-	coreUtil  []uint
-	memTotal  uint
-	memUsed   uint
-	power     uint
-	mcu       string
-	driver    string
+	slot   uint
+	model  string
+	uuid   string
+	sn     string
+	pcie   string
+	mcu    string
+	driver string
 }
 
 type Collectors struct {
 	collectors map[string]Collector
 	metrics    map[string]collectorMetrics
 	mutex      sync.Mutex
-	sharedInfo map[string]mluStat
-	cndev      cndev.Cndev
 }
 
 func NewCollectors(host string, config string, enabled []string, prefix string) *Collectors {
@@ -80,7 +74,6 @@ func NewCollectors(host string, config string, enabled []string, prefix string) 
 	c := &Collectors{
 		collectors: cs,
 		metrics:    m,
-		cndev:      cndev.NewCndevClient(),
 	}
 	c.init()
 	go c.syncMetrics(config, prefix)
@@ -90,13 +83,12 @@ func NewCollectors(host string, config string, enabled []string, prefix string) 
 func (c *Collectors) Collect(ch chan<- prometheus.Metric) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	c.collectSharedInfo()
 
 	wg := sync.WaitGroup{}
 	wg.Add(len(c.collectors))
 	for _, col := range c.collectors {
 		go func(col Collector) {
-			col.collect(ch, c.sharedInfo)
+			col.collect(ch)
 			wg.Done()
 		}(col)
 	}
@@ -111,41 +103,45 @@ func (c *Collectors) Describe(ch chan<- *prometheus.Desc) {
 	}
 }
 
-func (c *Collectors) collectSharedInfo() {
-	var errs *multierror.Error
-	num, err := c.cndev.GetDeviceCount()
-	errs = multierror.Append(errs, err)
+func collectSharedInfo() map[string]mluStat {
+	cli := cndev.NewCndevClient()
+	if err := cli.Init(); err != nil {
+		log.Panic(errors.Wrap(err, "Init"))
+	}
+	num, err := cli.GetDeviceCount()
+	if err != nil {
+		log.Panic(errors.Wrap(err, "GetDeviceCount"))
+	}
 	info := make(map[string]mluStat)
+	model := cli.GetDeviceModel(0)
 	for i := uint(0); i < num; i++ {
-		sn, err := c.cndev.GetDeviceSN(i)
-		errs = multierror.Append(errs, err)
-		model := c.cndev.GetDeviceModel(i)
-		pcie, err := c.cndev.GetDevicePCIeID(i)
-		errs = multierror.Append(errs, err)
-		board, core, err := c.cndev.GetDeviceUtil(i)
-		errs = multierror.Append(errs, err)
-		used, total, err := c.cndev.GetDeviceMemory(i)
-		errs = multierror.Append(errs, err)
-		power, err := c.cndev.GetDevicePower(i)
-		errs = multierror.Append(errs, err)
-		mcu, driver, err := c.cndev.GetDeviceVersion(i)
-		errs = multierror.Append(errs, err)
-		info[sn] = mluStat{
-			sn:        sn,
-			model:     model,
-			slot:      i,
-			pcie:      pcie,
-			boardUtil: board,
-			coreUtil:  core,
-			memTotal:  total,
-			memUsed:   used,
-			power:     power,
-			mcu:       mcu,
-			driver:    driver,
+		uuid, err := cli.GetDeviceUUID(i)
+		if err != nil {
+			log.Panic(errors.Wrap(err, "GetDeviceUUID"))
+		}
+		sn, err := cli.GetDeviceSN(i)
+		if err != nil {
+			log.Panic(errors.Wrap(err, "GetDeviceSN"))
+		}
+		pcie, err := cli.GetDevicePCIeID(i)
+		if err != nil {
+			log.Panic(errors.Wrap(err, "GetDevicePCIeID"))
+		}
+		mcu, driver, err := cli.GetDeviceVersion(i)
+		if err != nil {
+			log.Panic(errors.Wrap(err, "GetDeviceVersion"))
+		}
+		info[uuid] = mluStat{
+			sn:     sn,
+			uuid:   uuid,
+			model:  model,
+			slot:   i,
+			pcie:   pcie,
+			mcu:    mcu,
+			driver: driver,
 		}
 	}
-	check(errs.ErrorOrNil())
-	c.sharedInfo = info
+	return info
 }
 
 func (c *Collectors) syncMetrics(config string, prefix string) {
@@ -185,9 +181,11 @@ func (c *Collectors) syncMetrics(config string, prefix string) {
 }
 
 func (c *Collectors) init() {
-	for _, collector := range c.collectors {
-		err := collector.init()
-		check(err)
+	info := collectSharedInfo()
+	for name, collector := range c.collectors {
+		if err := collector.init(info); err != nil {
+			log.Panic(errors.Wrapf(err, "init collector %s", name))
+		}
 	}
 }
 
@@ -215,18 +213,12 @@ func getMetrics(cfg metrics.Conf, prefix string) map[string]collectorMetrics {
 	return m
 }
 
-func check(err error) {
-	if err != nil {
-		log.Panicln("Fatal:", err)
-	}
-}
-
 type labelInfo struct {
 	stat    mluStat
 	host    string
 	core    int
 	cluster string
-	vfID    int
+	vf      string
 	podInfo podresources.PodInfo
 }
 
@@ -234,37 +226,39 @@ func getLabelValues(labels []string, info labelInfo) []string {
 	values := []string{}
 	for _, l := range labels {
 		switch l {
-		case metrics.Slot:
+		case MLU:
 			values = append(values, fmt.Sprintf("%d", info.stat.slot))
-		case metrics.Model:
+		case Model:
 			values = append(values, info.stat.model)
-		case metrics.MluType:
+		case Type:
 			// suffix needs to be stripped except for "mlu270-x5k"
 			if strings.EqualFold(info.stat.model, "mlu270-x5k") {
-				values = append(values, info.stat.model)
+				values = append(values, strings.ToLower(info.stat.model))
 			} else {
-				values = append(values, strings.Split(info.stat.model, "-")[0])
+				values = append(values, strings.ToLower(strings.Split(info.stat.model, "-")[0]))
 			}
-		case metrics.SN:
+		case SN:
 			values = append(values, info.stat.sn)
-		case metrics.Hostname:
+		case UUID:
+			values = append(values, info.stat.uuid)
+		case Node:
 			values = append(values, info.host)
-		case metrics.Cluster:
+		case Cluster:
 			values = append(values, info.cluster)
-		case metrics.Core:
+		case Core:
 			values = append(values, fmt.Sprintf("%d", info.core))
-		case metrics.MCU:
+		case MCU:
 			values = append(values, info.stat.mcu)
-		case metrics.Driver:
+		case Driver:
 			values = append(values, info.stat.driver)
-		case metrics.Namespace:
+		case Namespace:
 			values = append(values, info.podInfo.Namespace)
-		case metrics.Pod:
+		case Pod:
 			values = append(values, info.podInfo.Pod)
-		case metrics.Container:
+		case Container:
 			values = append(values, info.podInfo.Container)
-		case metrics.VFID:
-			values = append(values, fmt.Sprintf("%d", info.vfID))
+		case VF:
+			values = append(values, info.vf)
 		default:
 			values = append(values, "") // configured label not applicable, add this to prevent panic
 		}

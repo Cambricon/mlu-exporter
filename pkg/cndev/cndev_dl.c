@@ -166,6 +166,25 @@ cndevRet_t cndevGetVersionInfo(cndevVersionInfo_t *versInfo, int devId)
     return cndevGetVersionInfoFunc(versInfo, devId);
 }
 
+cndevRet_t (*cndevGetUUIDFunc)(cndevUUID_t *uuidInfo, int devId);
+cndevRet_t cndevGetUUID(cndevUUID_t *uuidInfo, int devId)
+{
+    if (cndevGetUUIDFunc == NULL)
+    {
+        return CNDEV_ERROR_UNKNOWN;
+    }
+    return cndevGetUUIDFunc(uuidInfo, devId);
+}
+
+cndevRet_t (*cndevGetCardVfStateFunc)(cndevCardVfState_t *vfstate, int devId);
+cndevRet_t cndevGetCardVfState(cndevCardVfState_t *vfstate, int devId)
+{
+    if (cndevGetCardVfStateFunc == NULL)
+    {
+        return CNDEV_ERROR_UNKNOWN;
+    }
+    return cndevGetCardVfStateFunc(vfstate, devId);
+}
 cndevRet_t CNDEV_DL(cndevInit)(void)
 {
     cndevHandle = dlopen("libcndev.so", RTLD_LAZY);
@@ -195,6 +214,16 @@ cndevRet_t CNDEV_DL(cndevInit)(void)
     }
     cndevGetCardSNFunc = dlsym(cndevHandle, "cndevGetCardSN");
     if (cndevGetCardSNFunc == NULL)
+    {
+        return CNDEV_ERROR_UNKNOWN;
+    }
+    cndevGetUUIDFunc = dlsym(cndevHandle, "cndevGetUUID");
+    if (cndevGetUUIDFunc == NULL)
+    {
+        return CNDEV_ERROR_UNKNOWN;
+    }
+    cndevGetCardVfStateFunc = dlsym(cndevHandle, "cndevGetCardVfState");
+    if (cndevGetCardVfStateFunc == NULL)
     {
         return CNDEV_ERROR_UNKNOWN;
     }

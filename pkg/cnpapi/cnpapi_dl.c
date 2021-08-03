@@ -96,14 +96,14 @@ cnpapiResult cnpapiPmuFlushData(int dev_id)
     return cnpapiPmuFlushDataFunc(dev_id);
 }
 
-cnpapiResult (*cnpapiGetDeviceTypeFunc)(int devid, cnpapiDeviceType_t *type);
-cnpapiResult cnpapiGetDeviceType(int devid, cnpapiDeviceType_t *type)
+cnpapiResult (*cnpapiGetDeviceTypeFunc)(int dev_id, cnpapiDeviceType_t *type);
+cnpapiResult cnpapiGetDeviceType(int dev_id, cnpapiDeviceType_t *type)
 {
     if (cnpapiGetDeviceTypeFunc == NULL)
     {
         return CNPAPI_ERROR_UNKNOWN;
     }
-    return cnpapiGetDeviceTypeFunc(devid, type);
+    return cnpapiGetDeviceTypeFunc(dev_id, type);
 }
 
 cnpapiResult CNPAPI_DL(cnpapiInit)(void)

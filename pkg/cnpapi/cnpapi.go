@@ -23,6 +23,7 @@ import "C"
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -124,10 +125,7 @@ func (c *cnpapi) getCounters() error {
 }
 
 func supportsMLULink(device C.cnpapiDeviceType_t) bool {
-	if device == C.CNPAPI_MLU290 {
-		return true
-	}
-	return false
+	return device == C.CNPAPI_MLU290
 }
 
 func (c *cnpapi) getDeviceType(idx uint) (C.cnpapiDeviceType_t, error) {
@@ -147,7 +145,11 @@ func (c *cnpapi) getDeviceCount() (uint, error) {
 
 func (c *cnpapi) enableCounters(idx uint) error {
 	for _, name := range counterNames {
-		id := c.counters[name]
+		id, ok := c.counters[name]
+		if !ok {
+			log.Printf("counter %s is not supported, ignore", name)
+			continue
+		}
 		r := C.cnpapiPmuEnableCounter(C.int(idx), id, true)
 		if err := errorString(r); err != nil {
 			return err

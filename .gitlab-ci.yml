@@ -41,13 +41,19 @@ run-mlu-exporter-lint:
   stage: lint
   script:
     - make lint
+  only:
+    <<: *only-mr-refs
 
 run-mlu-exporter-build:
   stage: build
   script:
     - make build
+  only:
+    <<: *only-mr-refs
 
 run-mlu-exporter-test:
   stage: test
   script:
     - make test
+  only:
+    <<: *only-mr-refs

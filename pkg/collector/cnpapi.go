@@ -18,29 +18,41 @@ import (
 	"log"
 
 	"github.com/Cambricon/mlu-exporter/pkg/cnpapi"
-	"github.com/Cambricon/mlu-exporter/pkg/metrics"
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 func init() {
-	registerCollector(metrics.Cnpapi, NewCnpapiCollector)
+	registerCollector(Cnpapi, NewCnpapiCollector)
 }
 
 type cnpapiCollector struct {
-	metrics collectorMetrics
-	host    string
-	cnpapi  cnpapi.Cnpapi
+	metrics    collectorMetrics
+	host       string
+	cnpapi     cnpapi.Cnpapi
+	sharedInfo map[string]mluStat
+	fnMap      map[string]interface{}
 }
 
 func NewCnpapiCollector(m collectorMetrics, host string) Collector {
-	return &cnpapiCollector{
+	c := &cnpapiCollector{
 		metrics: m,
 		host:    host,
 		cnpapi:  cnpapi.NewCnpapiClient(),
 	}
+	c.fnMap = map[string]interface{}{
+		PCIeRead:     c.collectPCIeRead,
+		PCIeWrite:    c.collectPCIeWrite,
+		DramRead:     c.collectDramRead,
+		DramWrite:    c.collectDramWrite,
+		MLULinkRead:  c.collectMLULinkRead,
+		MLULinkWrite: c.collectMLULinkWrite,
+	}
+	return c
 }
 
-func (c *cnpapiCollector) init() error {
+func (c *cnpapiCollector) init(info map[string]mluStat) error {
+	c.sharedInfo = info
 	return c.cnpapi.Init()
 }
 
@@ -48,80 +60,91 @@ func (c *cnpapiCollector) updateMetrics(m collectorMetrics) {
 	c.metrics = m
 }
 
-func (c *cnpapiCollector) collect(ch chan<- prometheus.Metric, mluInfo map[string]mluStat) {
-	for i := 0; i < len(mluInfo); i++ {
+func (c *cnpapiCollector) collect(ch chan<- prometheus.Metric) {
+	for i := 0; i < len(c.sharedInfo); i++ {
 		if err := c.cnpapi.PmuFlushData(uint(i)); err != nil {
 			log.Printf("cnpapi flush data, err: %v", err)
 			return
 		}
 	}
-	for name, metric := range c.metrics {
-		switch name {
-		case metrics.PCIeRead:
-			c.collectPCIeRead(ch, metric, mluInfo)
-		case metrics.PCIeWrite:
-			c.collectPCIeWrite(ch, metric, mluInfo)
-		case metrics.DramRead:
-			c.collectDramRead(ch, metric, mluInfo)
-		case metrics.DramWrite:
-			c.collectDramWrite(ch, metric, mluInfo)
-		case metrics.MLULinkRead:
-			c.collectMLULinkRead(ch, metric, mluInfo)
-		case metrics.MLULinkWrite:
-			c.collectMLULinkWrite(ch, metric, mluInfo)
+	for name, m := range c.metrics {
+		fn := c.fnMap[name]
+		f, ok := fn.(func(chan<- prometheus.Metric, metric))
+		if !ok {
+			log.Printf("type assertion for fn %s failed, skip", name)
+		} else {
+			f(ch, m)
 		}
 	}
 }
 
-func (c *cnpapiCollector) collectPCIeRead(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
-	for _, stat := range info {
+func (c *cnpapiCollector) collectPCIeRead(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
 		data, err := c.cnpapi.GetPCIeReadBytes(stat.slot)
-		check(err)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetPCIeReadBytes", stat.slot))
+			continue
+		}
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
 		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(data)/1024/1024/1024, labelValues...)
 	}
 }
 
-func (c *cnpapiCollector) collectPCIeWrite(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
-	for _, stat := range info {
+func (c *cnpapiCollector) collectPCIeWrite(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
 		data, err := c.cnpapi.GetPCIeWriteBytes(stat.slot)
-		check(err)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetPCIeWriteBytes", stat.slot))
+			continue
+		}
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
 		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(data)/1024/1024/1024, labelValues...)
 	}
 }
 
-func (c *cnpapiCollector) collectDramRead(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
-	for _, stat := range info {
+func (c *cnpapiCollector) collectDramRead(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
 		data, err := c.cnpapi.GetDramReadBytes(stat.slot)
-		check(err)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetDramReadBytes", stat.slot))
+			continue
+		}
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
 		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(data)/1024/1024/1024, labelValues...)
 	}
 }
 
-func (c *cnpapiCollector) collectDramWrite(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
-	for _, stat := range info {
+func (c *cnpapiCollector) collectDramWrite(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
 		data, err := c.cnpapi.GetDramWriteBytes(stat.slot)
-		check(err)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetDramWriteBytes", stat.slot))
+			continue
+		}
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
 		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(data)/1024/1024/1024, labelValues...)
 	}
 }
 
-func (c *cnpapiCollector) collectMLULinkRead(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
-	for _, stat := range info {
+func (c *cnpapiCollector) collectMLULinkRead(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
 		data, err := c.cnpapi.GetMLULinkReadBytes(stat.slot)
-		check(err)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetMLULinkReadBytes", stat.slot))
+			continue
+		}
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
 		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(data)/1024/1024/1024, labelValues...)
 	}
 }
 
-func (c *cnpapiCollector) collectMLULinkWrite(ch chan<- prometheus.Metric, m metric, info map[string]mluStat) {
-	for _, stat := range info {
+func (c *cnpapiCollector) collectMLULinkWrite(ch chan<- prometheus.Metric, m metric) {
+	for _, stat := range c.sharedInfo {
 		data, err := c.cnpapi.GetMLULinkWriteBytes(stat.slot)
-		check(err)
+		if err != nil {
+			log.Println(errors.Wrapf(err, "Slot %d GetMLULinkWriteBytes", stat.slot))
+			continue
+		}
 		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.host})
 		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(data)/1024/1024/1024, labelValues...)
 	}

@@ -108,13 +108,15 @@ func (mr *CndevMockRecorder) GetDeviceHealth(arg0 interface{}) *gomock.Call {
 }
 
 // GetDeviceMemory mocks base method
-func (m *Cndev) GetDeviceMemory(arg0 uint) (uint, uint, error) {
+func (m *Cndev) GetDeviceMemory(arg0 uint) (uint, uint, uint, uint, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDeviceMemory", arg0)
 	ret0, _ := ret[0].(uint)
 	ret1, _ := ret[1].(uint)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret2, _ := ret[2].(uint)
+	ret3, _ := ret[3].(uint)
+	ret4, _ := ret[4].(error)
+	return ret0, ret1, ret2, ret3, ret4
 }
 
 // GetDeviceMemory indicates an expected call of GetDeviceMemory
@@ -198,6 +200,21 @@ func (mr *CndevMockRecorder) GetDeviceTemperature(arg0 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceTemperature", reflect.TypeOf((*Cndev)(nil).GetDeviceTemperature), arg0)
 }
 
+// GetDeviceUUID mocks base method
+func (m *Cndev) GetDeviceUUID(arg0 uint) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceUUID", arg0)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceUUID indicates an expected call of GetDeviceUUID
+func (mr *CndevMockRecorder) GetDeviceUUID(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceUUID", reflect.TypeOf((*Cndev)(nil).GetDeviceUUID), arg0)
+}
+
 // GetDeviceUtil mocks base method
 func (m *Cndev) GetDeviceUtil(arg0 uint) (uint, []uint, error) {
 	m.ctrl.T.Helper()
@@ -228,6 +245,21 @@ func (m *Cndev) GetDeviceVersion(arg0 uint) (string, string, error) {
 func (mr *CndevMockRecorder) GetDeviceVersion(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceVersion", reflect.TypeOf((*Cndev)(nil).GetDeviceVersion), arg0)
+}
+
+// GetDeviceVfState mocks base method
+func (m *Cndev) GetDeviceVfState(arg0 uint) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceVfState", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceVfState indicates an expected call of GetDeviceVfState
+func (mr *CndevMockRecorder) GetDeviceVfState(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceVfState", reflect.TypeOf((*Cndev)(nil).GetDeviceVfState), arg0)
 }
 
 // Init mocks base method

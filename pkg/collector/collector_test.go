@@ -17,6 +17,7 @@ package collector
 import (
 	"fmt"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/Cambricon/mlu-exporter/pkg/metrics"
@@ -28,167 +29,339 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	cardNum             = uint(4)
-	sn                  = []string{"sn0", "sn1", "sn2", "sn3"}
-	mcu                 = "v1.1.1"
-	driver              = "v2.2.2"
-	model               = "MLU270-X5K"
-	mluType             = "MLU270-X5K"
-	pcie                = "0000:1c:00.0"
-	boardUtil           = []uint{11, 12, 13, 14}
-	coreUtil            = []uint{11, 12, 13, 14}
-	memUsed             = []uint{21, 22, 23, 24}
-	memTotal            = uint(1000)
-	temperature         = []uint{50, 51, 52, 53}
-	clusterTemperatures = []uint{22, 23, 24, 26}
-	health              = uint(1)
-	power               = []uint{44, 45, 46, 46}
-	nodeName            = "machine1"
-	devicePodInfo       = map[string]podresources.PodInfo{
-		"MLU-sn1": {
+func TestCollect(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mluStat := map[string]mluStat{
+		"uuid1": {
+			slot:   0,
+			model:  "MLU270-X5K",
+			uuid:   "uuid1",
+			sn:     "sn1",
+			pcie:   "0000:1a:00.0",
+			mcu:    "v1.1.1",
+			driver: "v2.2.2",
+		},
+		"uuid2": {
+			slot:   1,
+			model:  "MLU270-X5K",
+			uuid:   "uuid2",
+			sn:     "sn2",
+			pcie:   "0000:1b:00.0",
+			mcu:    "v1.1.1",
+			driver: "v2.2.2",
+		},
+		"uuid3": {
+			slot:   2,
+			model:  "MLU270-X5K",
+			uuid:   "uuid3",
+			sn:     "sn3",
+			pcie:   "0000:1c:00.0",
+			mcu:    "v1.1.1",
+			driver: "v2.2.2",
+		},
+		"uuid4": {
+			slot:   3,
+			model:  "MLU270-X5K",
+			uuid:   "uuid4",
+			sn:     "sn4",
+			pcie:   "0000:1d:00.0",
+			mcu:    "v1.1.1",
+			driver: "v2.2.2",
+		},
+	}
+
+	node := "machine1"
+	devicePodInfo := map[string]podresources.PodInfo{
+		"MLU-uuid1": {
 			Pod:       "pod1",
 			Namespace: "namespace1",
 			Container: "container1",
 		},
-		"MLU-sn2-_-2": {
+		"MLU-uuid2-_-2": {
 			Pod:       "pod2",
 			Namespace: "namespace2",
 			Container: "container2",
 		},
-	}
-	pcieRead     = []uint64{1073741824, 1073741824 * 2, 1073741824 * 3, 1073741824 * 4}
-	pcieWrite    = []uint64{1073741824, 1073741824 * 2, 1073741824 * 3, 1073741824 * 4}
-	dramRead     = []uint64{1073741824, 1073741824 * 2, 1073741824 * 3, 1073741824 * 4}
-	dramWrite    = []uint64{1073741824, 1073741824 * 2, 1073741824 * 3, 1073741824 * 4}
-	mlulinkRead  = []uint64{1073741824, 1073741824 * 2, 1073741824 * 3, 1073741824 * 4}
-	mlulinkWrite = []uint64{1073741824, 1073741824 * 2, 1073741824 * 3, 1073741824 * 4}
-	hostCPUTotal = float64(6185912)
-	hostCPUIdle  = float64(34459)
-	hostMemTotal = float64(24421820)
-	hostMemFree  = float64(18470732)
-)
-
-func TestInit(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	cndev := mock.NewCndev(ctrl)
-	cndev.EXPECT().Init().Return(nil).Times(1)
-	c := &Collectors{
-		collectors: map[string]Collector{
-			"cndev": &cndevCollector{
-				cndev: cndev,
-			},
+		"MLU-uuid3--fake--4": {
+			Pod:       "pod3",
+			Namespace: "namespace3",
+			Container: "container3",
 		},
 	}
-	c.init()
-}
-
-func TestCollect(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	cndevOuter := mock.NewCndev(ctrl)
-	cndevOuter.EXPECT().GetDeviceCount().Return(uint(cardNum), nil).Times(1)
-	for i := uint(0); i < cardNum; i++ {
-		cndevOuter.EXPECT().GetDeviceSN(i).Return(sn[i], nil).Times(1)
-		cndevOuter.EXPECT().GetDeviceModel(i).Return(model).Times(1)
-		cndevOuter.EXPECT().GetDevicePCIeID(i).Return(pcie, nil).Times(1)
-		cndevOuter.EXPECT().GetDeviceUtil(i).Return(boardUtil[i], coreUtil, nil).Times(1)
-		cndevOuter.EXPECT().GetDeviceMemory(i).Return(memUsed[i], memTotal, nil).Times(1)
-		cndevOuter.EXPECT().GetDevicePower(i).Return(power[i], nil).Times(1)
-		cndevOuter.EXPECT().GetDeviceVersion(i).Return(mcu, driver, nil).Times(1)
+	hostCPUTotal := float64(6185912)
+	hostCPUIdle := float64(34459)
+	hostMemTotal := float64(24421820)
+	hostMemFree := float64(18470732)
+	mluMetrics := map[string]struct {
+		boardUtil           uint
+		coreUtil            []uint
+		memUsed             uint
+		memTotal            uint
+		virtualMemUsed      []uint
+		virtualMemTotal     uint
+		temperature         uint
+		clusterTemperatures []uint
+		health              uint
+		power               uint
+		pcieRead            uint64
+		pcieWrite           uint64
+		dramRead            uint64
+		dramWrite           uint64
+		mlulinkRead         uint64
+		mlulinkWrite        uint64
+		vfState             int
+	}{
+		"uuid1": {
+			11,
+			[]uint{11, 11, 11, 11, 13, 13, 13, 13, 15, 15, 15, 15, 17, 17, 17, 17},
+			21,
+			1000,
+			[]uint{},
+			1000,
+			31,
+			[]uint{22, 23, 24, 26},
+			1,
+			41,
+			1073741824,
+			1073741824,
+			1073741824,
+			1073741824,
+			1073741824,
+			1073741824,
+			0,
+		},
+		"uuid2": {
+			11,
+			[]uint{11, 11, 11, 11, 13, 13, 13, 13, 15, 15, 15, 15, 17, 17, 17, 17},
+			21,
+			1000,
+			[]uint{},
+			1000,
+			31,
+			[]uint{22, 23, 24, 26},
+			1,
+			41,
+			1073741824,
+			1073741824,
+			1073741824,
+			1073741824,
+			1073741824,
+			1073741824,
+			0,
+		},
+		"uuid3": {
+			11,
+			[]uint{11, 11, 11, 11, 13, 13, 13, 13, 15, 15, 15, 15, 17, 17, 17, 17},
+			21,
+			1000,
+			[]uint{11, 13, 15, 17},
+			250,
+			31,
+			[]uint{22, 23, 24, 26},
+			1,
+			41,
+			1073741824,
+			1073741824,
+			1073741824,
+			1073741824,
+			1073741824,
+			1073741824,
+			15,
+		},
+		"uuid4": {
+			11,
+			[]uint{11, 11, 11, 11, 13, 13, 13, 13, 15, 15, 15, 15, 17, 17, 17, 17},
+			21,
+			1000,
+			[]uint{12, 16},
+			500,
+			31,
+			[]uint{22, 23, 24, 26},
+			1,
+			41,
+			1073741824,
+			1073741824,
+			1073741824,
+			1073741824,
+			1073741824,
+			1073741824,
+			3,
+		},
 	}
-	cndevInner := mock.NewCndev(ctrl)
+
+	cndev := mock.NewCndev(ctrl)
+	cndev.EXPECT().Init().Return(nil).Times(1)
 	cnpapi := mock.NewCnpapi(ctrl)
-	for i := uint(0); i < cardNum; i++ {
-		cndevInner.EXPECT().GetDeviceTemperature(i).Return(temperature[i], clusterTemperatures, nil).Times(1)
-		cndevInner.EXPECT().GetDeviceHealth(i).Return(health, nil).Times(1)
-		cndevInner.EXPECT().GetDeviceFanSpeed(i).Return(uint(0), nil).Times(1)
-		cnpapi.EXPECT().PmuFlushData(i).Return(nil).Times(1)
-		cnpapi.EXPECT().GetPCIeReadBytes(i).Return(pcieRead[i], nil).Times(1)
-		cnpapi.EXPECT().GetPCIeWriteBytes(i).Return(pcieWrite[i], nil).Times(1)
-		cnpapi.EXPECT().GetDramReadBytes(i).Return(dramRead[i], nil).Times(1)
-		cnpapi.EXPECT().GetDramWriteBytes(i).Return(dramWrite[i], nil).Times(1)
-		cnpapi.EXPECT().GetMLULinkReadBytes(i).Return(mlulinkRead[i], nil).Times(1)
-		cnpapi.EXPECT().GetMLULinkWriteBytes(i).Return(mlulinkWrite[i], nil).Times(1)
+	cnpapi.EXPECT().Init().Return(nil).Times(1)
+	for mlu, stat := range mluStat {
+		cndev.EXPECT().GetDeviceTemperature(stat.slot).Return(mluMetrics[mlu].temperature, mluMetrics[mlu].clusterTemperatures, nil).Times(1)
+		cndev.EXPECT().GetDeviceHealth(stat.slot).Return(mluMetrics[mlu].health, nil).Times(1)
+		cndev.EXPECT().GetDeviceVfState(stat.slot).Return(mluMetrics[mlu].vfState, nil).Times(2)
+		for vf := 0; vf < len(mluMetrics[stat.uuid].virtualMemUsed); vf++ {
+			cndev.EXPECT().GetDeviceMemory(uint((vf+1)<<8|int(stat.slot))).Return(mluMetrics[mlu].memUsed, mluMetrics[mlu].memTotal, mluMetrics[mlu].virtualMemUsed[vf], mluMetrics[mlu].virtualMemTotal, nil).Times(1)
+		}
+		cndev.EXPECT().GetDeviceMemory(stat.slot).Return(mluMetrics[mlu].memUsed, mluMetrics[mlu].memTotal, uint(0), uint(0), nil).Times(3)
+		cndev.EXPECT().GetDeviceUtil(stat.slot).Return(mluMetrics[mlu].boardUtil, mluMetrics[mlu].coreUtil, nil).Times(4)
+		cndev.EXPECT().GetDeviceFanSpeed(stat.slot).Return(uint(0), nil).Times(1)
+		cndev.EXPECT().GetDevicePower(stat.slot).Return(mluMetrics[mlu].power, nil).Times(1)
+		cnpapi.EXPECT().PmuFlushData(stat.slot).Return(nil).Times(1)
+		cnpapi.EXPECT().GetPCIeReadBytes(stat.slot).Return(mluMetrics[mlu].pcieRead, nil).Times(1)
+		cnpapi.EXPECT().GetPCIeWriteBytes(stat.slot).Return(mluMetrics[mlu].pcieWrite, nil).Times(1)
+		cnpapi.EXPECT().GetDramReadBytes(stat.slot).Return(mluMetrics[mlu].dramRead, nil).Times(1)
+		cnpapi.EXPECT().GetDramWriteBytes(stat.slot).Return(mluMetrics[mlu].dramWrite, nil).Times(1)
+		cnpapi.EXPECT().GetMLULinkReadBytes(stat.slot).Return(mluMetrics[mlu].mlulinkRead, nil).Times(1)
+		cnpapi.EXPECT().GetMLULinkWriteBytes(stat.slot).Return(mluMetrics[mlu].mlulinkWrite, nil).Times(1)
 	}
 	podresources := mock.NewPodResources(ctrl)
 	podresources.EXPECT().GetDeviceToPodInfo().Return(devicePodInfo, nil).Times(1)
 	host := mock.NewHost(ctrl)
 	host.EXPECT().GetCPUStats().Return(hostCPUTotal, hostCPUIdle, nil).Times(2)
 	host.EXPECT().GetMemoryStats().Return(hostMemTotal, hostMemFree, nil).Times(2)
-	m := getMetrics(metrics.GetOrDie("../../examples/metrics.yaml"), "")
-	expected := map[*prometheus.Desc][]metricValue{}
-	for i := uint(0); i < cardNum; i++ {
-		l := []string{sn[i], model, mluType, nodeName, fmt.Sprintf("%d", i), mcu, driver}
-		expected[m[metrics.Cndev][metrics.Temperature].desc] = append(expected[m[metrics.Cndev][metrics.Temperature].desc], append(l, "", fmt.Sprintf("%v", temperature[i])))
-		for cluster, temp := range clusterTemperatures {
-			expected[m[metrics.Cndev][metrics.Temperature].desc] = append(expected[m[metrics.Cndev][metrics.Temperature].desc], append(l, fmt.Sprintf("%d", cluster), fmt.Sprintf("%v", temp)))
-		}
-		expected[m[metrics.Cndev][metrics.BoardHealth].desc] = append(expected[m[metrics.Cndev][metrics.BoardHealth].desc], append(l, fmt.Sprintf("%v", health)))
-		expected[m[metrics.Cndev][metrics.MemTotal].desc] = append(expected[m[metrics.Cndev][metrics.MemTotal].desc], append(l, fmt.Sprintf("%v", float64(memTotal*1024*1024))))
-		expected[m[metrics.Cndev][metrics.MemUsed].desc] = append(expected[m[metrics.Cndev][metrics.MemUsed].desc], append(l, fmt.Sprintf("%v", float64(memUsed[i]*1024*1024))))
-		expected[m[metrics.Cndev][metrics.MemUtil].desc] = append(expected[m[metrics.Cndev][metrics.MemUtil].desc], append(l, fmt.Sprintf("%v", float64(memUsed[i])/float64(memTotal)*100)))
-		expected[m[metrics.Cndev][metrics.BoardUtil].desc] = append(expected[m[metrics.Cndev][metrics.BoardUtil].desc], append(l, fmt.Sprintf("%v", boardUtil[i])))
-		expected[m[metrics.Cndev][metrics.BoardCapacity].desc] = append(expected[m[metrics.Cndev][metrics.BoardCapacity].desc], append(l, fmt.Sprintf("%v", capacity[model])))
-		expected[m[metrics.Cndev][metrics.BoardUsage].desc] = append(expected[m[metrics.Cndev][metrics.BoardUsage].desc], append(l, fmt.Sprintf("%v", float64(capacity[model])*float64(boardUtil[i])/100)))
-		for core, u := range coreUtil {
-			expected[m[metrics.Cndev][metrics.CoreUtil].desc] = append(expected[m[metrics.Cndev][metrics.CoreUtil].desc], append(l, fmt.Sprintf("%d", core), fmt.Sprintf("%v", u)))
-		}
-		expected[m[metrics.Cndev][metrics.FanSpeed].desc] = append(expected[m[metrics.Cndev][metrics.FanSpeed].desc], append(l, fmt.Sprintf("%v", -1)))
-		expected[m[metrics.Cndev][metrics.BoardPower].desc] = append(expected[m[metrics.Cndev][metrics.BoardPower].desc], append(l, fmt.Sprintf("%v", power[i])))
-		expected[m[metrics.Cndev][metrics.BoardVersion].desc] = append(expected[m[metrics.Cndev][metrics.BoardVersion].desc], append(l, "1"))
-		expected[m[metrics.Cnpapi][metrics.PCIeRead].desc] = append(expected[m[metrics.Cnpapi][metrics.PCIeRead].desc], append(l, fmt.Sprintf("%v", pcieRead[i]/1024/1024/1024)))
-		expected[m[metrics.Cnpapi][metrics.PCIeWrite].desc] = append(expected[m[metrics.Cnpapi][metrics.PCIeWrite].desc], append(l, fmt.Sprintf("%v", pcieWrite[i]/1024/1024/1024)))
-		expected[m[metrics.Cnpapi][metrics.DramRead].desc] = append(expected[m[metrics.Cnpapi][metrics.DramRead].desc], append(l, fmt.Sprintf("%v", dramRead[i]/1024/1024/1024)))
-		expected[m[metrics.Cnpapi][metrics.DramWrite].desc] = append(expected[m[metrics.Cnpapi][metrics.DramWrite].desc], append(l, fmt.Sprintf("%v", dramWrite[i]/1024/1024/1024)))
-		expected[m[metrics.Cnpapi][metrics.MLULinkRead].desc] = append(expected[m[metrics.Cnpapi][metrics.MLULinkRead].desc], append(l, fmt.Sprintf("%v", mlulinkRead[i]/1024/1024/1024)))
-		expected[m[metrics.Cnpapi][metrics.MLULinkWrite].desc] = append(expected[m[metrics.Cnpapi][metrics.MLULinkWrite].desc], append(l, fmt.Sprintf("%v", mlulinkWrite[i]/1024/1024/1024)))
 
+	m := getMetrics(metrics.GetOrDie("../../examples/metrics.yaml"), "")
+
+	cndevCollector := &cndevCollector{
+		host:    node,
+		cndev:   cndev,
+		metrics: m["cndev"],
 	}
-	expected[m[metrics.PodResources][metrics.BoardAllocated].desc] = append(expected[m[metrics.PodResources][metrics.BoardAllocated].desc], []string{model, mluType, driver, nodeName, "2"})
-	expected[m[metrics.PodResources][metrics.ContainerMLUUtil].desc] = append(expected[m[metrics.PodResources][metrics.ContainerMLUUtil].desc], []string{"1", model, mluType, sn[1], nodeName, "namespace1", "pod1", "container1", fmt.Sprintf("%v", boardUtil[1])})
-	expected[m[metrics.PodResources][metrics.ContainerMLUUtil].desc] = append(expected[m[metrics.PodResources][metrics.ContainerMLUUtil].desc], []string{"2", model, mluType, sn[2], nodeName, "namespace2", "pod2", "container2", fmt.Sprintf("%v", boardUtil[2])})
-	expected[m[metrics.PodResources][metrics.ContainerMLUMemUtil].desc] = append(expected[m[metrics.PodResources][metrics.ContainerMLUMemUtil].desc], []string{"1", model, mluType, sn[1], nodeName, "namespace1", "pod1", "container1", fmt.Sprintf("%v", float64(memUsed[1])/float64(memTotal)*100)})
-	expected[m[metrics.PodResources][metrics.ContainerMLUMemUtil].desc] = append(expected[m[metrics.PodResources][metrics.ContainerMLUMemUtil].desc], []string{"2", model, mluType, sn[2], nodeName, "namespace2", "pod2", "container2", fmt.Sprintf("%v", float64(memUsed[2])/float64(memTotal)*100)})
-	expected[m[metrics.PodResources][metrics.ContainerMLUBoardPower].desc] = append(expected[m[metrics.PodResources][metrics.ContainerMLUBoardPower].desc], []string{"1", model, mluType, sn[1], nodeName, "namespace1", "pod1", "container1", fmt.Sprintf("%v", power[1])})
-	expected[m[metrics.PodResources][metrics.ContainerMLUBoardPower].desc] = append(expected[m[metrics.PodResources][metrics.ContainerMLUBoardPower].desc], []string{"2", model, mluType, sn[2], nodeName, "namespace2", "pod2", "container2", fmt.Sprintf("%v", power[2])})
-	expected[m[metrics.PodResources][metrics.MLUContainer].desc] = append(expected[m[metrics.PodResources][metrics.MLUContainer].desc], []string{"1", sn[1], model, mluType, mcu, driver, nodeName, "namespace1", "pod1", "container1", "1"})
-	expected[m[metrics.PodResources][metrics.MLUContainer].desc] = append(expected[m[metrics.PodResources][metrics.MLUContainer].desc], []string{"2", sn[2], model, mluType, mcu, driver, nodeName, "namespace2", "pod2", "container2", "1"})
-	expected[m[metrics.Host][metrics.MemoryTotal].desc] = append(expected[m[metrics.Host][metrics.MemoryFree].desc], []string{fmt.Sprintf("%v", hostMemTotal/1024/1024), nodeName})
-	expected[m[metrics.Host][metrics.MemoryFree].desc] = append(expected[m[metrics.Host][metrics.MemoryFree].desc], []string{fmt.Sprintf("%v", hostMemFree/1024/1024), nodeName})
-	expected[m[metrics.Host][metrics.CPUIdle].desc] = append(expected[m[metrics.Host][metrics.CPUIdle].desc], []string{fmt.Sprintf("%v", hostCPUIdle), nodeName})
-	expected[m[metrics.Host][metrics.CPUTotal].desc] = append(expected[m[metrics.Host][metrics.CPUTotal].desc], []string{fmt.Sprintf("%v", hostCPUTotal), nodeName})
+	cndevCollector.fnMap = map[string]interface{}{
+		Temperature:         cndevCollector.collectTemperature,
+		Health:              cndevCollector.collectHealth,
+		MemTotal:            cndevCollector.collectMemTotal,
+		MemUsed:             cndevCollector.collectMemUsed,
+		MemUtil:             cndevCollector.collectMemUtil,
+		Util:                cndevCollector.collectUtil,
+		CoreUtil:            cndevCollector.collectCoreUtil,
+		FanSpeed:            cndevCollector.collectFanSpeed,
+		PowerUsage:          cndevCollector.collectPowerUsage,
+		Capacity:            cndevCollector.collectCapacity,
+		Usage:               cndevCollector.collectUsage,
+		Version:             cndevCollector.collectVersion,
+		VirtualMemUtil:      cndevCollector.collectVirtualMemUtil,
+		VirtualFunctionUtil: cndevCollector.collectVirtualFunctionUtil,
+	}
+
+	podResourcesCollector := &podResourcesCollector{
+		metrics: m["podresources"],
+		host:    node,
+		client:  podresources,
+	}
+
+	podResourcesCollector.fnMap = map[string]interface{}{
+		Allocated: podResourcesCollector.collectBoardAllocated,
+		Container: podResourcesCollector.collectMLUContainer,
+	}
+
+	cnpapiCollector := &cnpapiCollector{
+		metrics: m["cnpapi"],
+		host:    node,
+		cnpapi:  cnpapi,
+	}
+
+	cnpapiCollector.fnMap = map[string]interface{}{
+		PCIeRead:     cnpapiCollector.collectPCIeRead,
+		PCIeWrite:    cnpapiCollector.collectPCIeWrite,
+		DramRead:     cnpapiCollector.collectDramRead,
+		DramWrite:    cnpapiCollector.collectDramWrite,
+		MLULinkRead:  cnpapiCollector.collectMLULinkRead,
+		MLULinkWrite: cnpapiCollector.collectMLULinkWrite,
+	}
+
+	hostCollector := &hostCollector{
+		metrics: m["host"],
+		host:    node,
+		client:  host,
+	}
+
+	hostCollector.fnMap = map[string]interface{}{
+		HostCPUIdle:  hostCollector.collectCPUIdle,
+		HostCPUTotal: hostCollector.collectCPUTotal,
+		HostMemTotal: hostCollector.collectMemoryTotal,
+		HostMemFree:  hostCollector.collectMemoryFree,
+	}
+
+	c := &Collectors{
+		collectors: map[string]Collector{
+			Cndev:        cndevCollector,
+			PodResources: podResourcesCollector,
+			Cnpapi:       cnpapiCollector,
+			Host:         hostCollector,
+		},
+		metrics: m,
+	}
+
+	for _, collector := range c.collectors {
+		collector.init(mluStat)
+	}
+
+	expected := map[*prometheus.Desc][]metricValue{}
+
+	for mlu, stat := range mluStat {
+		l := []string{stat.sn, stat.model, strings.ToLower(stat.model), node, fmt.Sprintf("%d", stat.slot), stat.mcu, stat.driver, stat.uuid}
+		expected[m[Cndev][Temperature].desc] = append(expected[m[Cndev][Temperature].desc], append(l, "", fmt.Sprintf("%v", mluMetrics[mlu].temperature)))
+		for cluster, temp := range mluMetrics[mlu].clusterTemperatures {
+			expected[m[Cndev][Temperature].desc] = append(expected[m[Cndev][Temperature].desc], append(l, fmt.Sprintf("%d", cluster), fmt.Sprintf("%v", temp)))
+		}
+		expected[m[Cndev][Health].desc] = append(expected[m[Cndev][Health].desc], append(l, fmt.Sprintf("%v", mluMetrics[mlu].health)))
+		expected[m[Cndev][MemTotal].desc] = append(expected[m[Cndev][MemTotal].desc], append(l, fmt.Sprintf("%v", float64(mluMetrics[mlu].memTotal*1024*1024))))
+		expected[m[Cndev][MemUsed].desc] = append(expected[m[Cndev][MemUsed].desc], append(l, fmt.Sprintf("%v", float64(mluMetrics[mlu].memUsed*1024*1024))))
+		expected[m[Cndev][MemUtil].desc] = append(expected[m[Cndev][MemUtil].desc], append(l, fmt.Sprintf("%v", float64(mluMetrics[mlu].memUsed)/float64(mluMetrics[mlu].memTotal)*100)))
+		expected[m[Cndev][Util].desc] = append(expected[m[Cndev][Util].desc], append(l, fmt.Sprintf("%v", mluMetrics[mlu].boardUtil)))
+		expected[m[Cndev][Capacity].desc] = append(expected[m[Cndev][Capacity].desc], append(l, fmt.Sprintf("%v", getModelCapacity(stat.model))))
+		expected[m[Cndev][Usage].desc] = append(expected[m[Cndev][Usage].desc], append(l, fmt.Sprintf("%v", getModelCapacity(stat.model)*float64(mluMetrics[mlu].boardUtil)/100)))
+		for core, u := range mluMetrics[mlu].coreUtil {
+			expected[m[Cndev][CoreUtil].desc] = append(expected[m[Cndev][CoreUtil].desc], append(l, fmt.Sprintf("%d", core), fmt.Sprintf("%v", u)))
+		}
+		expected[m[Cndev][FanSpeed].desc] = append(expected[m[Cndev][FanSpeed].desc], append(l, fmt.Sprintf("%v", -1)))
+		expected[m[Cndev][PowerUsage].desc] = append(expected[m[Cndev][PowerUsage].desc], append(l, fmt.Sprintf("%v", mluMetrics[mlu].power)))
+		expected[m[Cndev][Version].desc] = append(expected[m[Cndev][Version].desc], append(l, "1"))
+		for vf := 0; vf < len(mluMetrics[stat.uuid].virtualMemUsed); vf++ {
+			memUtil := float64(mluMetrics[mlu].virtualMemUsed[vf]) / float64(mluMetrics[mlu].virtualMemTotal) * 100
+			util, _ := calcVFUtil(mluMetrics[mlu].coreUtil, len(mluMetrics[stat.uuid].virtualMemUsed), vf+1)
+			expected[m[Cndev][VirtualMemUtil].desc] = append(expected[m[Cndev][VirtualMemUtil].desc], append(l, fmt.Sprintf("%d", vf+1), fmt.Sprintf("%v", memUtil)))
+			expected[m[Cndev][VirtualFunctionUtil].desc] = append(expected[m[Cndev][VirtualFunctionUtil].desc], append(l, fmt.Sprintf("%d", vf+1), fmt.Sprintf("%v", util)))
+		}
+		expected[m[Cnpapi][PCIeRead].desc] = append(expected[m[Cnpapi][PCIeRead].desc], append(l, fmt.Sprintf("%v", mluMetrics[mlu].pcieRead/1024/1024/1024)))
+		expected[m[Cnpapi][PCIeWrite].desc] = append(expected[m[Cnpapi][PCIeWrite].desc], append(l, fmt.Sprintf("%v", mluMetrics[mlu].pcieWrite/1024/1024/1024)))
+		expected[m[Cnpapi][DramRead].desc] = append(expected[m[Cnpapi][DramRead].desc], append(l, fmt.Sprintf("%v", mluMetrics[mlu].dramRead/1024/1024/1024)))
+		expected[m[Cnpapi][DramWrite].desc] = append(expected[m[Cnpapi][DramWrite].desc], append(l, fmt.Sprintf("%v", mluMetrics[mlu].dramWrite/1024/1024/1024)))
+		expected[m[Cnpapi][MLULinkRead].desc] = append(expected[m[Cnpapi][MLULinkRead].desc], append(l, fmt.Sprintf("%v", mluMetrics[mlu].mlulinkRead/1024/1024/1024)))
+		expected[m[Cnpapi][MLULinkWrite].desc] = append(expected[m[Cnpapi][MLULinkWrite].desc], append(l, fmt.Sprintf("%v", mluMetrics[mlu].mlulinkWrite/1024/1024/1024)))
+	}
+
+	var allocatedDriver, allocatedModel, allocatedType string
+	for id, info := range devicePodInfo {
+		uuid := strings.Split(id, uuidPrefix)[1]
+		vf := ""
+		if strings.Contains(uuid, envShareSubString) {
+			uuid = strings.Split(uuid, envShareSubString)[0]
+		}
+		if strings.Contains(uuid, sriovSubString) {
+			s := strings.Split(uuid, sriovSubString)
+			uuid = s[0]
+			vf = s[1]
+		}
+		stat := mluStat[uuid]
+		allocatedDriver = stat.driver
+		allocatedModel = stat.model
+		allocatedType = strings.ToLower(stat.model)
+		l := []string{stat.sn, stat.model, strings.ToLower(stat.model), node, fmt.Sprintf("%d", stat.slot), stat.mcu, stat.driver, stat.uuid}
+		expected[m[PodResources][Container].desc] = append(expected[m[PodResources][Container].desc], append(l, "1", info.Container, info.Namespace, info.Pod, vf))
+	}
+	expected[m[PodResources][Allocated].desc] = append(expected[m[PodResources][Allocated].desc], []string{node, allocatedDriver, allocatedModel, allocatedType, fmt.Sprintf("%d", len(devicePodInfo))})
+
+	expected[m[Host][HostMemTotal].desc] = append(expected[m[Host][HostMemTotal].desc], []string{fmt.Sprintf("%v", hostMemTotal/1024/1024), node})
+	expected[m[Host][HostMemFree].desc] = append(expected[m[Host][HostMemFree].desc], []string{fmt.Sprintf("%v", hostMemFree/1024/1024), node})
+	expected[m[Host][HostCPUIdle].desc] = append(expected[m[Host][HostCPUIdle].desc], []string{fmt.Sprintf("%v", hostCPUIdle), node})
+	expected[m[Host][HostCPUTotal].desc] = append(expected[m[Host][HostCPUTotal].desc], []string{fmt.Sprintf("%v", hostCPUTotal), node})
 	for desc, values := range expected {
 		sortMetricValues(values)
 		expected[desc] = values
 	}
-	c := &Collectors{
-		collectors: map[string]Collector{
-			"cndev": &cndevCollector{
-				host:    nodeName,
-				cndev:   cndevInner,
-				metrics: m["cndev"],
-			},
-			"podresources": &podResourcesCollector{
-				metrics: m["podresources"],
-				host:    nodeName,
-				client:  podresources,
-			},
-			"cnpapi": &cnpapiCollector{
-				metrics: m["cnpapi"],
-				host:    nodeName,
-				cnpapi:  cnpapi,
-			},
-			"host": &hostCollector{
-				metrics: m["host"],
-				host:    nodeName,
-				client:  host,
-			},
-		},
-		metrics: m,
-		cndev:   cndevOuter,
-	}
+
 	ch := make(chan prometheus.Metric)
 	go func() {
 		c.Collect(ch)
@@ -204,11 +377,11 @@ func TestCollect(t *testing.T) {
 		}
 		got[m.Desc()] = append(got[m.Desc()], values)
 	}
+	assert.Equal(t, len(expected), len(got))
 	for desc, values := range got {
 		sortMetricValues(values)
-		got[desc] = values
+		assert.Equal(t, expected[desc], values)
 	}
-	assert.Equal(t, expected, got)
 }
 
 type metricValue []string

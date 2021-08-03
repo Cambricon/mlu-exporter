@@ -16,13 +16,11 @@
 
 #ifndef CNPAPI_PMU_API_H_
 #define CNPAPI_PMU_API_H_
+#include <stdint.h>
+#include "cnpapi_types.h"  // NOLINT
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdint.h>
-#include "cnpapi_types.h"  // NOLINT
-
 typedef enum {
   PMU_AUTO_FLUSH,
   PMU_EXPLICIT_FLUSH
@@ -31,16 +29,16 @@ typedef enum {
 /**
  * @brief: used to get supported counters of a certain type mlu card.
  *
- * @param: dev_type[in]: the card type.
+ * @param: chip_type[in]: the card chip type.
  * @param: counter_dst[out]: counter id array pointer. the supported counter id will be copyed to this dst.
  * @param: size[in/out]: the size of given counter_dst, and the supported counter size will be set to this addr.
  * @ret: *CNPAPI_SUCCESS*                   on success.
  *       *CNPAPI_ERROR_NOT_INITIALIZED*     cnpapi not initialized.
  *       *CNPAPI_ERROR_INSUFFICIENT_MEMORY* size less than needed.
  *       *CNPAPI_ERROR_INVALID_ARGUMENT*    size or counter_dst is NULL.
- *       *CNPAPI_ERROR_INVALID_DEVICE_TYPE* unknown device type.
+ *       *CNPAPI_ERROR_INVALID_CHIP_TYPE*   unknown chip type.
  */
-CNPAPI_EXPORT cnpapiResult cnpapiPmuGetCounterSupported(cnpapiDeviceType_t dev_type,
+CNPAPI_EXPORT cnpapiResult cnpapiPmuGetCounterSupported(cnpapiChipType_t chip_type,
                                                         uint64_t *counter_dst, uint64_t *size);
 
 /**

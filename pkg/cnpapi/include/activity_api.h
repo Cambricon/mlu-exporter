@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef ACTIVITY_ACTIVITY_API_H_
-#define ACTIVITY_ACTIVITY_API_H_
+#ifndef ACTIVITY_ACTIVITY_API_H_  // NOLINT
+#define ACTIVITY_ACTIVITY_API_H_  // NOLINT
 #include "callbackapi_types.h"  // NOLINT
 #include "cnpapi.h"  // NOLINT
 #ifdef __cplusplus
@@ -34,7 +34,8 @@ typedef enum {
   CNPAPI_ACTIVITY_TYPE_MEMCPY = 9,
   CNPAPI_ACTIVITY_TYPE_MEMSET = 10,
   CNPAPI_ACTIVITY_TYPE_MEMCPY_PTOP = 11,
-  CNPAPI_ACTIVITY_TYPE_CNNL_EXTRA_API = 12
+  CNPAPI_ACTIVITY_TYPE_CNNL_EXTRA_API = 12,
+  CNPAPI_ACTIVITY_TYPE_SIZE
 } cnpapiActivityType;
 typedef enum {
   CNPAPI_ACTIVITY_FLAG_NONE = 0,
@@ -293,5 +294,4 @@ CNPAPI_EXPORT cnpapiResult cnpapiActivityFlushAll();
 #ifdef __cplusplus
 }
 #endif
-#endif  // ACTIVITY_ACTIVITY_API_H_
-
+#endif  // ACTIVITY_ACTIVITY_API_H_  // NOLINT

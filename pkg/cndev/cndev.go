@@ -24,26 +24,29 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unsafe"
 )
 
-const version = 3
+const version = 5
 
 type Cndev interface {
 	Init() error
 	Release() error
 	GetDeviceCount() (uint, error)
 	GetDeviceSN(idx uint) (string, error)
+	GetDeviceUUID(idx uint) (string, error)
 	GetDeviceModel(idx uint) string
 	GetDeviceClusterCount(idx uint) (uint, error)
 	GetDeviceTemperature(idx uint) (uint, []uint, error)
 	GetDeviceHealth(idx uint) (uint, error)
-	GetDeviceMemory(idx uint) (uint, uint, error)
+	GetDeviceMemory(idx uint) (uint, uint, uint, uint, error)
 	GetDevicePower(idx uint) (uint, error)
 	GetDeviceCoreNum(idx uint) (uint, error)
 	GetDeviceUtil(idx uint) (uint, []uint, error)
 	GetDeviceFanSpeed(idx uint) (uint, error)
 	GetDevicePCIeID(idx uint) (string, error)
 	GetDeviceVersion(idx uint) (string, string, error)
+	GetDeviceVfState(idx uint) (int, error)
 }
 
 type cndev struct{}
@@ -77,7 +80,7 @@ func (c *cndev) GetDeviceCount() (uint, error) {
 	var cardInfos C.cndevCardInfo_t
 	cardInfos.version = C.int(version)
 	r := C.cndevGetDeviceCount(&cardInfos)
-	return uint(cardInfos.Number), errorString(r)
+	return uint(cardInfos.number), errorString(r)
 }
 
 func (c *cndev) GetDeviceSN(idx uint) (string, error) {
@@ -87,8 +90,19 @@ func (c *cndev) GetDeviceSN(idx uint) (string, error) {
 	if err := errorString(r); err != nil {
 		return "", err
 	}
-	uuid := fmt.Sprintf("%x", int64(cardSN.sn))
-	return uuid, nil
+	sn := fmt.Sprintf("%x", int64(cardSN.sn))
+	return sn, nil
+}
+
+func (c *cndev) GetDeviceUUID(idx uint) (string, error) {
+	var uuidInfo C.cndevUUID_t
+	uuidInfo.version = C.int(version)
+	r := C.cndevGetUUID(&uuidInfo, C.int(idx))
+	if err := errorString(r); err != nil {
+		return "", err
+	}
+	uuid := *(*[C.UUID_SIZE]C.uchar)(unsafe.Pointer(&uuidInfo.uuid))
+	return fmt.Sprintf("%s", uuid), nil
 }
 
 func (c *cndev) GetDeviceModel(idx uint) string {
@@ -115,9 +129,9 @@ func (c *cndev) GetDeviceTemperature(idx uint) (uint, []uint, error) {
 	}
 	clusterTemperature := make([]uint, cluster)
 	for i := uint(0); i < cluster; i++ {
-		clusterTemperature[i] = uint(cardTemperature.Cluster[i])
+		clusterTemperature[i] = uint(cardTemperature.cluster[i])
 	}
-	return uint(cardTemperature.Board), clusterTemperature, nil
+	return uint(cardTemperature.board), clusterTemperature, nil
 }
 
 func (c *cndev) GetDeviceHealth(idx uint) (uint, error) {
@@ -127,18 +141,18 @@ func (c *cndev) GetDeviceHealth(idx uint) (uint, error) {
 	return uint(cardHealthState.health), errorString(r)
 }
 
-func (c *cndev) GetDeviceMemory(idx uint) (uint, uint, error) {
+func (c *cndev) GetDeviceMemory(idx uint) (uint, uint, uint, uint, error) {
 	var cardMemInfo C.cndevMemoryInfo_t
 	cardMemInfo.version = C.int(version)
 	r := C.cndevGetMemoryUsage(&cardMemInfo, C.int(idx))
-	return uint(cardMemInfo.PhysicalMemoryUsed), uint(cardMemInfo.PhysicalMemoryTotal), errorString(r)
+	return uint(cardMemInfo.physicalMemoryUsed), uint(cardMemInfo.physicalMemoryTotal), uint(cardMemInfo.virtualMemoryUsed), uint(cardMemInfo.virtualMemoryTotal), errorString(r)
 }
 
 func (c *cndev) GetDevicePower(idx uint) (uint, error) {
 	var cardPower C.cndevPowerInfo_t
 	cardPower.version = C.int(version)
 	r := C.cndevGetPowerInfo(&cardPower, C.int(idx))
-	return uint(cardPower.Usage), errorString(r)
+	return uint(cardPower.usage), errorString(r)
 }
 
 func (c *cndev) GetDeviceCoreNum(idx uint) (uint, error) {
@@ -161,16 +175,24 @@ func (c *cndev) GetDeviceUtil(idx uint) (uint, []uint, error) {
 	}
 	coreUtil := make([]uint, core)
 	for i := uint(0); i < core; i++ {
-		coreUtil[i] = uint(cardUtil.CoreUtilization[i])
+		coreUtil[i] = uint(cardUtil.coreUtilization[i])
 	}
-	return uint(cardUtil.BoardUtilization), coreUtil, nil
+	return uint(cardUtil.averageCoreUtilization), coreUtil, nil
 }
 
 func (c *cndev) GetDeviceFanSpeed(idx uint) (uint, error) {
 	var cardFanSpeed C.cndevFanSpeedInfo_t
 	cardFanSpeed.version = C.int(version)
 	r := C.cndevGetFanSpeedInfo(&cardFanSpeed, C.int(idx))
-	return uint(cardFanSpeed.FanSpeed), errorString(r)
+	return uint(cardFanSpeed.fanSpeed), errorString(r)
+}
+
+// GetDeviceVfState returns cndevCardVfState_t.vfState, which is bitmap of mlu vf state. See cndev user doc for more details.
+func (c *cndev) GetDeviceVfState(idx uint) (int, error) {
+	var vfstate C.cndevCardVfState_t
+	vfstate.version = C.int(version)
+	r := C.cndevGetCardVfState(&vfstate, C.int(idx))
+	return int(vfstate.vfState), errorString(r)
 }
 
 func getPCIeID(domain int64, bus int64, device int64, function int64) string {
@@ -209,5 +231,5 @@ func (c *cndev) GetDeviceVersion(idx uint) (string, string, error) {
 	if err := errorString(r); err != nil {
 		return "", "", err
 	}
-	return getVersion(uint(versionInfo.MCUMajorVersion), uint(versionInfo.MCUMinorVersion), uint(versionInfo.MCUBuildVersion)), getVersion(uint(versionInfo.DriverMajorVersion), uint(versionInfo.DriverMinorVersion), uint(versionInfo.DriverBuildVersion)), nil
+	return getVersion(uint(versionInfo.mcuMajorVersion), uint(versionInfo.mcuMinorVersion), uint(versionInfo.mcuBuildVersion)), getVersion(uint(versionInfo.driverMajorVersion), uint(versionInfo.driverMinorVersion), uint(versionInfo.driverBuildVersion)), nil
 }

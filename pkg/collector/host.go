@@ -15,30 +15,42 @@
 package collector
 
 import (
+	"log"
+
 	"github.com/Cambricon/mlu-exporter/pkg/host"
-	"github.com/Cambricon/mlu-exporter/pkg/metrics"
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 func init() {
-	registerCollector(metrics.Host, NewHostCollector)
+	registerCollector(Host, NewHostCollector)
 }
 
 type hostCollector struct {
-	metrics collectorMetrics
-	host    string
-	client  host.Host
+	metrics    collectorMetrics
+	host       string
+	client     host.Host
+	sharedInfo map[string]mluStat
+	fnMap      map[string]interface{}
 }
 
 func NewHostCollector(m collectorMetrics, h string) Collector {
-	return &hostCollector{
+	c := &hostCollector{
 		metrics: m,
 		host:    h,
 		client:  host.NewHostClient(),
 	}
+	c.fnMap = map[string]interface{}{
+		HostCPUIdle:  c.collectCPUIdle,
+		HostCPUTotal: c.collectCPUTotal,
+		HostMemTotal: c.collectMemoryTotal,
+		HostMemFree:  c.collectMemoryFree,
+	}
+	return c
 }
 
-func (c *hostCollector) init() error {
+func (c *hostCollector) init(info map[string]mluStat) error {
+	c.sharedInfo = info
 	return nil
 }
 
@@ -46,41 +58,50 @@ func (c *hostCollector) updateMetrics(m collectorMetrics) {
 	c.metrics = m
 }
 
-func (c *hostCollector) collect(ch chan<- prometheus.Metric, mluInfo map[string]mluStat) {
-	for name, metric := range c.metrics {
-		switch name {
-		case metrics.CPUIdle:
-			c.collectCPUIdle(ch, metric)
-		case metrics.CPUTotal:
-			c.collectCPUTotal(ch, metric)
-		case metrics.MemoryTotal:
-			c.collectMemoryTotal(ch, metric)
-		case metrics.MemoryFree:
-			c.collectMemoryFree(ch, metric)
+func (c *hostCollector) collect(ch chan<- prometheus.Metric) {
+	for name, m := range c.metrics {
+		fn := c.fnMap[name]
+		f, ok := fn.(func(chan<- prometheus.Metric, metric))
+		if !ok {
+			log.Printf("type assertion for fn %s failed, skip", name)
+		} else {
+			f(ch, m)
 		}
 	}
 }
 
 func (c *hostCollector) collectCPUIdle(ch chan<- prometheus.Metric, m metric) {
 	_, idle, err := c.client.GetCPUStats()
-	check(err)
+	if err != nil {
+		log.Println(errors.Wrap(err, "GetCPUStats"))
+		return
+	}
 	ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, idle, c.host)
 }
 
 func (c *hostCollector) collectCPUTotal(ch chan<- prometheus.Metric, m metric) {
 	total, _, err := c.client.GetCPUStats()
-	check(err)
+	if err != nil {
+		log.Println(errors.Wrap(err, "GetCPUStats"))
+		return
+	}
 	ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, total, c.host)
 }
 
 func (c *hostCollector) collectMemoryTotal(ch chan<- prometheus.Metric, m metric) {
 	total, _, err := c.client.GetMemoryStats()
-	check(err)
+	if err != nil {
+		log.Println(errors.Wrap(err, "GetMemoryStats"))
+		return
+	}
 	ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, total/1024/1024, c.host)
 }
 
 func (c *hostCollector) collectMemoryFree(ch chan<- prometheus.Metric, m metric) {
 	_, free, err := c.client.GetMemoryStats()
-	check(err)
+	if err != nil {
+		log.Println(errors.Wrap(err, "GetMemoryStats"))
+		return
+	}
 	ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, free/1024/1024, c.host)
 }

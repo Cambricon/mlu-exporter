@@ -13,6 +13,7 @@
 # limitations under the License.
 
 ARG BUILDPLATFORM=linux/amd64
+ARG BASE_IMAGE=ubuntu:18.04
 FROM --platform=$BUILDPLATFORM golang:1.13 as build
 ARG APT_PROXY
 ARG GOPROXY
@@ -24,7 +25,7 @@ WORKDIR /work/
 COPY . .
 RUN make build
 
-FROM ubuntu:18.04
+FROM $BASE_IMAGE
 ARG TARGETPLATFORM
 COPY --from=build /work/mlu-exporter /usr/bin/
 COPY libs/$TARGETPLATFORM/*.so /usr/lib/

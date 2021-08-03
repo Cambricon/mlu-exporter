@@ -16,7 +16,6 @@
 
 #ifndef CALLBACKAPI_H_
 #define CALLBACKAPI_H_
-
 #include "cnpapi_types.h"  // NOLINT
 #include "callbackapi_types.h"  // NOLINT
 #ifdef __cplusplus
