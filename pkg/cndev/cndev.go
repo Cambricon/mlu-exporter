@@ -22,8 +22,6 @@ import "C"
 import (
 	"errors"
 	"fmt"
-	"strconv"
-	"strings"
 	"unsafe"
 )
 
@@ -44,7 +42,6 @@ type Cndev interface {
 	GetDeviceCoreNum(idx uint) (uint, error)
 	GetDeviceUtil(idx uint) (uint, []uint, error)
 	GetDeviceFanSpeed(idx uint) (uint, error)
-	GetDevicePCIeID(idx uint) (string, error)
 	GetDeviceVersion(idx uint) (string, string, error)
 	GetDeviceVfState(idx uint) (int, error)
 }
@@ -193,31 +190,6 @@ func (c *cndev) GetDeviceVfState(idx uint) (int, error) {
 	vfstate.version = C.int(version)
 	r := C.cndevGetCardVfState(&vfstate, C.int(idx))
 	return int(vfstate.vfState), errorString(r)
-}
-
-func getPCIeID(domain int64, bus int64, device int64, function int64) string {
-	domainStr := strconv.FormatInt(domain, 16)
-	domainStr = strings.Repeat("0", 4-len([]byte(domainStr))) + domainStr
-	busStr := strconv.FormatInt(bus, 16)
-	if bus < 16 {
-		busStr = "0" + busStr
-	}
-	deviceStr := strconv.FormatInt(device, 16)
-	if device < 16 {
-		deviceStr = "0" + deviceStr
-	}
-	functionStr := strconv.FormatInt(function, 16)
-	return domainStr + ":" + busStr + ":" + deviceStr + "." + functionStr
-}
-
-func (c *cndev) GetDevicePCIeID(idx uint) (string, error) {
-	var pcieInfo C.cndevPCIeInfo_t
-	pcieInfo.version = C.int(version)
-	r := C.cndevGetPCIeInfo(&pcieInfo, C.int(idx))
-	if err := errorString(r); err != nil {
-		return "", err
-	}
-	return getPCIeID(int64(pcieInfo.domain), int64(pcieInfo.bus), int64(pcieInfo.device), int64(pcieInfo.function)), nil
 }
 
 func getVersion(major uint, minor uint, build uint) string {

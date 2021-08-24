@@ -76,8 +76,8 @@ cnpapiResult cnpapiPmuGetCounterValue(int dev_id, uint64_t counter_id, uint64_t 
     return cnpapiPmuGetCounterValueFunc(dev_id, counter_id, value);
 }
 
-cnpapiResult (*cnpapiPmuSetFlushModeFunc)(pmuFlushMode_t mode);
-cnpapiResult cnpapiPmuSetFlushMode(pmuFlushMode_t mode)
+cnpapiResult (*cnpapiPmuSetFlushModeFunc)(cnpapiPmuFlushMode mode);
+cnpapiResult cnpapiPmuSetFlushMode(cnpapiPmuFlushMode mode)
 {
     if (cnpapiPmuSetFlushModeFunc == NULL)
     {
@@ -96,8 +96,8 @@ cnpapiResult cnpapiPmuFlushData(int dev_id)
     return cnpapiPmuFlushDataFunc(dev_id);
 }
 
-cnpapiResult (*cnpapiGetDeviceTypeFunc)(int dev_id, cnpapiDeviceType_t *type);
-cnpapiResult cnpapiGetDeviceType(int dev_id, cnpapiDeviceType_t *type)
+cnpapiResult (*cnpapiGetDeviceTypeFunc)(int dev_id, cnpapiDeviceType *type);
+cnpapiResult cnpapiGetDeviceType(int dev_id, cnpapiDeviceType *type)
 {
     if (cnpapiGetDeviceTypeFunc == NULL)
     {

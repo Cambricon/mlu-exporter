@@ -1,23 +1,9 @@
-/*
- * Copyright 2021 Cambricon, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+#ifndef CNPAPI_ACTIVITY_API_H_
+#define CNPAPI_ACTIVITY_API_H_
+#include <stdint.h>
 
-#ifndef ACTIVITY_ACTIVITY_API_H_  // NOLINT
-#define ACTIVITY_ACTIVITY_API_H_  // NOLINT
-#include "callbackapi_types.h"  // NOLINT
-#include "cnpapi.h"  // NOLINT
+#include "callbackapi_types.h"
+#include "cnpapi_types.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -35,8 +21,13 @@ typedef enum {
   CNPAPI_ACTIVITY_TYPE_MEMSET = 10,
   CNPAPI_ACTIVITY_TYPE_MEMCPY_PTOP = 11,
   CNPAPI_ACTIVITY_TYPE_CNNL_EXTRA_API = 12,
+  CNPAPI_ACTIVITY_TYPE_NAME = 13,
+  CNPAPI_ACTIVITY_TYPE_ATOMIC_OPERATION = 14,
+  CNPAPI_ACTIVITY_TYPE_NOTIFIER = 15,
+  CNPAPI_ACTIVITY_TYPE_CNCL_API = 16,
   CNPAPI_ACTIVITY_TYPE_SIZE
 } cnpapiActivityType;
+
 typedef enum {
   CNPAPI_ACTIVITY_FLAG_NONE = 0,
   CNPAPI_ACTIVITY_FLAG_MEMCPY_ASYNC = 1 << 0,
@@ -59,7 +50,7 @@ typedef struct cnpapiActivityAPI {
   /* tid */
   uint32_t thread_id;
   /* return value */
-  const void * return_value;
+  const void *return_value;
 } cnpapiActivityAPI;
 
 typedef enum {
@@ -133,8 +124,8 @@ typedef struct cnpapiActivityKernel {
   uint64_t correlation_id;
   /* tensor processor start timestamp */
   union {
-  uint64_t start_ts;  // deprecated
-  uint64_t start;
+    uint64_t start_ts;  // deprecated
+    uint64_t start;
   };
   /* tensor processor end timestamp */
   union {
@@ -153,13 +144,20 @@ typedef struct cnpapiActivityKernel {
   /* device id */
   uint64_t device_id;
   /* kernel name, a value of 0 indicates that this field could not be collected. */
-  const char * name;
+  const char *name;
   uint64_t queue_id;
   /* cnrt correlation id */
   uint64_t runtime_correlation_id;
   /* the value of this field is equivalent to MLUKernelClass. */
   uint64_t kernel_type;
+  /* The dimension of x. */
+  uint32_t dimx;
+  /* The dimension of y. */
+  uint32_t dimy;
+  /* The dimension of z. */
+  uint32_t dimz;
 } cnpapiActivityKernel;
+
 typedef enum {
   CNPAPI_ACTIVITY_MEMCPY_TYPE_UNKNOWN = 0,
   CNPAPI_ACTIVITY_MEMCPY_TYPE_HTOD = 1,
@@ -168,6 +166,7 @@ typedef enum {
   CNPAPI_ACTIVITY_MEMCPY_TYPE_HTOH = 4,
   CNPAPI_ACTIVITY_MEMCPY_TYPE_PTOP = 5
 } cnpapiActivityMemcpyType;
+
 typedef struct cnpapiActivityMemcpy {
   /* activity type, must be CNPAPI_ACTIVITY_TYPE_MEMCPY */
   cnpapiActivityType type;
@@ -278,6 +277,95 @@ typedef struct cnpapiActivityMemset {
   /* the value being assigned to memory by the memory set.*/
   uint64_t value;
 } cnpapiActivityMemset;
+
+typedef struct cnpapiActivityName {
+  cnpapiActivityType type;
+  /* the object id */
+  cnpapiActivityObjectTypeId object_id;
+  /* the cnpx name */
+  const char* name;
+  /* the kind of activity object to be named */
+  cnpapiActivityObjectType object_type;
+} cnpapiActivityName;
+
+typedef enum {
+  CNPAPI_ACTIVITY_ATOMIC_OP_REQUEST = 0,
+  CNPAPI_ACTIVITY_ATOMIC_OP_COMPARE = 1
+} cnpapiActivityAtomicOpType;
+
+typedef enum {
+  /* Compares input data1 and opPtr until opData1 == *opPtr */
+  CNPAPI_ACTIVITY_FLAG_ATOMIC_COMPARE_EQUAL = 0,
+  /* Compares input data1 and opPtr until opData1 <= *opPtr */
+  CNPAPI_ACTIVITY_FLAG_ATOMIC_COMPARE_LESS_EQUAL = 1,
+  /* Compares input data1 and opPtr until opData1 < *opPtr */
+  CNPAPI_ACTIVITY_FLAG_ATOMIC_COMPARE_LESS = 2
+} cnpapiActivityAtomicCompareFlag;
+
+typedef enum {
+  /* Default request operation, which is the same as CN_ATOMIC_REQUEST_ADD */
+  CNPAPI_ACTIVITY_FLAG_ATOMIC_REQUEST_DEFAULT = 0,
+  /* Atomic add, this is default operation */
+  CNPAPI_ACTIVITY_FLAG_ATOMIC_ADD = 0,
+  /* Sets operation address to input value */
+  CNPAPI_ACTIVITY_FLAG_ATOMIC_SET = 2,
+  /* Resets operation address to zero */
+  CNPAPI_ACTIVITY_FLAG_ATOMIC_CLEAR = 3
+} cnpapiActivityAtomicRequestFlag;
+
+typedef struct cnpapiActivityAtomicOperation {
+  /* activity type, must be CNPAPI_ACTIVITY_TYPE_ATOMIC_OPERATION */
+  cnpapiActivityType type;
+  /* Operation Type : REQUEST or COMPARE */
+  cnpapiActivityAtomicOpType operation_type;
+  /* CNAtomicReqFlag or CNAtomicCompFlag */
+  union {
+    cnpapiActivityAtomicRequestFlag req_flag;
+    cnpapiActivityAtomicCompareFlag com_flag;
+  };
+  /* cndrv correlation id */
+  uint64_t correlation_id;
+  /* tensor processor start timestamp */
+  uint64_t start;
+  uint64_t end;
+  /* timestamp when mlu driver received the task,
+     a value of 0 indicates that this field could not be collected.*/
+  uint64_t received;
+  /* device id */
+  uint64_t device_id;
+  /* queue id */
+  uint64_t queue_id;
+  /* operation target value */
+  uint64_t value;
+} cnpapiActivityAtomicOperation;
+
+typedef enum {
+  CNPAPI_ACTIVITY_NOTIFIER_WAIT = 0,
+  CNPAPI_ACTIVITY_NOTIFIER_PLACE = 1
+} cnpapiActivityNotifierTaskType;
+
+typedef struct cnpapiActivityNotifier {
+  /* activity type, must be CNPAPI_ACTIVITY_TYPE_NOTIFIER */
+  cnpapiActivityType type;
+  /* notifier task type */
+  cnpapiActivityNotifierTaskType task_type;
+  /* cndrv correlation id */
+  uint64_t correlation_id;
+  /* notifier op start timestamp */
+  uint64_t start;
+  /* notifier op end timestamp */
+  uint64_t end;
+  /* timestamp when mlu driver received the task,
+     a value of 0 indicates that this field could not be collected.*/
+  uint64_t received;
+  /* device id */
+  uint64_t device_id;
+  /* queue id */
+  uint64_t queue_id;
+  /* notifier id */
+  uint64_t notifier_id;
+} cnpapiActivityNotifier;
+
 typedef struct cnpapiActivity {
   cnpapiActivityType type;
 } cnpapiActivity;
@@ -285,13 +373,12 @@ typedef struct cnpapiActivity {
 typedef void (*cnpapi_request)(uint64_t **buffer, size_t *size, size_t *maxNumRecords);
 typedef void (*cnpapi_complete)(uint64_t *buffer, size_t size, size_t validSize);
 CNPAPI_EXPORT cnpapiResult cnpapiActivityEnable(cnpapiActivityType type);
-CNPAPI_EXPORT cnpapiResult cnpapiActivityRegisterCallbacks(cnpapi_request bufferRequested,
-                                                           cnpapi_complete bufferCompleted);
-CNPAPI_EXPORT cnpapiResult cnpapiActivityGetNextRecord(void *buffer, size_t validSize,
-                                                       cnpapiActivity **record);
+CNPAPI_EXPORT cnpapiResult cnpapiActivityRegisterCallbacks(cnpapi_request bufferRequested, cnpapi_complete bufferCompleted);
+CNPAPI_EXPORT cnpapiResult cnpapiActivityGetNextRecord(void *buffer, size_t validSize, cnpapiActivity **record);
 CNPAPI_EXPORT cnpapiResult cnpapiActivityDisable(cnpapiActivityType type);
 CNPAPI_EXPORT cnpapiResult cnpapiActivityFlushAll();
+CNPAPI_EXPORT cnpapiResult cnpapiActivityFlushPeriod(uint64_t time);
 #ifdef __cplusplus
 }
 #endif
-#endif  // ACTIVITY_ACTIVITY_API_H_  // NOLINT
+#endif  // CNPAPI_ACTIVITY_API_H_

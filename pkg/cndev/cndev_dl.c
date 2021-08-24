@@ -146,16 +146,6 @@ cndevRet_t cndevGetFanSpeedInfo(cndevFanSpeedInfo_t *fanInfo, int devId)
     return cndevGetFanSpeedInfoFunc(fanInfo, devId);
 }
 
-cndevRet_t (*cndevGetPCIeInfoFunc)(cndevPCIeInfo_t *deviceInfo, int devId);
-cndevRet_t cndevGetPCIeInfo(cndevPCIeInfo_t *deviceInfo, int devId)
-{
-    if (cndevGetPCIeInfoFunc == NULL)
-    {
-        return CNDEV_ERROR_UNKNOWN;
-    }
-    return cndevGetPCIeInfoFunc(deviceInfo, devId);
-}
-
 cndevRet_t (*cndevGetVersionInfoFunc)(cndevVersionInfo_t *versInfo, int devId);
 cndevRet_t cndevGetVersionInfo(cndevVersionInfo_t *versInfo, int devId)
 {
@@ -269,11 +259,6 @@ cndevRet_t CNDEV_DL(cndevInit)(void)
     }
     cndevGetFanSpeedInfoFunc = dlsym(cndevHandle, "cndevGetFanSpeedInfo");
     if (cndevGetFanSpeedInfoFunc == NULL)
-    {
-        return CNDEV_ERROR_UNKNOWN;
-    }
-    cndevGetPCIeInfoFunc = dlsym(cndevHandle, "cndevGetPCIeInfo");
-    if (cndevGetPCIeInfoFunc == NULL)
     {
         return CNDEV_ERROR_UNKNOWN;
     }

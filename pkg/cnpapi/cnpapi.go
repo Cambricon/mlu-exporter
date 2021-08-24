@@ -87,7 +87,7 @@ func (c *cnpapi) Init() error {
 	if err := c.getCounters(); err != nil {
 		return fmt.Errorf("getCounters err: %w", err)
 	}
-	r = C.cnpapiPmuSetFlushMode(C.PMU_EXPLICIT_FLUSH)
+	r = C.cnpapiPmuSetFlushMode(C.CNPAPI_PMU_EXPLICIT_FLUSH)
 	if err := errorString(r); err != nil {
 		return fmt.Errorf("cnpapiPmuSetFlushMode err: %w", err)
 	}
@@ -124,12 +124,21 @@ func (c *cnpapi) getCounters() error {
 	return nil
 }
 
-func supportsMLULink(device C.cnpapiDeviceType_t) bool {
-	return device == C.CNPAPI_MLU290
+func supportsMLULink(device C.cnpapiDeviceType) bool {
+	if device == C.CNPAPI_DEVICE_TYPE_MLU290 {
+		return true
+	}
+	if device == C.CNPAPI_DEVICE_TYPE_MLU370 {
+		return true
+	}
+	if device == C.CNPAPI_DEVICE_TYPE_MLU365 {
+		return true
+	}
+	return false
 }
 
-func (c *cnpapi) getDeviceType(idx uint) (C.cnpapiDeviceType_t, error) {
-	var device C.cnpapiDeviceType_t
+func (c *cnpapi) getDeviceType(idx uint) (C.cnpapiDeviceType, error) {
+	var device C.cnpapiDeviceType
 	r := C.cnpapiGetDeviceType(C.int(idx), &device)
 	return device, errorString(r)
 }

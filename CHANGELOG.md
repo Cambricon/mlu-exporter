@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.6.1
+
+- Support MLU365-D2 devices
+
 ## v1.6.0
 
 **BREAKING CHANGE**: MLU driver must be equal or above 4.15.2

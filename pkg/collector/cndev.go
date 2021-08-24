@@ -35,6 +35,7 @@ var capacity = map[string]float64{
 	"MLU370-S4":   192,
 	"MLU370-M8":   332.8,
 	"MLU370":      256,
+	"MLU365":      64,
 }
 
 const maxFanSpeed = 5400

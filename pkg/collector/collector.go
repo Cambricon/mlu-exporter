@@ -52,7 +52,6 @@ type mluStat struct {
 	model  string
 	uuid   string
 	sn     string
-	pcie   string
 	mcu    string
 	driver string
 }
@@ -123,10 +122,6 @@ func collectSharedInfo() map[string]mluStat {
 		if err != nil {
 			log.Panic(errors.Wrap(err, "GetDeviceSN"))
 		}
-		pcie, err := cli.GetDevicePCIeID(i)
-		if err != nil {
-			log.Panic(errors.Wrap(err, "GetDevicePCIeID"))
-		}
 		mcu, driver, err := cli.GetDeviceVersion(i)
 		if err != nil {
 			log.Panic(errors.Wrap(err, "GetDeviceVersion"))
@@ -136,7 +131,6 @@ func collectSharedInfo() map[string]mluStat {
 			uuid:   uuid,
 			model:  model,
 			slot:   i,
-			pcie:   pcie,
 			mcu:    mcu,
 			driver: driver,
 		}
