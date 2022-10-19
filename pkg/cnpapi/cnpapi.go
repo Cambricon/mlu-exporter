@@ -131,9 +131,6 @@ func supportsMLULink(device C.cnpapiDeviceType) bool {
 	if device == C.CNPAPI_DEVICE_TYPE_MLU370 {
 		return true
 	}
-	if device == C.CNPAPI_DEVICE_TYPE_MLU365 {
-		return true
-	}
 	return false
 }
 

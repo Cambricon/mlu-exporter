@@ -5,34 +5,35 @@
 package mock
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// Cnpapi is a mock of Cnpapi interface
+// Cnpapi is a mock of Cnpapi interface.
 type Cnpapi struct {
 	ctrl     *gomock.Controller
 	recorder *CnpapiMockRecorder
 }
 
-// CnpapiMockRecorder is the mock recorder for Cnpapi
+// CnpapiMockRecorder is the mock recorder for Cnpapi.
 type CnpapiMockRecorder struct {
 	mock *Cnpapi
 }
 
-// NewCnpapi creates a new mock instance
+// NewCnpapi creates a new mock instance.
 func NewCnpapi(ctrl *gomock.Controller) *Cnpapi {
 	mock := &Cnpapi{ctrl: ctrl}
 	mock.recorder = &CnpapiMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *Cnpapi) EXPECT() *CnpapiMockRecorder {
 	return m.recorder
 }
 
-// GetDramReadBytes mocks base method
+// GetDramReadBytes mocks base method.
 func (m *Cnpapi) GetDramReadBytes(arg0 uint) (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDramReadBytes", arg0)
@@ -41,13 +42,13 @@ func (m *Cnpapi) GetDramReadBytes(arg0 uint) (uint64, error) {
 	return ret0, ret1
 }
 
-// GetDramReadBytes indicates an expected call of GetDramReadBytes
+// GetDramReadBytes indicates an expected call of GetDramReadBytes.
 func (mr *CnpapiMockRecorder) GetDramReadBytes(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDramReadBytes", reflect.TypeOf((*Cnpapi)(nil).GetDramReadBytes), arg0)
 }
 
-// GetDramWriteBytes mocks base method
+// GetDramWriteBytes mocks base method.
 func (m *Cnpapi) GetDramWriteBytes(arg0 uint) (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDramWriteBytes", arg0)
@@ -56,13 +57,13 @@ func (m *Cnpapi) GetDramWriteBytes(arg0 uint) (uint64, error) {
 	return ret0, ret1
 }
 
-// GetDramWriteBytes indicates an expected call of GetDramWriteBytes
+// GetDramWriteBytes indicates an expected call of GetDramWriteBytes.
 func (mr *CnpapiMockRecorder) GetDramWriteBytes(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDramWriteBytes", reflect.TypeOf((*Cnpapi)(nil).GetDramWriteBytes), arg0)
 }
 
-// GetMLULinkReadBytes mocks base method
+// GetMLULinkReadBytes mocks base method.
 func (m *Cnpapi) GetMLULinkReadBytes(arg0 uint) (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMLULinkReadBytes", arg0)
@@ -71,13 +72,13 @@ func (m *Cnpapi) GetMLULinkReadBytes(arg0 uint) (uint64, error) {
 	return ret0, ret1
 }
 
-// GetMLULinkReadBytes indicates an expected call of GetMLULinkReadBytes
+// GetMLULinkReadBytes indicates an expected call of GetMLULinkReadBytes.
 func (mr *CnpapiMockRecorder) GetMLULinkReadBytes(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMLULinkReadBytes", reflect.TypeOf((*Cnpapi)(nil).GetMLULinkReadBytes), arg0)
 }
 
-// GetMLULinkWriteBytes mocks base method
+// GetMLULinkWriteBytes mocks base method.
 func (m *Cnpapi) GetMLULinkWriteBytes(arg0 uint) (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMLULinkWriteBytes", arg0)
@@ -86,13 +87,13 @@ func (m *Cnpapi) GetMLULinkWriteBytes(arg0 uint) (uint64, error) {
 	return ret0, ret1
 }
 
-// GetMLULinkWriteBytes indicates an expected call of GetMLULinkWriteBytes
+// GetMLULinkWriteBytes indicates an expected call of GetMLULinkWriteBytes.
 func (mr *CnpapiMockRecorder) GetMLULinkWriteBytes(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMLULinkWriteBytes", reflect.TypeOf((*Cnpapi)(nil).GetMLULinkWriteBytes), arg0)
 }
 
-// GetPCIeReadBytes mocks base method
+// GetPCIeReadBytes mocks base method.
 func (m *Cnpapi) GetPCIeReadBytes(arg0 uint) (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPCIeReadBytes", arg0)
@@ -101,13 +102,13 @@ func (m *Cnpapi) GetPCIeReadBytes(arg0 uint) (uint64, error) {
 	return ret0, ret1
 }
 
-// GetPCIeReadBytes indicates an expected call of GetPCIeReadBytes
+// GetPCIeReadBytes indicates an expected call of GetPCIeReadBytes.
 func (mr *CnpapiMockRecorder) GetPCIeReadBytes(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPCIeReadBytes", reflect.TypeOf((*Cnpapi)(nil).GetPCIeReadBytes), arg0)
 }
 
-// GetPCIeWriteBytes mocks base method
+// GetPCIeWriteBytes mocks base method.
 func (m *Cnpapi) GetPCIeWriteBytes(arg0 uint) (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPCIeWriteBytes", arg0)
@@ -116,13 +117,13 @@ func (m *Cnpapi) GetPCIeWriteBytes(arg0 uint) (uint64, error) {
 	return ret0, ret1
 }
 
-// GetPCIeWriteBytes indicates an expected call of GetPCIeWriteBytes
+// GetPCIeWriteBytes indicates an expected call of GetPCIeWriteBytes.
 func (mr *CnpapiMockRecorder) GetPCIeWriteBytes(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPCIeWriteBytes", reflect.TypeOf((*Cnpapi)(nil).GetPCIeWriteBytes), arg0)
 }
 
-// Init mocks base method
+// Init mocks base method.
 func (m *Cnpapi) Init() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Init")
@@ -130,13 +131,13 @@ func (m *Cnpapi) Init() error {
 	return ret0
 }
 
-// Init indicates an expected call of Init
+// Init indicates an expected call of Init.
 func (mr *CnpapiMockRecorder) Init() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*Cnpapi)(nil).Init))
 }
 
-// PmuFlushData mocks base method
+// PmuFlushData mocks base method.
 func (m *Cnpapi) PmuFlushData(arg0 uint) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PmuFlushData", arg0)
@@ -144,7 +145,7 @@ func (m *Cnpapi) PmuFlushData(arg0 uint) error {
 	return ret0
 }
 
-// PmuFlushData indicates an expected call of PmuFlushData
+// PmuFlushData indicates an expected call of PmuFlushData.
 func (mr *CnpapiMockRecorder) PmuFlushData(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PmuFlushData", reflect.TypeOf((*Cnpapi)(nil).PmuFlushData), arg0)

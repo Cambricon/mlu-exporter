@@ -1,6 +1,23 @@
+/*
+ * Copyright 2022 Cambricon, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef CNPAPI_PMU_API_H_
 #define CNPAPI_PMU_API_H_
 #include <stdint.h>
+#include <stdbool.h>
 #include "cnpapi_types.h"  // NOLINT
 #ifdef __cplusplus
 extern "C" {
@@ -100,6 +117,24 @@ CNPAPI_EXPORT cnpapiResult cnpapiPmuGetCounterValue(int dev_id, uint64_t counter
  *       *CNPAPI_ERROR_INVALID_ARGUMENT*            invalid mode.
  */
 CNPAPI_EXPORT cnpapiResult cnpapiPmuSetFlushMode(cnpapiPmuFlushMode mode);
+
+/**
+ * @brief: used to pmu init by device id.
+ *
+ * @param: dev_id[in]: device id.
+ * @ret: *CNPAPI_SUCCESS*                           on success.
+ *       *CNPAPI_ERROR_NOT_INITIALIZED*             cnpapi not initialized.
+ *       *CNPAPI_ERROR_INVALID_DEVICE_ID*           invalid device.
+ */
+CNPAPI_EXPORT cnpapiResult cnpapiPmuInit(int dev_id);
+
+/**
+ * @brief: used to pmu release by device id.
+ *
+ * @param: dev_id[in]: device id.
+ * @ret: *CNPAPI_SUCCESS*                           on success.
+ */
+CNPAPI_EXPORT cnpapiResult cnpapiPmuRelease(int dev_id);
 
 #ifdef __cplusplus
 }

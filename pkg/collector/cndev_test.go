@@ -23,7 +23,7 @@ import (
 
 func TestCalcVFUtil(t *testing.T) {
 	tests := []struct {
-		utils []uint
+		utils []int
 		vfNum int
 		vfID  int
 		util  float64
@@ -32,19 +32,19 @@ func TestCalcVFUtil(t *testing.T) {
 			vfNum: 0,
 		},
 		{
-			utils: []uint{13, 13, 13, 13, 14, 14, 14, 14, 15, 15, 15, 15, 16, 16, 16, 16},
+			utils: []int{13, 13, 13, 13, 14, 14, 14, 14, 15, 15, 15, 15, 16, 16, 16, 16},
 			vfNum: 1,
 			vfID:  1,
 			util:  float64(14.5),
 		},
 		{
-			utils: []uint{13, 13, 13, 13, 14, 14, 14, 14, 15, 15, 15, 15, 16, 16, 16, 16},
+			utils: []int{13, 13, 13, 13, 14, 14, 14, 14, 15, 15, 15, 15, 16, 16, 16, 16},
 			vfNum: 2,
 			vfID:  2,
 			util:  float64(15.5),
 		},
 		{
-			utils: []uint{13, 13, 13, 13, 14, 14, 14, 14, 15, 15, 15, 15, 16, 16, 16, 16},
+			utils: []int{13, 13, 13, 13, 14, 14, 14, 14, 15, 15, 15, 15, 16, 16, 16, 16},
 			vfNum: 4,
 			vfID:  3,
 			util:  float64(15),

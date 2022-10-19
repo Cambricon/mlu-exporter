@@ -30,10 +30,11 @@ spec:
     spec:
       containers:
         - name: cambricon-mlu-monitor
-          image: cambricon-mlu-exporter:v1.6.1
+          image: cambricon-mlu-exporter:v1.6.7
           imagePullPolicy: IfNotPresent
           command:
             - /usr/bin/mlu-exporter
+          args:
             - --metrics-config=/etc/mlu-exporter/metrics.yaml
             - --metrics-path=/metrics
             - --port=30108
@@ -54,6 +55,8 @@ spec:
               name: pod-resources
             - mountPath: /etc/mlu-exporter
               name: mlu-exporter
+      hostPID: true
+      hostIPC: true
       volumes:
         - name: pod-resources
           hostPath:

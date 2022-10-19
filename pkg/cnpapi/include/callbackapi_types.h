@@ -1,12 +1,13 @@
+/**
+ * copyright 2018 cambricon Inc.
+ **/
 #ifndef CNPAPI_HOOKLIB_CALLBACKAPI_TYPES_H_
 #define CNPAPI_HOOKLIB_CALLBACKAPI_TYPES_H_
-#include <stdbool.h>
-#include <stdint.h>
-#include <stddef.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+typedef enum { CNPAPI_API_ENTER = 0, CNPAPI_API_EXIT = 1 } cnpapi_CallbackSite;
+
 
 #ifndef __CNPAPI_TYPES_H
 #define __CNPAPI_TYPES_H
@@ -35,11 +36,6 @@ extern "C" {
 #endif /*WIN32||WINDOWS*/
 #endif /*__CNPAPI_TYPES_H*/
 
-typedef enum {
-  CNPAPI_API_ENTER = 0,
-  CNPAPI_API_EXIT = 1
-} cnpapi_CallbackSite;
-
 typedef struct {
   /**
    * The point where the callback was issued.
@@ -55,7 +51,7 @@ typedef struct {
    */
   const void * functionParams;
   /**
-   * Pointer to the return value of the API function.
+   * The return value of the API function.
    * This field is only valid within CNPAPI_API_EXIT.
    */
   const void* functionReturnValue;
@@ -77,15 +73,15 @@ typedef struct {
    */
   uint64_t reserved2;
   /**
-   * Reserved for future use.
+   * Pointer to data shared between the entry and exit callbacks.
    */
-  uint64_t reserved3;
+  uint64_t * correlationData;
 } cnpapi_CallbackData;
 
 typedef enum {
   CNPAPI_CB_DOMAIN_CNRT_API = 0,
   CNPAPI_CB_DOMAIN_CNML_API = 1,
-  CNPAPI_CB_DOMAIN_RESERVER0 = 2,
+  CNPAPI_CB_DOMAIN_RESERVED0 = 2,
   CNPAPI_CB_DOMAIN_CNNL_API = 3,
   CNPAPI_CB_DOMAIN_CNPX_API = 4,
   CNPAPI_CB_DOMAIN_CNNL_EXTRA_API = 5,
@@ -96,11 +92,11 @@ typedef enum {
 } cnpapi_CallbackDomain;
 typedef i32_t cnpapi_CallbackId;
 
-typedef void (*cnpapi_CallbackFunc)(void * userdata,
-                                   cnpapi_CallbackDomain domain,
-                                   cnpapi_CallbackId cbid,
-                                   const void* cbdata);
-typedef void* cnpapi_SubscriberHandle;
+typedef void (*cnpapi_CallbackFunc)(void *userdata,
+                                    cnpapi_CallbackDomain domain,
+                                    cnpapi_CallbackId cbid,
+                                    const void *cbdata);
+typedef void *cnpapi_SubscriberHandle;
 #ifdef __cplusplus
 }
 #endif

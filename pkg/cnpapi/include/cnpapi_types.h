@@ -1,3 +1,19 @@
+/*
+ * Copyright 2022 Cambricon, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef CNPAPI_TYPES_H_
 #define CNPAPI_TYPES_H_
 #include <stdint.h>
@@ -37,8 +53,12 @@ typedef enum {
   CNPAPI_ERROR_INVALID_CHIP_TYPE = 20,
   CNPAPI_ERROR_MULTIPLE_SUBSCRIBERS_NOT_SUPPORTED = 21,
   CNPAPI_ERROR_MULTIPLE_CHIPS_TYPE_NOT_SUPPORTED = 22,
+  CNPAPI_ERROR_NO_DEVICE = 23,
+  CNPAPI_ERROR_DEPENDENT_LIB_NOT_FOUND = 24,
+  CNPAPI_ERROR_NOT_SUPPORTED = 25,
+  CNPAPI_ERROR_STACK_EMPTY = 26,
   // deprecated
-  CNPAPI_ERROR_INVALID_DEVICE = CNPAPI_ERROR_INVALID_DEVICE_ID
+  CNPAPI_ERROR_INVALID_DEVICE = CNPAPI_ERROR_INVALID_DEVICE_ID,
 } cnpapiResult;
 
 typedef enum {
@@ -48,7 +68,6 @@ typedef enum {
   CNPAPI_DEVICE_TYPE_MLU290,
   CNPAPI_DEVICE_TYPE_MLU370,
   CNPAPI_DEVICE_TYPE_CE3226,
-  CNPAPI_DEVICE_TYPE_MLU365,
   CNPAPI_DEVICE_TYPE_SIZE,
   // deprecated
   CNPAPI_MLU220 = CNPAPI_DEVICE_TYPE_MLU220,
@@ -64,8 +83,8 @@ typedef enum {
   CNPAPI_CHIP_TYPE_C20,
   CNPAPI_CHIP_TYPE_C30S,
   CNPAPI_CHIP_TYPE_C30D,
-  CNPAPI_CHIP_TYPE_CE3226V100,
   CNPAPI_CHIP_TYPE_CE3226V101,
+  CNPAPI_CHIP_TYPE_CE3226V100,
   CNPAPI_CHIP_TYPE_SIZE
 } cnpapiChipType;
 

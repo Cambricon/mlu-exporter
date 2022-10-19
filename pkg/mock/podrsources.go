@@ -5,35 +5,36 @@
 package mock
 
 import (
+	reflect "reflect"
+
 	podresources "github.com/Cambricon/mlu-exporter/pkg/podresources"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
-// PodResources is a mock of PodResources interface
+// PodResources is a mock of PodResources interface.
 type PodResources struct {
 	ctrl     *gomock.Controller
 	recorder *PodResourcesMockRecorder
 }
 
-// PodResourcesMockRecorder is the mock recorder for PodResources
+// PodResourcesMockRecorder is the mock recorder for PodResources.
 type PodResourcesMockRecorder struct {
 	mock *PodResources
 }
 
-// NewPodResources creates a new mock instance
+// NewPodResources creates a new mock instance.
 func NewPodResources(ctrl *gomock.Controller) *PodResources {
 	mock := &PodResources{ctrl: ctrl}
 	mock.recorder = &PodResourcesMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *PodResources) EXPECT() *PodResourcesMockRecorder {
 	return m.recorder
 }
 
-// GetDeviceToPodInfo mocks base method
+// GetDeviceToPodInfo mocks base method.
 func (m *PodResources) GetDeviceToPodInfo() (map[string]podresources.PodInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDeviceToPodInfo")
@@ -42,7 +43,7 @@ func (m *PodResources) GetDeviceToPodInfo() (map[string]podresources.PodInfo, er
 	return ret0, ret1
 }
 
-// GetDeviceToPodInfo indicates an expected call of GetDeviceToPodInfo
+// GetDeviceToPodInfo indicates an expected call of GetDeviceToPodInfo.
 func (mr *PodResourcesMockRecorder) GetDeviceToPodInfo() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceToPodInfo", reflect.TypeOf((*PodResources)(nil).GetDeviceToPodInfo))

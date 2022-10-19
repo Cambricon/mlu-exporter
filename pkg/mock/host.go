@@ -5,34 +5,35 @@
 package mock
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// Host is a mock of Host interface
+// Host is a mock of Host interface.
 type Host struct {
 	ctrl     *gomock.Controller
 	recorder *HostMockRecorder
 }
 
-// HostMockRecorder is the mock recorder for Host
+// HostMockRecorder is the mock recorder for Host.
 type HostMockRecorder struct {
 	mock *Host
 }
 
-// NewHost creates a new mock instance
+// NewHost creates a new mock instance.
 func NewHost(ctrl *gomock.Controller) *Host {
 	mock := &Host{ctrl: ctrl}
 	mock.recorder = &HostMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *Host) EXPECT() *HostMockRecorder {
 	return m.recorder
 }
 
-// GetCPUStats mocks base method
+// GetCPUStats mocks base method.
 func (m *Host) GetCPUStats() (float64, float64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCPUStats")
@@ -42,13 +43,13 @@ func (m *Host) GetCPUStats() (float64, float64, error) {
 	return ret0, ret1, ret2
 }
 
-// GetCPUStats indicates an expected call of GetCPUStats
+// GetCPUStats indicates an expected call of GetCPUStats.
 func (mr *HostMockRecorder) GetCPUStats() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCPUStats", reflect.TypeOf((*Host)(nil).GetCPUStats))
 }
 
-// GetMemoryStats mocks base method
+// GetMemoryStats mocks base method.
 func (m *Host) GetMemoryStats() (float64, float64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMemoryStats")
@@ -58,7 +59,7 @@ func (m *Host) GetMemoryStats() (float64, float64, error) {
 	return ret0, ret1, ret2
 }
 
-// GetMemoryStats indicates an expected call of GetMemoryStats
+// GetMemoryStats indicates an expected call of GetMemoryStats.
 func (mr *HostMockRecorder) GetMemoryStats() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMemoryStats", reflect.TypeOf((*Host)(nil).GetMemoryStats))

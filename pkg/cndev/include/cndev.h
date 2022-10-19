@@ -1,3 +1,19 @@
+/*
+ * Copyright 2022 Cambricon, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef INCLUDE_CNDEV_H_
 #define INCLUDE_CNDEV_H_
 
@@ -50,7 +66,9 @@ typedef enum {
   CNDEV_ERROR_MALLOC = 8,                  /**< internal malloc fail */
   CNDEV_ERROR_INSUFFICIENT_SPACE = 9,      /**< cndevInfoCount has not enough space */
   CNDEV_ERROR_NOT_SUPPORTED = 10,          /**< not supported */
-  CNDEV_ERROR_INVALID_LINK = 11            /**< Invalid link port */
+  CNDEV_ERROR_INVALID_LINK = 11,           /**< Invalid link port */
+  CNDEV_ERROR_NO_DEVICES = 12,             /**< No MLU devices */
+  CNDEV_ERROR_NO_PERMISSION = 13,          /**< No permission */
 } cndevRet_t;
 
 typedef enum {
@@ -62,7 +80,6 @@ typedef enum {
   MLU220_M2i = 19,   /**< MLU220_M2i */
   MLU290 = 20,       /**< MLU290 */
   MLU370 = 23,       /**< MLU370 */
-  MLU365 = 24,       /**< MLU365 */
   CE3226 = 25,       /**< CE3226 */
 } cndevNameEnum_t;
 
@@ -127,8 +144,15 @@ const char *cndevGetErrorString(cndevRet_t errorId);
   } while (0)
 #define cndevCheckErrors(err) __cndevCheckErrors((err), __FILE__, __LINE__)
 #endif
-
+#ifndef UUID_SIZE
 #define UUID_SIZE 37
+#endif
+#define CNDEV_UUID_SIZE 37
+#ifndef IP_ADDRESS_LEN
+#define IP_ADDRESS_LEN 40
+#endif
+#define CNDEV_IP_ADDRESS_LEN 40
+
 /**< Card information */
 typedef struct {
   int version;     /**< driver version */
@@ -138,7 +162,8 @@ typedef struct {
 /**< UUID information */
 typedef struct {
   int version;
-  __uint8_t uuid[UUID_SIZE]; /**< uuid */
+  __uint8_t uuid[CNDEV_UUID_SIZE]; /**< uuid */
+  __uint64_t ncsUUID64;      /**< ncs uuid*/
 } cndevUUID_t;
 
 /**< Memory information */
@@ -173,6 +198,7 @@ typedef struct {
   __uint64_t correctedError;        /**< corrected error */
   __uint64_t uncorrectedError;      /**< uncorrected error */
   __uint64_t totalError;            /**< ECC error total times */
+  __uint64_t addressForbiddenError;  /**< address forbidden error */
 } cndevECCInfo_t;
 
 /**< Power information */
@@ -183,6 +209,7 @@ typedef struct {
   int usageDecimal;   /**< decimal places for current power dissipation */
   int machine;        /**< current machine power dissipation,unit:W */
   int capDecimal;     /**< decimal places for cap powewr */
+  __uint16_t thermalDesignPower; /**< thermal design power,unit:W */
 } cndevPowerInfo_t;
 
 /**< Temperature information */
@@ -295,6 +322,7 @@ typedef struct {
   unsigned int device;              /**< PCIe device, slot */
   unsigned int function;            /**< PCIe function, func */
   const char * physicalSlot;        /**< Physical Slot */
+  int slotID;                       /**< Slot ID */
 } cndevPCIeInfo_t;
 
 /**< PCie throughput,read and write */
@@ -439,6 +467,7 @@ typedef struct {
 typedef struct {
   int version;
   cndevEnableStatusEnum_t isActive;
+  cndevEnableStatusEnum_t serdesState;
 } cndevMLULinkStatus_t;
 
 /**< MLU-Link speed */
@@ -485,10 +514,11 @@ typedef struct {
   __uint32_t slotId;
   __uint32_t portId;
   __uint8_t devIp[16];
-  __uint8_t uuid[UUID_SIZE];
+  __uint8_t uuid[CNDEV_UUID_SIZE];
   __uint32_t devIpVersion;
   __uint32_t isIpValid;
-  int connectType;
+  __int32_t connectType;
+  __uint64_t ncsUUID64;
 } cndevMLULinkRemoteInfo_t;
 
 /**< MLU-Link devices sn */
@@ -499,10 +529,10 @@ typedef struct {
 } cndevMLULinkDevSN_t;
 
 typedef struct {
-  __uint8_t nvmeSn[20];
-  __uint8_t nvmeModel[16];
-  __uint8_t nvmeFw[8];
-  __uint8_t nvmeMfc[8];
+  __uint8_t nvmeSn[21];
+  __uint8_t nvmeModel[17];
+  __uint8_t nvmeFw[9];
+  __uint8_t nvmeMfc[9];
 } cndevNvmeSsdInfo_t;
 
 typedef struct {
@@ -515,15 +545,15 @@ typedef struct {
 typedef struct {
   __uint8_t ibSn[25];
   __uint8_t ibModel[17];
-  __uint8_t ibFw[9];
-  __uint8_t ibMfc[3];
+  __uint8_t ibFw[3];
+  __uint8_t ibMfc[9];
 } cndevIbInfo_t;
 
 typedef struct {
   int version;
   __uint64_t chassisSn; /**< chassis sn */
   char chassisProductDate[12];
-  char chassisPartNum[9];
+  char chassisPartNum[13];
 
   char chassisVendorName[17];
 
@@ -655,6 +685,46 @@ typedef struct {
   __uint8_t mluFrequencyLockStatus;
 } cndevMLUFrequencyStatus_t;
 
+typedef struct {
+  int version;
+  __uint8_t ipVersion;
+  char ip[CNDEV_IP_ADDRESS_LEN];
+} cndevMLULinkPortIP_t;
+
+typedef struct {
+  int version;
+  __uint64_t die2dieCRCError;       	 /**< D2D crc error */
+  __uint64_t die2dieCRCErrorOverflow;  /**< D2D crc error overflow */
+} cndevCRCInfo_t;
+
+typedef struct {
+  int version;
+  __uint32_t dataWidth;
+  __uint32_t bandWidth;
+  __uint32_t bandWidthDecimal;
+} cndevDDRInfo_t;
+
+typedef struct {
+  __uint32_t version;
+  __uint32_t minIpuFreq;  /**< requested minimum ipu frequency in MHz */
+  __uint32_t maxIpuFreq;  /**< requested maximum ipu frequency in MHz */
+} cndevSetIpuFrequency_t;
+
+typedef struct {
+  __uint32_t version;
+  __uint32_t pid;
+  __uint32_t ipuUtil;
+  __uint32_t jpuUtil;
+  __uint32_t vpuDecUtil;
+  __uint32_t vpuEncUtil;
+  __uint32_t memUtil;
+} cndevProcessUtilization_t;
+
+typedef struct {
+  __uint32_t version;
+  __uint32_t supportedIpuFreq;  /**< supported ipu frequency in MHz */
+} cndevSupportedIpuFrequency_t;
+
 typedef int (*CNDEV_TRAVERSE_CALLBACK)(cndevTopologyNode_t *current, void *userdata);
 /**
  * @ brief do initialization work, check whether the API version and the MLU driver version could be supported
@@ -662,6 +732,7 @@ typedef int (*CNDEV_TRAVERSE_CALLBACK)(cndevTopologyNode_t *current, void *userd
  * @ return CNDEV_NO_DRIVER if the MLU driver is not available
  * @ return CNDEV_LOW_DRIVER if the version of the MLU driver is too low to support the cndev library
  * @ return CNDEV_ERROR_UNKNOWN if some fault occurs, when the function calls some system function
+ * @ return CNDEV_ERROR_NO_DEVICES if there are no MLU devices or no MLU devices can be used
  */
 EXPORT
 cndevRet_t cndevInit(int reserved);
@@ -991,6 +1062,16 @@ cndevRet_t cndevGetCardName(cndevCardName_t *cardName, int devId);
  */
 EXPORT
 const char *cndevGetCardNameString(cndevNameEnum_t cardName);
+
+/**
+ * @ brief translate the index of a card's name to the string of the card's name
+ *
+ * @ param devId the number of the card which the user selects, starting from 0
+ *
+ * @ return the string of the card's name by device id
+ */
+EXPORT
+const char *cndevGetCardNameStringByDevId(int devId);
 
 /**
  * @ brief translate the index of a card's name to the string of the card's name
@@ -1751,7 +1832,7 @@ cndevRet_t cndevGetRetiredPagesOperation(cndevRetiredPageOperation_t *operation,
 /**
  * @ brief get card VF state
  *
- * @ param devId the number of the card which the user selects, staring from 0
+ * @ param devId the number of the card which the user selects, starting from 0
  * @ param vfstate will stores the state of VF
  *
  * @ return CNDEV_SUCCESS if success
@@ -1766,7 +1847,7 @@ cndevRet_t cndevGetCardVfState(cndevCardVfState_t *vfstate, int devId);
 /**
  * @ brief get card MLULink port mode
  *
- * @ param devId the number of the card which the user selects, staring from 0
+ * @ param devId the number of the card which the user selects, starting from 0
  * @ param mode will stores the mode of card
  * @ param port the number of the port which the user selects, starting from 0
  *
@@ -1782,7 +1863,7 @@ cndevRet_t cndevGetMLULinkPortMode(cndevMLULinkPortMode_t *mode, int devId, int 
 /**
  * @ brief set card MLULink port mode
  *
- * @ param devId the number of the card which the user selects, staring from 0
+ * @ param devId the number of the card which the user selects, starting from 0
  * @ param mode will stores the mode of card
  * @ param port the number of the port which the user selects, starting from 0
  *
@@ -1798,7 +1879,7 @@ cndevRet_t cndevSetMLULinkPortMode(cndevMLULinkPortMode_t *mode, int devId, int 
 /**
  * @ brief get card MLULink port roce control information
  *
- * @ param devId the number of the card which the user selects, staring from 0
+ * @ param devId the number of the card which the user selects, starting from 0
  * @ param ctrl will stores roce control information
  * @ param port the number of the port which the user selects, starting from 0
  *
@@ -1814,7 +1895,7 @@ cndevRet_t cndevGetRoceCtrl(cndevMLULinkPortRoceCtrl_t *ctrl, int devId, int por
 /**
  * @ brief get card port number
  *
- * @ param devId the number of the card which the user selects, staring from 0
+ * @ param devId the number of the card which the user selects, starting from 0
  *
  */
 EXPORT
@@ -1823,7 +1904,7 @@ int cndevGetMLULinkPortNumber(int devId);
 /**
  * @ brief get card tinycore utilization
  *
- * @ param devId the number of the card which the user selects, staring from 0
+ * @ param devId the number of the card which the user selects, starting from 0
  * @ param util will stores the tinycore utilization
  *
  * @ return CNDEV_SUCCESS if success
@@ -1838,7 +1919,7 @@ cndevRet_t cndevGetTinyCoreUtilization(cndevTinyCoreUtilization_t *util, int dev
 /**
  * @ brief get card arm os memory usage information
  *
- * @ param devId the number of the card which the user selects, staring from 0
+ * @ param devId the number of the card which the user selects, starting from 0
  * @ param mem will stores arm os memory usage
  *
  * @ return CNDEV_SUCCESS if success
@@ -1854,7 +1935,7 @@ cndevRet_t cndevGetArmOsMemoryUsage(cndevArmOsMemoryInfo_t *mem, int devId);
 /**
  * @ brief get card chip id information
  *
- * @ param devId the number of the card which the user selects, staring from 0
+ * @ param devId the number of the card which the user selects, starting from 0
  * @ param chipid will stores card chip id
  *
  * @ return CNDEV_SUCCESS if success
@@ -1869,7 +1950,7 @@ cndevRet_t cndevGetChipId(cndevChipId_t *chipid, int devId);
 /**
  * @ brief get card MLU frequency status
  *
- * @ param devId the number of the card which the user selects, staring from 0
+ * @ param devId the number of the card which the user selects, starting from 0
  * @ param status will stores  MLU frequency status
  *
  * @ return CNDEV_SUCCESS if success
@@ -1884,7 +1965,7 @@ cndevRet_t cndevGetMLUFrequencyStatus(cndevMLUFrequencyStatus_t *status, int dev
 /**
  * @ brief unlock MLU frequency
  *
- * @ param devId the number of the card which the user selects, staring from 0
+ * @ param devId the number of the card which the user selects, starting from 0
  *
  * @ return CNDEV_SUCCESS if success
  * @ return CNDEV_ERROR_UNINITIALIZED if the user don't call the function named cndevInit beforehand
@@ -1893,7 +1974,115 @@ cndevRet_t cndevGetMLUFrequencyStatus(cndevMLUFrequencyStatus_t *status, int dev
  */
 EXPORT
 cndevRet_t cndevUnlockMLUFrequency(int devId);
+/**
+ * @ brief get card MLULink port ip
+ *
+ * @ param devId the number of the card which the user selects, starting from 0
+ * @ param ip will stores card MLULink port ip
+ * @ param port the number of the port which the user selects, starting from 0
+ *
+ * @ return CNDEV_SUCCESS if success
+ * @ return CNDEV_ERROR_UNINITIALIZED if the user don't call the function named cndevInit beforehand
+ * @ return CNDEV_ERROR_INVALID_ARGUMENT if the parameter is NULL
+ * @ return CNDEV_ERROR_UNKNOWN if some fault occurs, when the function calls some system function
+ * @ return CNDEV_ERROR_INVALID_DEVICE_ID if the number of card which the user selects is not available
+ * @ return CNDEV_UNSUPPORTED_API_VERSION if the API version is too low to be support by the cndev library
+ * @ return CNDEV_ERROR_INVALID_LINK if the number of link which the user selects is not available
+ */
+EXPORT
+cndevRet_t cndevGetMLULinkPortIP(cndevMLULinkPortIP_t *ip, int devId, int port);
 
+/**
+ * @ brief get the information of the card's D2D CRC
+ *
+ * @ param devId the number of the card which the user selects, starting from 0
+
+ * @ param crcInfo will store a pointer to a structure which stores the information of the card's D2D CRC
+ *
+ * @ return CNDEV_SUCCESS if success
+ * @ return CNDEV_ERROR_UNINITIALIZED if the user don't call the function named cndevInit beforehand
+ * @ return CNDEV_ERROR_INVALID_ARGUMENT if the parameter is NULL
+ * @ return CNDEV_ERROR_UNKNOWN if some fault occurs, when the function calls some system function
+ * @ return CNDEV_UNSUPPORTED_API_VERSION if the API version is too low to be support by the cndev library
+ * @ return CNDEV_ERROR_INVALID_DEVICE_ID if the number of card which the user selects is not available
+ */
+EXPORT
+cndevRet_t cndevGetCRCInfo(cndevCRCInfo_t *crcInfo, int devId);
+
+/**
+ * @ brief get the information of the card's DDR
+ *
+ * @ param devId the number of the card which the user selects, starting from 0
+
+ * @ param crcInfo will store a pointer to a structure which stores the information of the card's DDR
+ *
+ * @ return CNDEV_SUCCESS if success
+ * @ return CNDEV_ERROR_UNINITIALIZED if the user don't call the function named cndevInit beforehand
+ * @ return CNDEV_ERROR_NOT_SUPPORTED if devId is C10 device
+ * @ return CNDEV_ERROR_INVALID_ARGUMENT if the parameter is NULL
+ * @ return CNDEV_ERROR_UNKNOWN if some fault occurs, when the function calls some system function
+ * @ return CNDEV_UNSUPPORTED_API_VERSION if the API version is too low to be support by the cndev library
+ * @ return CNDEV_ERROR_INVALID_DEVICE_ID if the number of card which the user selects is not available
+ */
+EXPORT
+cndevRet_t cndevGetDDRInfo(cndevDDRInfo_t *ddrInfo, int devId);
+
+/**
+ * @ brief set the IPU frequency of the card
+ *
+ * @ param setipufreq will store a pointer to a structure which stores the information of the user set ipu frequency
+ *
+ * @ param devId the number of the card which the user selects, starting from 0
+ *
+ * @ return CNDEV_SUCCESS if success
+ * @ return CNDEV_ERROR_UNINITIALIZED if the user don't call the function named cndevInit beforehand
+ * @ return CNDEV_ERROR_NOT_SUPPORTED if devId is not supported
+ * @ return CNDEV_ERROR_INVALID_ARGUMENT if the parameter is NULL or minIpuFreq and maxIpuFreq is not a valid frequency combination
+ * @ return CNDEV_ERROR_UNKNOWN if some fault occurs, when the function calls some system function
+ * @ return CNDEV_UNSUPPORTED_API_VERSION if the API version is too low to be support by the cndev library
+ * @ return CNDEV_ERROR_INVALID_DEVICE_ID if the number of card which the user selects is not available
+ */
+EXPORT
+cndevRet_t cndevSetIpuFrequency(cndevSetIpuFrequency_t *setipufreq, int devId);
+/**
+ * @ brief get the information of the card's processes utilization
+ *
+ * @ param devId the number of the card which the user selects, starting from 0
+ * @ param processCount the size of the space which the user allocates for storing the information of processes.At the same time,the
+ * parameter will store a pointer to the size of a space which is suit to store all information after the function ends
+ * @ param processUtil the pointer of the space which the user allocates for saving the information of processes utilization
+ *
+ * @ return CNDEV_SUCCESS if success
+ * @ return CNDEV_ERROR_UNINITIALIZED if the user don't call the function named cndevInit beforehand
+ * @ return CNDEV_ERROR_INVALID_ARGUMENT if the parameter is NULL
+ * @ return CNDEV_ERROR_UNKNOWN if some fault occurs, when the function calls some system function
+ * @ return CNDEV_ERROR_INVALID_DEVICE_ID if the number of card which the user selects is not available
+ * @ return CNDEV_ERROR_INSUFFICIENT_SPACE if the the space which the space which the user allocates is too little
+ * @ return CNDEV_UNSUPPORTED_API_VERSION if the API version is too low to be support by the cndev library
+ * @ return CNDEV_ERROR_NOT_SUPPORTED if devId is not supported
+ */
+EXPORT
+cndevRet_t cndevGetProcessUtilization(unsigned int *processCount, cndevProcessUtilization_t *processUtil, int devId);
+/**
+ * @ brief get the list ospossible ipu frequency that can be used
+ *
+ * @ param count the size of the space which the user allocates for storing the information of supported ipu frequency
+ * At the same time,the parameter will store a pointer to the size of a space which is suit to store all information after the function ends
+ *
+ * @ param ipufreq the pointer of the space which the user allocates for saving the information of supported ipu frequency
+ *
+ * @ param devId the number of the card which the user selects, starting from 0
+ *
+ * @ return CNDEV_SUCCESS if success
+ * @ return CNDEV_ERROR_UNINITIALIZED if the user don't call the function named cndevInit beforehand
+ * @ return CNDEV_ERROR_NOT_SUPPORTED if devId is not supported
+ * @ return CNDEV_ERROR_INVALID_ARGUMENT if the parameter is NULL
+ * @ return CNDEV_ERROR_UNKNOWN if some fault occurs, when the function calls some system function
+ * @ return CNDEV_UNSUPPORTED_API_VERSION if the API version is too low to be support by the cndev library
+ * @ return CNDEV_ERROR_INVALID_DEVICE_ID if the number of card which the user selects is not available
+ */
+EXPORT
+cndevRet_t cndevGetSupportedIpuFrequency(unsigned int *count, cndevSupportedIpuFrequency_t *ipufreq, int devId);
 #if defined(__cplusplus)
 }
 #endif  /*__cplusplus*/

@@ -17,6 +17,7 @@ package collector
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"sync"
 
@@ -54,6 +55,17 @@ type mluStat struct {
 	sn     string
 	mcu    string
 	driver string
+}
+
+type pcieInfo struct {
+	pcieSlot            string
+	pcieSubsystem       string
+	pcieDeviceID        string
+	pcieVendor          string
+	pcieSubsystemVendor string
+	pcieID              string
+	pcieSpeed           string
+	pcieWidth           string
 }
 
 type Collectors struct {
@@ -122,7 +134,7 @@ func collectSharedInfo() map[string]mluStat {
 		if err != nil {
 			log.Panic(errors.Wrap(err, "GetDeviceSN"))
 		}
-		mcu, driver, err := cli.GetDeviceVersion(i)
+		mcuMajor, mcuMinor, mcuBuild, driverMajor, driverMinor, driverBuild, err := cli.GetDeviceVersion(i)
 		if err != nil {
 			log.Panic(errors.Wrap(err, "GetDeviceVersion"))
 		}
@@ -131,8 +143,8 @@ func collectSharedInfo() map[string]mluStat {
 			uuid:   uuid,
 			model:  model,
 			slot:   i,
-			mcu:    mcu,
-			driver: driver,
+			mcu:    calcVersion(mcuMajor, mcuMinor, mcuBuild),
+			driver: calcVersion(driverMajor, driverMinor, driverBuild),
 		}
 	}
 	return info
@@ -193,6 +205,7 @@ func getMetrics(cfg metrics.Conf, prefix string) map[string]collectorMetrics {
 				fqName = fmt.Sprintf("%s_%s", prefix, fqName)
 			}
 			labels := value.Labels.GetKeys()
+			sort.Strings(labels)
 			labelNames := []string{}
 			for _, l := range labels {
 				labelNames = append(labelNames, value.Labels[l])
@@ -208,12 +221,17 @@ func getMetrics(cfg metrics.Conf, prefix string) map[string]collectorMetrics {
 }
 
 type labelInfo struct {
-	stat    mluStat
-	host    string
-	core    int
-	cluster string
-	vf      string
-	podInfo podresources.PodInfo
+	stat        mluStat
+	host        string
+	core        int
+	cpuCore     string
+	link        int
+	linkVersion string
+	cluster     string
+	vf          string
+	pcieInfo    pcieInfo
+	pid         uint32
+	podInfo     podresources.PodInfo
 }
 
 func getLabelValues(labels []string, info labelInfo) []string {
@@ -241,6 +259,8 @@ func getLabelValues(labels []string, info labelInfo) []string {
 			values = append(values, info.cluster)
 		case Core:
 			values = append(values, fmt.Sprintf("%d", info.core))
+		case CPUCore:
+			values = append(values, info.cpuCore)
 		case MCU:
 			values = append(values, info.stat.mcu)
 		case Driver:
@@ -253,6 +273,28 @@ func getLabelValues(labels []string, info labelInfo) []string {
 			values = append(values, info.podInfo.Container)
 		case VF:
 			values = append(values, info.vf)
+		case Link:
+			values = append(values, fmt.Sprintf("%d", info.link))
+		case LinkVersion:
+			values = append(values, info.linkVersion)
+		case PCIeSlot:
+			values = append(values, info.pcieInfo.pcieSlot)
+		case PCIeSubsystem:
+			values = append(values, info.pcieInfo.pcieSubsystem)
+		case PCIeDeviceID:
+			values = append(values, info.pcieInfo.pcieDeviceID)
+		case PCIeVendor:
+			values = append(values, info.pcieInfo.pcieVendor)
+		case PCIeSubsystemVendor:
+			values = append(values, info.pcieInfo.pcieSubsystemVendor)
+		case PCIeID:
+			values = append(values, info.pcieInfo.pcieID)
+		case PCIeSpeed:
+			values = append(values, info.pcieInfo.pcieSpeed)
+		case PCIeWidth:
+			values = append(values, info.pcieInfo.pcieWidth)
+		case Pid:
+			values = append(values, fmt.Sprintf("%d", info.pid))
 		default:
 			values = append(values, "") // configured label not applicable, add this to prevent panic
 		}

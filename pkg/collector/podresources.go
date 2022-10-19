@@ -37,6 +37,7 @@ var (
 	envShareSubString = "-_-"
 	uuidPrefix        = "MLU-"
 	maxSize           = 1024 * 1024 * 16 // 16 Mb
+	void              struct{}
 )
 
 func init() {
@@ -116,6 +117,10 @@ func (c *podResourcesCollector) collectBoardAllocated(ch chan<- prometheus.Metri
 }
 
 func (c *podResourcesCollector) collectMLUContainer(ch chan<- prometheus.Metric, m metric) {
+	devs := map[string]struct{}{}
+	for dev := range c.sharedInfo {
+		devs[dev] = void
+	}
 	for device, podInfo := range c.devicePodInfo {
 		vf := ""
 		uuid := strings.TrimLeft(device, uuidPrefix)
@@ -127,7 +132,16 @@ func (c *podResourcesCollector) collectMLUContainer(ch chan<- prometheus.Metric,
 			uuid = s[0]
 			vf = s[1]
 		}
+		if _, ok := c.sharedInfo[uuid]; !ok {
+			log.Printf("failed to find mlu with uuid %s, skip", uuid)
+			continue
+		}
+		delete(devs, uuid)
 		labelValues := getLabelValues(m.labels, labelInfo{stat: c.sharedInfo[uuid], host: c.host, podInfo: podInfo, vf: vf})
 		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, 1, labelValues...)
+	}
+	for dev := range devs {
+		labelValues := getLabelValues(m.labels, labelInfo{stat: c.sharedInfo[dev], host: c.host})
+		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, 0, labelValues...)
 	}
 }
