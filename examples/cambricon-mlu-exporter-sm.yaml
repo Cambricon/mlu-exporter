@@ -24,8 +24,7 @@ metadata:
   namespace: monitoring
 spec:
   endpoints:
-  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-    honorLabels: true
+  - honorLabels: true
     interval: 15s
     port: http-metrics
   jobLabel: component
