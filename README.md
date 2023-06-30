@@ -65,6 +65,8 @@ Use the following command to start the exporter.
 docker run -d \
 -p 30108:30108 \
 --privileged=true \
+--pid=host \
+-e ENV_NODE_NAME={nodeName} \
 cambricon-mlu-exporter:v1.6.7
 ```
 
@@ -81,6 +83,7 @@ docker run -d \
 -p 30108:30108 \
 -v examples/metrics.yaml:/etc/mlu-exporter/metrics.yaml \
 --privileged=true \
+--pid=host \
 cambricon-mlu-exporter:v1.6.7 \
 mlu-exporter \
 --metrics-config=/etc/mlu-exporter/metrics.yaml \
@@ -98,7 +101,7 @@ Command Args Description
 | -------------- | ------------------------------------------ |
 | metrics-config | configuration file of MLU exporter metrics |
 | metrics-path   | metrics path of the exporter service       |
-| hostname       | machine hostname                           |
+| hostname       | machine hostname, or env:"ENV_NODE_NAME"   |
 | port           | exporter service port                      |
 | metrics-prefix | prefix of all metric names                 |
 | collector      | collector names, cndev by default          |
