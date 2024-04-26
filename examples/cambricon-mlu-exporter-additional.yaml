@@ -1,0 +1,17 @@
+- job_name: kube-prometheus-exporter-mlu-monitoring
+  kubernetes_sd_configs:
+  - namespaces:
+      names:
+      - kube-system
+    role: endpoints
+  metrics_path: /metrics
+  relabel_configs:
+  - source_labels: [__meta_kubernetes_endpoints_name]
+    action: keep
+    regex: "kube-prometheus-exporter-mlu-monitoring"
+  - action: replace
+    source_labels:
+    - __meta_kubernetes_endpoint_node_name
+    target_label: node
+  scheme: http
+  scrape_interval: 30s

@@ -3,3 +3,5 @@ mlu-exporter
 image
 .vscode
 *.tar*
+_build/
+__pycache__/

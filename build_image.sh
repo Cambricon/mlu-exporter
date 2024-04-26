@@ -16,10 +16,9 @@
 curpath=$(dirname "$0")
 cd "$curpath" || exit 1
 
-: "${TAG:=v1.6.7}"
+: "${TAG:=v2.0.11}"
 : "${ARCH:=amd64}"
 : "${LIBCNDEV:=/usr/local/neuware/lib64/libcndev.so}"
-: "${LIBCNPAPI:=/usr/local/neuware/lib64/libcnpapi.so}"
 
 case $(awk -F= '/^NAME/{print $2}' /etc/os-release) in
 "CentOS Linux")
@@ -27,13 +26,12 @@ case $(awk -F= '/^NAME/{print $2}' /etc/os-release) in
 	;;
 esac
 
-: "${BASE_IMAGE:=ubuntu:18.04}"
+: "${BASE_IMAGE:=ubuntu:22.04}"
 
 echo "Build environ (Can be overridden):"
 echo "TAG       = $TAG"
 echo "ARCH      = $ARCH"
 echo "LIBCNDEV  = $LIBCNDEV"
-echo "LIBCNPAPI  = $LIBCNPAPI"
 echo "APT_PROXY = $APT_PROXY"
 echo "GOPROXY   = $GOPROXY"
 echo "BASE_IMAGE   = $BASE_IMAGE"
@@ -60,12 +58,6 @@ if [[ ! -f "$LIBCNDEV" ]]; then
 	exit 1
 fi
 
-if [[ ! -f "$LIBCNPAPI" ]]; then
-	echo "Can't find libcnpapi.so at $LIBCNPAPI."
-	echo "If you want to scrape cnpapi metrics, please install Cambricon neuware, or set LIBCNPAPI environ to path of libcnpapi.so"
-	echo "Else, ignore this message."
-fi
-
 case $ARCH in
 amd64)
 	file_arch=x86-64
@@ -84,13 +76,7 @@ if ! file "$LIBCNDEV" --dereference | grep -q "$file_arch"; then
 	exit 1
 fi
 
-if [[ -f "$LIBCNPAPI" ]] && ! file "$LIBCNPAPI" --dereference | grep -q "$file_arch"; then
-	echo "$LIBCNPAPI is not for $ARCH"
-	exit 1
-fi
-
 cp "$LIBCNDEV" "$curpath/libs/linux/$ARCH/libcndev.so"
-[[ -f "$LIBCNPAPI" ]] && cp "$LIBCNPAPI" "$curpath/libs/linux/$ARCH/libcnpapi.so"
 
 echo "Building Cambricon MLU Exporter docker image."
 
@@ -100,6 +86,7 @@ echo "Building Cambricon MLU Exporter docker image."
 	--build-arg "GOPROXY=$GOPROXY" --build-arg "APT_PROXY=$APT_PROXY" \
 	--build-arg "BUILDPLATFORM=linux/$ARCH" \
 	--build-arg "BASE_IMAGE=$BASE_IMAGE" \
+	--build-arg "VERSION=$TAG" \
 	--build-arg "TARGETPLATFORM=linux/$ARCH" .
 
 [[ "$ARCH" == "$build_arch" ]] && docker save -o "image/cambricon-mlu-exporter-$ARCH.tar" \
@@ -118,4 +105,3 @@ fi
 
 echo "Image is saved at ./image/cambricon-mlu-exporter-$ARCH.tar"
 rm -f "$curpath/libs/linux/$ARCH/libcndev.so"
-rm -f "$curpath/libs/linux/$ARCH/libcnpapi.so"

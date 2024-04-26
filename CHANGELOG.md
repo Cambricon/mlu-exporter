@@ -1,5 +1,74 @@
 # Changelog
 
+## v2.0.11
+
+- Remove mem-share
+
+## v2.0.10
+
+- Support sram/dram ecc err
+- Add mlu nums
+- Add heartbeat count
+
+## v2.0.9
+
+- Support dsmlu restore
+- Bump cndev to 3.9.0
+- Stop annoy metrics
+
+## v2.0.8
+
+- Support dynamic smlu monitoring
+- Support new metrics to align with dcgm
+- Support to print out version
+- Refactor to use golden test
+- Bump cndev to 3.8.0
+- Support xid errors metrics
+
+## v2.0.7
+
+- Support smlu static
+- Fix memory total and used
+
+## v2.0.6
+
+- Get rid of annoy metrics cause long latency
+- Add prometheus additional config
+
+## v2.0.5
+
+- Upgrade dependence to cndev 3.4.2
+- Eliminate annoying printing
+- Replace ioutil with os package
+- Add metric:
+  - parity_error
+
+## v2.0.4
+
+- Support mlu share mode
+- Upgrade dependence to cndev 3.4.1
+- Bump go to 1.19 and baseimage to ubuntu:20.04
+
+## v2.0.3
+
+- Add liveness/readiness probes
+- Add log level config
+- Remove beartoken in servicemonitor config
+- Report vf metrics in env share mode as in sriov mode
+
+## v2.0.1
+
+- Upgrade dependence to cndev 3.0.1
+- Deprecated and remove cnpapi dependencies
+- Refactor collect test
+- Merge vf metrics with pf metrics
+
+## v2.0.0
+
+- Upgrade dependence to cndev 3.0.0
+- Add metric:
+  - virtual_function_power_usage
+
 ## v1.6.7
 
 - Upgrade dependence to cntoolkit 2.8.2

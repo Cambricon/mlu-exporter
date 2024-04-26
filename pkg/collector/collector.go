@@ -16,8 +16,8 @@ package collector
 
 import (
 	"fmt"
-	"log"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -27,6 +27,9 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 type Collector interface {
@@ -35,9 +38,9 @@ type Collector interface {
 	updateMetrics(m collectorMetrics)
 }
 
-var factories = make(map[string]func(m collectorMetrics, host string) Collector)
+var factories = make(map[string]func(m collectorMetrics, bi BaseInfo) Collector)
 
-func registerCollector(name string, factory func(m collectorMetrics, host string) Collector) {
+func registerCollector(name string, factory func(m collectorMetrics, bi BaseInfo) Collector) {
 	factories[name] = factory
 }
 
@@ -49,12 +52,26 @@ type metric struct {
 }
 
 type mluStat struct {
-	slot   uint
-	model  string
-	uuid   string
-	sn     string
-	mcu    string
-	driver string
+	crcDisabled          bool
+	driver               string
+	eccDisabled          bool
+	heartBeatDisabled    bool
+	link                 int
+	linkActive           map[int]bool
+	mcu                  string
+	memEccDisabled       bool
+	mimEnabled           bool
+	mimInfos             []cndev.MimInfo
+	model                string
+	processUtilDisabled  bool
+	remappedRowsDisabled bool
+	retiredPageDisabled  bool
+	slot                 uint
+	smluEnabled          bool
+	smluInfos            []cndev.SmluInfo
+	sn                   string
+	uuid                 string
+	xidDisabled          bool
 }
 
 type pcieInfo struct {
@@ -74,12 +91,29 @@ type Collectors struct {
 	mutex      sync.Mutex
 }
 
-func NewCollectors(host string, config string, enabled []string, prefix string) *Collectors {
+type BaseInfo struct {
+	client kubernetes.Interface
+	host   string
+	mode   string
+	num    uint
+}
+
+func NewCollectors(enabled []string, num uint, host, config, prefix, mode string) *Collectors {
 	cfg := metrics.GetOrDie(config)
 	m := getMetrics(cfg, prefix)
 	cs := make(map[string]Collector)
+	bi := BaseInfo{
+		host: host,
+		mode: mode,
+	}
+	if mode == "env-share" {
+		bi.num = num
+	}
+	if mode == "dynamic-smlu" {
+		bi.client = initClientSet()
+	}
 	for _, name := range enabled {
-		c := factories[name](m[name], host)
+		c := factories[name](m[name], bi)
 		cs[name] = c
 	}
 	c := &Collectors{
@@ -88,6 +122,7 @@ func NewCollectors(host string, config string, enabled []string, prefix string) 
 	}
 	c.init()
 	go c.syncMetrics(config, prefix)
+	log.Debugf("Collectors: %+v", c)
 	return c
 }
 
@@ -116,59 +151,133 @@ func (c *Collectors) Describe(ch chan<- *prometheus.Desc) {
 
 func collectSharedInfo() map[string]mluStat {
 	cli := cndev.NewCndevClient()
-	if err := cli.Init(); err != nil {
-		log.Panic(errors.Wrap(err, "Init"))
+	if err := cli.Init(false); err != nil {
+		log.Error(errors.Wrap(err, "Init"))
 	}
 	num, err := cli.GetDeviceCount()
 	if err != nil {
-		log.Panic(errors.Wrap(err, "GetDeviceCount"))
+		log.Error(errors.Wrap(err, "GetDeviceCount"))
 	}
 	info := make(map[string]mluStat)
-	model := cli.GetDeviceModel(0)
 	for i := uint(0); i < num; i++ {
+		model := cli.GetDeviceModel(i)
 		uuid, err := cli.GetDeviceUUID(i)
 		if err != nil {
-			log.Panic(errors.Wrap(err, "GetDeviceUUID"))
+			log.Error(errors.Wrap(err, "GetDeviceUUID"))
 		}
 		sn, err := cli.GetDeviceSN(i)
 		if err != nil {
-			log.Panic(errors.Wrap(err, "GetDeviceSN"))
+			log.Error(errors.Wrap(err, "GetDeviceSN"))
 		}
 		mcuMajor, mcuMinor, mcuBuild, driverMajor, driverMinor, driverBuild, err := cli.GetDeviceVersion(i)
 		if err != nil {
-			log.Panic(errors.Wrap(err, "GetDeviceVersion"))
+			log.Error(errors.Wrap(err, "GetDeviceVersion"))
 		}
+		mimEnabled, err := cli.DeviceMimModeEnabled(i)
+		if err != nil {
+			log.Warn(errors.Wrap(err, "DeviceMimModeEnabled"))
+		}
+		var mimInfos []cndev.MimInfo
+		if mimEnabled {
+			mimInfos, err = cli.GetAllMLUInstanceInfo(i)
+			if err != nil {
+				log.Warn(errors.Wrap(err, "GetAllMLUInstanceInfo"))
+			}
+		}
+		smluEnabled, err := cli.DeviceSmluModeEnabled(i)
+		if err != nil {
+			log.Warn(errors.Wrap(err, "DeviceMimModeEnabled"))
+		}
+		link := cli.GetDeviceMLULinkPortNumber(i)
+		linkActive := map[int]bool{}
+		for j := 0; j < link; j++ {
+			active, _, err := cli.GetDeviceMLULinkStatus(i, uint(j))
+			if err != nil {
+				log.Warn(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkStatus", i, j))
+				continue
+			}
+			linkActive[j] = active != 0
+		}
+		var crcDisabled, eccDisabled, processUtilDisabled, xidDisabled, retiredPageDisabled, remappedRowsDisabled bool
+		if _, _, err = cli.GetDeviceCRCInfo(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceCRCInfo", i))
+			crcDisabled = true
+		}
+		if _, _, _, _, _, _, _, _, err = cli.GetDeviceECCInfo(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", i))
+			eccDisabled = true
+		}
+		if _, _, _, _, _, _, err = cli.GetDeviceProcessUtil(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceProcessUtil", i))
+			processUtilDisabled = true
+		}
+		if _, err = cli.GetDeviceXidErrors(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceXidErrors", i))
+			xidDisabled = true
+		}
+		if _, _, err = cli.GetDeviceRetiredPageInfo(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceRetiredPageInfo", i))
+			retiredPageDisabled = true
+		}
+		if _, _, _, _, err = cli.GetDeviceRemappedRows(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceRemappedRows", i))
+			remappedRowsDisabled = true
+		}
+		var heartBeatDisabled, memEccDisabled bool
+		if _, err = cli.GetDeviceHeartbeatCount(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceHeartbeatCount", i))
+			heartBeatDisabled = true
+		}
+		if _, _, _, _, _, err = cli.GetDeviceMemEccCounter(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceMemEccCounter", i))
+			memEccDisabled = true
+		}
+
 		info[uuid] = mluStat{
-			sn:     sn,
-			uuid:   uuid,
-			model:  model,
-			slot:   i,
-			mcu:    calcVersion(mcuMajor, mcuMinor, mcuBuild),
-			driver: calcVersion(driverMajor, driverMinor, driverBuild),
+			crcDisabled:          crcDisabled,
+			driver:               calcVersion(driverMajor, driverMinor, driverBuild),
+			eccDisabled:          eccDisabled,
+			heartBeatDisabled:    heartBeatDisabled,
+			link:                 link,
+			linkActive:           linkActive,
+			mcu:                  calcVersion(mcuMajor, mcuMinor, mcuBuild),
+			memEccDisabled:       memEccDisabled,
+			mimEnabled:           mimEnabled,
+			mimInfos:             mimInfos,
+			model:                model,
+			processUtilDisabled:  processUtilDisabled,
+			remappedRowsDisabled: remappedRowsDisabled,
+			retiredPageDisabled:  retiredPageDisabled,
+			slot:                 i,
+			smluEnabled:          smluEnabled,
+			sn:                   sn,
+			uuid:                 uuid,
+			xidDisabled:          xidDisabled,
 		}
 	}
+	log.Debugf("collectSharedInfo: %+v", info)
 	return info
 }
 
 func (c *Collectors) syncMetrics(config string, prefix string) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Printf("failed to create watcher, err %v", err)
+		log.Errorf("failed to create watcher, err %v", err)
 		return
 	}
 	defer watcher.Close()
 	err = watcher.Add(config)
 	if err != nil {
-		log.Printf("failed to add config to watcher, err %v", err)
+		log.Infof("failed to add config to watcher, err %v", err)
 		return
 	}
-	log.Printf("start watching metrics config %s", config)
-	defer log.Printf("stop watching metrics config %s", config)
+	log.Infof("start watching metrics config %s", config)
+	defer log.Infof("stop watching metrics config %s", config)
 	for {
 		select {
 		case event := <-watcher.Events:
 			if event.Name == config && event.Op&fsnotify.Remove == fsnotify.Remove {
-				log.Printf("inotify: %v, reload config", event.String())
+				log.Infof("inotify: %v, reload config", event.String())
 				c.mutex.Lock()
 				watcher.Remove(event.Name)
 				watcher.Add(config)
@@ -181,7 +290,7 @@ func (c *Collectors) syncMetrics(config string, prefix string) {
 				c.mutex.Unlock()
 			}
 		case err := <-watcher.Errors:
-			log.Printf("watcher error: %v", err)
+			log.Errorf("watcher error: %v", err)
 		}
 	}
 }
@@ -190,7 +299,7 @@ func (c *Collectors) init() {
 	info := collectSharedInfo()
 	for name, collector := range c.collectors {
 		if err := collector.init(info); err != nil {
-			log.Panic(errors.Wrapf(err, "init collector %s", name))
+			log.Error(errors.Wrapf(err, "init collector %s", name))
 		}
 	}
 }
@@ -217,21 +326,25 @@ func getMetrics(cfg metrics.Conf, prefix string) map[string]collectorMetrics {
 		}
 		m[collector] = cms
 	}
+	log.Debugf("collectorMetrics: %+v", m)
 	return m
 }
 
 type labelInfo struct {
-	stat        mluStat
-	host        string
-	core        int
-	cpuCore     string
-	link        int
-	linkVersion string
-	cluster     string
-	vf          string
-	pcieInfo    pcieInfo
-	pid         uint32
-	podInfo     podresources.PodInfo
+	cluster      string
+	core         int
+	cpuCore      string
+	host         string
+	link         int
+	linkVersion  string
+	memoryDie    string
+	pcieInfo     pcieInfo
+	pid          uint32
+	podInfo      podresources.PodInfo
+	stat         mluStat
+	typ          string
+	vf           string
+	xidErrorType string
 }
 
 func getLabelValues(labels []string, info labelInfo) []string {
@@ -243,15 +356,93 @@ func getLabelValues(labels []string, info labelInfo) []string {
 		case Model:
 			values = append(values, info.stat.model)
 		case Type:
+			var typ string
 			// suffix needs to be stripped except for "mlu270-x5k"
 			if strings.EqualFold(info.stat.model, "mlu270-x5k") {
-				values = append(values, strings.ToLower(info.stat.model))
+				typ = strings.ToLower(info.stat.model)
 			} else {
-				values = append(values, strings.ToLower(strings.Split(info.stat.model, "-")[0]))
+				typ = strings.ToLower(strings.Split(info.stat.model, "-")[0])
 			}
+			if info.stat.mimEnabled && info.vf != "" {
+				index, err := strconv.Atoi(info.vf)
+				if err != nil {
+					log.Warnf("convert vf %s with err %v", info.vf, err)
+					break
+				}
+				for _, inf := range info.stat.mimInfos {
+					if inf.InstanceID == index {
+						typ = typ + ".mim-" + inf.Name
+						break
+					}
+				}
+			}
+			if info.stat.smluEnabled && info.vf != "" {
+				index, err := strconv.Atoi(info.vf)
+				if err != nil {
+					log.Warnf("Convert vf %s with err %v", info.vf, err)
+					break
+				}
+				smluInfos := info.stat.smluInfos
+				if len(info.stat.smluInfos) == 0 {
+					infs, err := cndev.NewCndevClient().GetAllSMluInfo(info.stat.slot)
+					if err != nil {
+						log.Warnf("Failed to get smlu info %s with err %v", info.vf, err)
+						break
+					}
+					smluInfos = infs
+				}
+				if info.typ != "" {
+					typ = typ + ".smlu." + info.typ
+				} else {
+					for _, inf := range smluInfos {
+						if inf.InstanceID == index {
+							typ = typ + ".smlu-" + inf.Name
+							break
+						}
+					}
+				}
+			}
+			values = append(values, typ)
 		case SN:
 			values = append(values, info.stat.sn)
 		case UUID:
+			if info.stat.mimEnabled && info.vf != "" {
+				index, err := strconv.Atoi(info.vf)
+				if err != nil {
+					log.Warnf("convert vf %s with err %v", info.vf, err)
+					break
+				}
+				for _, inf := range info.stat.mimInfos {
+					if inf.InstanceID == index {
+						values = append(values, inf.UUID)
+						break
+					}
+				}
+				break
+			}
+			if info.stat.smluEnabled && info.vf != "" {
+				index, err := strconv.Atoi(info.vf)
+				if err != nil {
+					log.Warnf("convert vf %s with err %v", info.vf, err)
+					break
+				}
+				smluInfos := info.stat.smluInfos
+				if len(info.stat.smluInfos) == 0 {
+					infs, err := cndev.NewCndevClient().GetAllSMluInfo(info.stat.slot)
+					if err != nil {
+						log.Warnf("Failed to get smlu info %s with err %v", info.vf, err)
+						break
+					}
+					smluInfos = infs
+				}
+				for _, inf := range smluInfos {
+					if inf.InstanceID == index {
+						values = append(values, inf.UUID)
+						break
+					}
+				}
+				break
+			}
 			values = append(values, info.stat.uuid)
 		case Node:
 			values = append(values, info.host)
@@ -295,9 +486,26 @@ func getLabelValues(labels []string, info labelInfo) []string {
 			values = append(values, info.pcieInfo.pcieWidth)
 		case Pid:
 			values = append(values, fmt.Sprintf("%d", info.pid))
+		case MemoryDie:
+			values = append(values, info.memoryDie)
+		case XidErrorType:
+			values = append(values, info.xidErrorType)
 		default:
 			values = append(values, "") // configured label not applicable, add this to prevent panic
 		}
 	}
+	log.Debugf("getLabelValues: %+v", values)
 	return values
+}
+
+func initClientSet() kubernetes.Interface {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		log.Printf("Failed to get in cluser config, err: %v", err)
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		log.Printf("Failed to init clientset, err: %v", err)
+	}
+	return clientset
 }

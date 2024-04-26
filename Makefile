@@ -13,6 +13,7 @@
 # limitations under the License.
 
 TARGETPLATFORM ?= linux/amd64
+VERSION ?= v1.0.0
 export GOOS := $(word 1, $(subst /, ,$(TARGETPLATFORM)))
 export GOARCH := $(word 2, $(subst /, ,$(TARGETPLATFORM)))
 export CGO_ENABLED := 1
@@ -23,14 +24,13 @@ endif
 generate:
 	mockgen -package mock -destination pkg/mock/cndev.go -mock_names=Cndev=Cndev github.com/Cambricon/mlu-exporter/pkg/cndev Cndev
 	mockgen -package mock -destination pkg/mock/podrsources.go -mock_names=PodResources=PodResources github.com/Cambricon/mlu-exporter/pkg/podresources PodResources
-	mockgen -package mock -destination pkg/mock/cnpapi.go -mock_names=Cnpapi=Cnpapi github.com/Cambricon/mlu-exporter/pkg/cnpapi Cnpapi
 	mockgen -package mock -destination pkg/mock/host.go -mock_names=Host=Host github.com/Cambricon/mlu-exporter/pkg/host Host
 
 lint:
 	golangci-lint run -v
 
 build:
-	go build  -trimpath -ldflags="-s -w" -o mlu-exporter .
+	go build -trimpath -ldflags="-s -w" -ldflags="-X 'main.version=$(VERSION)'" -o mlu-exporter .
 
 test:
 	go test -v ./...

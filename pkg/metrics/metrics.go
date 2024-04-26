@@ -15,10 +15,9 @@
 package metrics
 
 import (
-	"io/ioutil"
-	"log"
 	"os"
 
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
 
@@ -43,9 +42,9 @@ func (l Labels) GetKeys() []string {
 }
 
 func load(c *Conf, path string) error {
-	f, err := ioutil.ReadFile(path)
+	f, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
-		log.Printf("Can not find config file %s", path)
+		log.Errorf("Can not find config file %s", path)
 	}
 	if err != nil {
 		return err
@@ -62,6 +61,6 @@ func GetOrDie(path string) Conf {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Get config:\n%s", actual)
+	log.Debugf("Get config:\n%s", actual)
 	return conf
 }

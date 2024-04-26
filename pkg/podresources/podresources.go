@@ -17,12 +17,19 @@ package podresources
 import (
 	"context"
 	"fmt"
+	"log"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 
 	"google.golang.org/grpc"
-	podresourcesapi "k8s.io/kubernetes/pkg/kubelet/apis/podresources/v1alpha1"
+	"google.golang.org/grpc/credentials/insecure"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/client-go/kubernetes"
+	podresourcesapi "k8s.io/kubelet/pkg/apis/podresources/v1alpha1"
 )
 
 type PodResources interface {
@@ -30,36 +37,51 @@ type PodResources interface {
 }
 
 type podResources struct {
-	timeout  time.Duration
-	socket   string
-	reources []string
-	maxSize  int
+	client    kubernetes.Interface
+	host      string
+	maxSize   int
+	mode      string
+	resources []string
+	socket    string
+	timeout   time.Duration
 }
 
-func NewPodResourcesClient(timeout time.Duration, socket string, resources []string, maxSize int) PodResources {
-	return &podResources{
-		timeout:  timeout,
-		socket:   socket,
-		reources: resources,
-		maxSize:  maxSize,
+func NewPodResourcesClient(timeout time.Duration, socket string, resources []string, maxSize int, mode, host string, client kubernetes.Interface) PodResources {
+	podResource := &podResources{
+		timeout:   timeout,
+		socket:    socket,
+		resources: resources,
+		maxSize:   maxSize,
+		mode:      mode,
 	}
+	if mode == "dynamic-smlu" {
+		podResource.host = host
+		podResource.client = client
+	}
+	return podResource
 }
 
 type PodInfo struct {
-	Pod       string
-	Namespace string
 	Container string
+	Index     uint
+	Namespace string
+	Pod       string
+	VF        string
 }
 
 func connectToServer(socket string, timeout time.Duration, maxSize int) (*grpc.ClientConn, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	conn, err := grpc.DialContext(ctx, socket, grpc.WithInsecure(), grpc.WithBlock(),
+	creds := insecure.NewCredentials()
+	dialer := func(ctx context.Context, address string) (net.Conn, error) {
+		return net.DialTimeout("unix", address, timeout)
+	}
+	conn, err := grpc.DialContext(ctx, socket,
+		grpc.WithTransportCredentials(creds),
+		grpc.WithBlock(),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxSize)),
-		grpc.WithDialer(func(addr string, timeout time.Duration) (net.Conn, error) {
-			return net.DialTimeout("unix", addr, timeout)
-		}),
+		grpc.WithContextDialer(dialer),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failure connecting to %s: %v", socket, err)
@@ -95,18 +117,73 @@ func contains(set []string, s string) bool {
 	return false
 }
 
-func getDeviceToPodInfo(pods podresourcesapi.ListPodResourcesResponse, resources []string) map[string]PodInfo {
+func (p podResources) getDeviceToPodInfo(pods podresourcesapi.ListPodResourcesResponse) (map[string]PodInfo, error) {
+	var podList *v1.PodList
+	if p.host != "" {
+		var err error
+		selector := fields.SelectorFromSet(fields.Set{"spec.nodeName": p.host, "status.phase": "Running"})
+		podList, err = p.client.CoreV1().Pods(v1.NamespaceAll).List(context.TODO(), metav1.ListOptions{
+			FieldSelector: selector.String(),
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	m := make(map[string]PodInfo)
+	if p.mode == "dynamic-smlu" && podList != nil {
+		for _, pod := range podList.Items {
+			if pod.ObjectMeta.Annotations == nil {
+				continue
+			}
+			anno, ok := pod.ObjectMeta.Annotations["CAMBRICON_DSMLU_PROFILE_INSTANCE"]
+			if !ok {
+				continue
+			}
+			v := strings.Split(anno, "_")
+			// 1_256_1_0 represents profileID_instanceHandle_slot_instanceID
+			if len(v) != 4 {
+				log.Printf("Found pod %s with invalid annotation %s, ignore it", pod.Name, anno)
+				continue
+			}
+			index, err := strconv.Atoi(v[2])
+			if err != nil {
+				log.Printf("strconv value %v, %v", v[2], err)
+				continue
+			}
+			pi := PodInfo{
+				Pod:       pod.Name,
+				Namespace: pod.Namespace,
+				Index:     uint(index),
+				VF:        v[3],
+			}
+			for _, c := range pod.Spec.Containers {
+				for k, v := range c.Resources.Limits {
+					if v.Value() > 0 && strings.HasPrefix(k.String(), "cambricon.com/") &&
+						(strings.HasSuffix(k.String(), ".vcore") || strings.HasSuffix(k.String(), ".vmemory")) {
+						pi.Container = c.Name
+						break
+					}
+				}
+			}
+			m[v[1]] = pi
+		}
+		return m, nil
+	}
+
 	for _, pod := range pods.GetPodResources() {
 		for _, container := range pod.GetContainers() {
 			for _, device := range container.GetDevices() {
-				if !contains(resources, device.GetResourceName()) {
+				if !contains(p.resources, device.GetResourceName()) {
 					continue
 				}
+				podName := pod.GetName()
+				podNamespace := pod.GetNamespace()
+				containerName := container.GetName()
 				podInfo := PodInfo{
-					Pod:       pod.GetName(),
-					Namespace: pod.GetNamespace(),
-					Container: container.GetName(),
+					Pod:       podName,
+					Namespace: podNamespace,
+					Container: containerName,
 				}
 				for _, uuid := range device.GetDeviceIds() {
 					m[uuid] = podInfo
@@ -114,14 +191,14 @@ func getDeviceToPodInfo(pods podresourcesapi.ListPodResourcesResponse, resources
 			}
 		}
 	}
-	return m
+
+	return m, nil
 }
 
-func (k *podResources) GetDeviceToPodInfo() (map[string]PodInfo, error) {
-	pods, err := listPods(k.socket, k.timeout, k.maxSize)
+func (p podResources) GetDeviceToPodInfo() (map[string]PodInfo, error) {
+	pods, err := listPods(p.socket, p.timeout, p.maxSize)
 	if err != nil {
 		return nil, fmt.Errorf("list pods: %v", err)
 	}
-	info := getDeviceToPodInfo(*pods, k.reources)
-	return info, nil
+	return p.getDeviceToPodInfo(*pods)
 }

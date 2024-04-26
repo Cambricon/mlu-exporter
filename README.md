@@ -7,10 +7,11 @@ Prometheus exporter for Cambricon MLU metrics, written in Go with pluggable metr
 The prerequisites for running Cambricon MLU Exporter:
 
 - MLU270, MLU270-X5K, MLU220, MLU290, MLU370 devices
-- MLU driver >= 4.20.9
-- cntoolkit >= 2.8.2 on your building machine
+- For MLU 2xx needs driver >= 4.9.13
+- For MLU 3xx needs driver >= 4.20.9
+- For MLU 2xx、3xx needs cntoolkit >= 2.8.2 on your building machine
 
-For MLU driver version 4.9.x, please use [release v1.5.3].
+For MLU driver version before 4.9.13, please use [release v1.5.3].
 
 ## Installation and Usage
 
@@ -27,14 +28,13 @@ cd mlu-exporter
 
 Set the following environment variables if you need.
 
-| env        | description                                                                    |
-| ---------- | ------------------------------------------------------------------------------ |
-| APT_PROXY  | apt proxy address                                                              |
-| GOPROXY    | golang proxy address                                                           |
-| ARCH       | target platform architecture, amd64 or arm64, amd64 by default                 |
-| LIBCNDEV   | absolute path of the libcndev.so binary, neuware installation path by default  |
-| LIBCNPAPI  | absolute path of the libcnpapi.so binary, neuware installation path by default |
-| BASE_IMAGE | mlu exporter base image                                                        |
+| env        | description                                                                   |
+| ---------- | ----------------------------------------------------------------------------- |
+| APT_PROXY  | apt proxy address                                                             |
+| GOPROXY    | golang proxy address                                                          |
+| ARCH       | target platform architecture, amd64 or arm64, amd64 by default                |
+| LIBCNDEV   | absolute path of the libcndev.so binary, neuware installation path by default |
+| BASE_IMAGE | mlu exporter base image                                                       |
 
 Docker should be >= 17.05.0 on your building machine. If you want to cross build, make sure docker version >= 19.03.
 
@@ -67,7 +67,7 @@ docker run -d \
 --privileged=true \
 --pid=host \
 -e ENV_NODE_NAME={nodeName} \
-cambricon-mlu-exporter:v1.6.7
+cambricon-mlu-exporter:v2.0.11
 ```
 
 Then use the following command to get the metrics.
@@ -84,10 +84,11 @@ docker run -d \
 -v examples/metrics.yaml:/etc/mlu-exporter/metrics.yaml \
 --privileged=true \
 --pid=host \
-cambricon-mlu-exporter:v1.6.7 \
+cambricon-mlu-exporter:v2.0.11 \
 mlu-exporter \
 --metrics-config=/etc/mlu-exporter/metrics.yaml \
 --metrics-path=/metrics \
+--log-level=info \
 --port=30108 \
 --hostname=hostname \
 --metrics-prefix=mlu \
@@ -97,20 +98,22 @@ mlu-exporter \
 
 Command Args Description
 
-| arg            | description                                |
-| -------------- | ------------------------------------------ |
-| metrics-config | configuration file of MLU exporter metrics |
-| metrics-path   | metrics path of the exporter service       |
-| hostname       | machine hostname, or env:"ENV_NODE_NAME"   |
-| port           | exporter service port                      |
-| metrics-prefix | prefix of all metric names                 |
-| collector      | collector names, cndev by default          |
+| arg            | description                                                            |
+| -------------- | ---------------------------------------------------------------------- |
+| collector      | collector names, cndev by default                                      |
+| env-share-num  | vf numbers under env share mode, should set virtual-mode to env-share  |
+| hostname       | machine hostname, or env:"ENV_NODE_NAME"                               |
+| log-level      | set log level: trace/debug/info/warn/error/fatal/panic" default:"info" |
+| metrics-config | configuration file of MLU exporter metrics                             |
+| metrics-path   | metrics path of the exporter service                                   |
+| metrics-prefix | prefix of all metric names                                             |
+| port           | exporter service port                                                  |
+| virtual-mode   | virtual mode, default "", support dynamic-smlu, env-share              |
 
 available collectors:
 
 - cndev: collects basic MLU metrics
 - podresources: collects MLU usage metrics in containers managed by Kubernetes. For Kubernetes lower than 1.15, make sure `KubeletPodResources` [feature gate] is enabled by setting the `feature-gates` [kubelet option] in your kubelet configuration.
-- cnpapi: collects cnpapi pmu api metrics. It does not support SR-IOV. **Please note that cnpapi can only be used by one single process on a machine. Not recommended for production scenarios.**
 - host: collects host machine metrics
 
 And set the metrics configuration file passed by your metrics-config arg as you like, see examples/metrics.yaml for an example.
@@ -141,6 +144,12 @@ And if you want to create a Prometheus service monitor
 kubectl apply -f examples/cambricon-mlu-exporter-sm.yaml
 ```
 
+if you want to create a Prometheus [additional scrape configs]
+
+```shell
+kubectl create secret generic additional-scrape-configs --from-file=examples/cambricon-mlu-exporter-additional.yaml
+```
+
 Then checkout your Prometheus to get the MLU metrics.
 
 ##### Group Metrics
@@ -153,10 +162,10 @@ To attach namespace/pod/container info to another MLU metric, use `mlu_container
 mlu_power_usage * on(uuid) group_right mlu_container
 ```
 
-And for SR-IOV VFs:
+And for env-share VFs:
 
 ```text
-mlu_virtual_function_utilization * on(uuid,vf) group_right mlu_container
+mlu_utilization * on(uuid,vf) group_right mlu_container
 ```
 
 #### Metrics and Labels
@@ -174,3 +183,4 @@ For MLU370, mlu_temperature does not support cluster temperature, all cluster te
 [release v1.5.3]: https://github.com/Cambricon/mlu-exporter/releases/tag/v1.5.3
 [feature gate]: https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/
 [kubelet option]: https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/#options
+[additional scrape configs]: https://github.com/prometheus-operator/prometheus-operator/tree/main/example/additional-scrape-configs

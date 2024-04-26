@@ -16,8 +16,10 @@ package host
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Host interface {
@@ -33,7 +35,7 @@ func NewHostClient() Host {
 }
 
 func (h *host) GetCPUStats() (float64, float64, error) {
-	contents, err := ioutil.ReadFile("/proc/stat")
+	contents, err := os.ReadFile("/proc/stat")
 	if err != nil {
 		return 0, 0, err
 	}
@@ -47,11 +49,12 @@ func (h *host) GetCPUStats() (float64, float64, error) {
 	idle = idle + iowait
 	noneIdle := user + nice + sys + irq + softirq + steal
 	total := idle + noneIdle
+	log.Debugf("CPU Total: %v ,CPU Idle: %v", total, idle)
 	return total, idle, err
 }
 
 func (h *host) GetMemoryStats() (float64, float64, error) {
-	contents, err := ioutil.ReadFile("/proc/meminfo")
+	contents, err := os.ReadFile("/proc/meminfo")
 	if err != nil {
 		return 0, 0, err
 	}
@@ -65,5 +68,6 @@ func (h *host) GetMemoryStats() (float64, float64, error) {
 	if err != nil {
 		return 0, 0, fmt.Errorf("failed to scan %s, err: %w", lines[1], err)
 	}
+	log.Debugf("Memory Total: %v ,Memory Free: %v", total, free)
 	return total, free, err
 }

@@ -13,11 +13,12 @@
 # limitations under the License.
 
 ARG BUILDPLATFORM=linux/amd64
-ARG BASE_IMAGE=ubuntu:18.04
-FROM --platform=$BUILDPLATFORM golang:1.13 as build
+ARG BASE_IMAGE=ubuntu:20.04
+FROM --platform=$BUILDPLATFORM golang:1.19 as build
 ARG APT_PROXY
 ARG GOPROXY
 ARG TARGETPLATFORM
+ARG VERSION
 RUN set -ex && export http_proxy=$APT_PROXY && \
   apt-get update && \
   apt-get install -y build-essential gcc-aarch64-linux-gnu ca-certificates make

@@ -15,7 +15,6 @@
 package metrics
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -24,7 +23,7 @@ import (
 )
 
 func TestLoad(t *testing.T) {
-	f, err := ioutil.TempFile("", "config.*.yaml")
+	f, err := os.CreateTemp("", "config.*.yaml")
 	require.NoError(t, err)
 	defer os.Remove(f.Name())
 	f.Write([]byte(`

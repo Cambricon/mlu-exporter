@@ -15,13 +15,14 @@
 package collector
 
 import (
-	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Cambricon/mlu-exporter/pkg/podresources"
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -33,8 +34,9 @@ var (
 		"cambricon.com/half-mlu-vf-count",
 		"cambricon.com/quarter-mlu-vf-count",
 	}
-	sriovSubString    = "--fake--"
 	envShareSubString = "-_-"
+	mimSubString      = "-mim-"
+	smluSubString     = "-smlu-"
 	uuidPrefix        = "MLU-"
 	maxSize           = 1024 * 1024 * 16 // 16 Mb
 	void              struct{}
@@ -45,24 +47,25 @@ func init() {
 }
 
 type podResourcesCollector struct {
-	metrics       collectorMetrics
-	host          string
-	devicePodInfo map[string]podresources.PodInfo
+	baseInfo      BaseInfo
 	client        podresources.PodResources
-	sharedInfo    map[string]mluStat
+	devicePodInfo map[string]podresources.PodInfo
 	fnMap         map[string]interface{}
+	metrics       collectorMetrics
+	sharedInfo    map[string]mluStat
 }
 
-func NewPodResourcesCollector(m collectorMetrics, host string) Collector {
+func NewPodResourcesCollector(m collectorMetrics, bi BaseInfo) Collector {
 	c := &podResourcesCollector{
-		metrics: m,
-		host:    host,
-		client:  podresources.NewPodResourcesClient(timeout, socket, resources, maxSize),
+		baseInfo: bi,
+		client:   podresources.NewPodResourcesClient(timeout, socket, resources, maxSize, bi.mode, bi.host, bi.client),
+		metrics:  m,
 	}
 	c.fnMap = map[string]interface{}{
 		Allocated: c.collectBoardAllocated,
 		Container: c.collectMLUContainer,
 	}
+	log.Debugf("podResourcesCollector: %+v", c)
 	return c
 }
 
@@ -78,8 +81,9 @@ func (c *podResourcesCollector) updateMetrics(m collectorMetrics) {
 
 func (c *podResourcesCollector) collect(ch chan<- prometheus.Metric) {
 	info, err := c.client.GetDeviceToPodInfo()
+	log.Debugf("GetDeviceToPodInfo: %+v", info)
 	if err != nil {
-		log.Printf("GetDeviceToPodInfo err: %v", err)
+		log.Errorf("GetDeviceToPodInfo err: %v", err)
 		return
 	}
 	c.devicePodInfo = info
@@ -87,7 +91,7 @@ func (c *podResourcesCollector) collect(ch chan<- prometheus.Metric) {
 		fn := c.fnMap[name]
 		f, ok := fn.(func(chan<- prometheus.Metric, metric))
 		if !ok {
-			log.Printf("type assertion for fn %s failed, skip", name)
+			log.Warnf("type assertion for fn %s failed, skip", name)
 		} else {
 			f(ch, m)
 		}
@@ -98,11 +102,8 @@ func (c *podResourcesCollector) collectBoardAllocated(ch chan<- prometheus.Metri
 	mlus := make(map[string]bool)
 	for device := range c.devicePodInfo {
 		uuid := device
-		for _, sub := range []string{envShareSubString, sriovSubString} {
-			if strings.Contains(device, sub) {
-				uuid = strings.Split(device, sub)[0]
-				break
-			}
+		if strings.Contains(device, envShareSubString) {
+			uuid = strings.Split(device, envShareSubString)[0]
 		}
 		mlus[uuid] = true
 	}
@@ -112,7 +113,7 @@ func (c *podResourcesCollector) collectBoardAllocated(ch chan<- prometheus.Metri
 		driver = info.driver
 		break
 	}
-	labelValues := getLabelValues(m.labels, labelInfo{stat: mluStat{model: model, driver: driver}, host: c.host})
+	labelValues := getLabelValues(m.labels, labelInfo{stat: mluStat{model: model, driver: driver}, host: c.baseInfo.host})
 	ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(len(mlus)), labelValues...)
 }
 
@@ -121,27 +122,72 @@ func (c *podResourcesCollector) collectMLUContainer(ch chan<- prometheus.Metric,
 	for dev := range c.sharedInfo {
 		devs[dev] = void
 	}
+	filterDup := map[string]struct{}{}
 	for device, podInfo := range c.devicePodInfo {
-		vf := ""
-		uuid := strings.TrimLeft(device, uuidPrefix)
-		if strings.Contains(uuid, envShareSubString) {
-			uuid = strings.Split(uuid, envShareSubString)[0]
-		}
-		if strings.Contains(device, sriovSubString) {
-			s := strings.Split(uuid, sriovSubString)
-			uuid = s[0]
-			vf = s[1]
+		var vf, uuid string
+		if c.baseInfo.mode == "dynamic-smlu" {
+			for _, inf := range c.sharedInfo {
+				if inf.slot == podInfo.Index {
+					// Here uuid is the device id and vf is the instanceID.
+					// We can ensure that the combination of uuid and instanceID is unique at the same moment.
+					uuid = inf.uuid
+					vf = podInfo.VF
+					break
+				}
+			}
+		} else {
+			uuid = strings.TrimLeft(device, uuidPrefix)
+			if strings.Contains(uuid, envShareSubString) {
+				s := strings.Split(uuid, envShareSubString)
+				uuid = s[0]
+				vf = s[1]
+			}
+			if strings.Contains(uuid, mimSubString) {
+				s := strings.Split(uuid, mimSubString)
+				uuid = s[0]
+				uid := strings.TrimLeft(s[1], uuidPrefix)
+				st := c.sharedInfo[uuid]
+				for _, inf := range st.mimInfos {
+					if inf.UUID == uid {
+						vf = strconv.Itoa(inf.InstanceID)
+						break
+					}
+				}
+			}
+			if strings.Contains(uuid, smluSubString) {
+				s := strings.Split(uuid, smluSubString)
+				uuid = s[0]
+				uid := strings.TrimLeft(s[1], uuidPrefix)
+				st := c.sharedInfo[uuid]
+				for _, inf := range st.smluInfos {
+					if inf.UUID == uid {
+						vf = strconv.Itoa(inf.InstanceID)
+						break
+					}
+				}
+			}
 		}
 		if _, ok := c.sharedInfo[uuid]; !ok {
-			log.Printf("failed to find mlu with uuid %s, skip", uuid)
+			log.Warnf("failed to find mlu with uuid %s, skip", uuid)
 			continue
 		}
+		if _, ok := filterDup[uuid+vf]; ok {
+			continue
+		}
+		filterDup[uuid+vf] = void
 		delete(devs, uuid)
-		labelValues := getLabelValues(m.labels, labelInfo{stat: c.sharedInfo[uuid], host: c.host, podInfo: podInfo, vf: vf})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, 1, labelValues...)
+		if c.baseInfo.mode == "dynamic-smlu" {
+			labelValues := getLabelValues(m.labels, labelInfo{stat: c.sharedInfo[uuid], host: c.baseInfo.host, podInfo: podInfo, typ: "vcore", vf: vf})
+			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, 1, labelValues...)
+			labelValues = getLabelValues(m.labels, labelInfo{stat: c.sharedInfo[uuid], host: c.baseInfo.host, podInfo: podInfo, typ: "vmemory", vf: vf})
+			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, 1, labelValues...)
+		} else {
+			labelValues := getLabelValues(m.labels, labelInfo{stat: c.sharedInfo[uuid], host: c.baseInfo.host, podInfo: podInfo, vf: vf})
+			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, 1, labelValues...)
+		}
 	}
 	for dev := range devs {
-		labelValues := getLabelValues(m.labels, labelInfo{stat: c.sharedInfo[dev], host: c.host})
+		labelValues := getLabelValues(m.labels, labelInfo{stat: c.sharedInfo[dev], host: c.baseInfo.host})
 		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, 0, labelValues...)
 	}
 }
