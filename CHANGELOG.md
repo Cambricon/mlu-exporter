@@ -1,5 +1,26 @@
 # Changelog
 
+## v2.0.14
+
+- Support obtaining `xid` through `cndev` callback function
+- Support pushing `xid` metric
+- Support retrying when initial allocation is insufficient
+- Add chip temperature metric
+- Bump `cndev` to version 3.12.3
+
+## v2.0.13
+
+- Support pushing metrics to PushGateway:
+  - config push-gateway-url to enable
+  - add `push: true` in metrics config, this metrics will push to PushGateway and not export in metrics exporter
+  - Support device arm os memory metrics
+
+## v2.0.12
+
+- Add metric:
+  - mlulink_cntr_cnp_package_total
+  - mlulink_cntr_pfc_package_total
+
 ## v2.0.11
 
 - Remove mem-share

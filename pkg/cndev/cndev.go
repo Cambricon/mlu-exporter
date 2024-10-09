@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"unsafe"
 
+	"github.com/Masterminds/semver/v3"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -42,6 +43,22 @@ type SmluInfo struct {
 	MemTotal   int64
 	Name       string
 	UUID       string
+}
+
+type DeviceInfo struct {
+	Device            uint
+	ComputeInstanceID int32
+	MLUInstanceID     int32
+}
+
+type XIDInfo struct {
+	XID int64
+	DeviceInfo
+}
+
+type XIDInfoWithTimestamp struct {
+	Timestamp string
+	XIDInfo
 }
 
 type Cndev interface {
@@ -69,7 +86,7 @@ type Cndev interface {
 	GetDeviceMemory(idx uint) (int64, int64, int64, int64, error)
 	GetDeviceMemoryDieCount(idx uint) (int, error)
 	GetDeviceMLULinkCapability(idx, link uint) (uint, uint, error)
-	GetDeviceMLULinkCounter(idx, link uint) (uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, error)
+	GetDeviceMLULinkCounter(idx, link uint) (uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, error)
 	GetDeviceMLULinkPortMode(idx, link uint) (int, error)
 	GetDeviceMLULinkPortNumber(idx uint) int
 	GetDeviceMLULinkSpeedInfo(idx, link uint) (float32, int, error)
@@ -87,7 +104,7 @@ type Cndev interface {
 	GetDeviceRemappedRows(idx uint) (uint32, uint32, uint32, uint32, error)
 	GetDeviceRetiredPageInfo(idx uint) (int, uint32, error)
 	GetDeviceSN(idx uint) (string, error)
-	GetDeviceTemperature(idx uint) (int, int, []int, []int, error)
+	GetDeviceTemperature(idx uint) (int, int, int, []int, []int, error)
 	GetDeviceTinyCoreUtil(idx uint) ([]int, error)
 	GetDeviceUtil(idx uint) (int, []int, error)
 	GetDeviceFrequency(idx uint) (int, int, error)
@@ -95,7 +112,8 @@ type Cndev interface {
 	GetDeviceVersion(idx uint) (uint, uint, uint, uint, uint, uint, error)
 	GetDeviceVfState(idx uint) (int, error)
 	GetDeviceVideoCodecUtil(idx uint) ([]int, error)
-	GetDeviceXidErrors(idx uint) (map[string]uint64, error)
+	RegisterEventsHandleAndWait(slots []int, ch chan XIDInfoWithTimestamp) error
+	GetSupportedEventTypes(idx uint) error
 }
 
 type cndev struct {
@@ -139,18 +157,39 @@ func (c *cndev) DeviceSmluModeEnabled(idx uint) (bool, error) {
 }
 
 func (c *cndev) GetAllMLUInstanceInfo(idx uint) ([]MimInfo, error) {
+	miCount := C.int(1 << 4)
 	var miInfos []MimInfo
-	// Inherit from cndev, assuming mim counts for single card should never exceed 10
-	miCount := C.int(10)
 	var miInfo C.cndevMluInstanceInfo_t
 	infs := (*C.cndevMluInstanceInfo_t)(C.malloc(C.size_t(miCount) * C.size_t(unsafe.Sizeof(miInfo))))
-	defer C.free(unsafe.Pointer(infs))
+	defer func() {
+		if infs != nil {
+			C.free(unsafe.Pointer(infs))
+		}
+	}()
+
 	infs.version = C.CNDEV_VERSION_6
 	r := C.cndevGetAllMluInstanceInfo(&miCount, infs, c.cndevHandleMap[idx])
-	if errorString(r) != nil {
+	if errorString(r) != nil && r != C.CNDEV_ERROR_INSUFFICIENT_SPACE {
 		return miInfos, errorString(r)
 	}
-	infos := (*[10]C.cndevMluInstanceInfo_t)(unsafe.Pointer(infs))[:miCount]
+
+	// handle the case when the initial count is insufficient,
+	// after cndevGetAllMluInstanceInfo miCount will be set to real count,
+	// so just use it to reallocate and cndevGetAllMluInstanceInfo again.
+	if r == C.CNDEV_ERROR_INSUFFICIENT_SPACE {
+		log.Debugf("cndevGetAllMluInstanceInfo with insufficient space with real counts %d, with slot: %d, will try with the real counts", miCount, idx)
+		newInfs := (*C.cndevMluInstanceInfo_t)(C.realloc(unsafe.Pointer(infs), C.size_t(miCount)*C.size_t(unsafe.Sizeof(miInfo))))
+		if newInfs == nil {
+			return miInfos, fmt.Errorf("realloc failed for cndevGetAllMluInstanceInfo")
+		}
+		infs = newInfs
+		r := C.cndevGetAllMluInstanceInfo(&miCount, infs, c.cndevHandleMap[idx])
+		if errorString(r) != nil {
+			return miInfos, errorString(r)
+		}
+	}
+
+	infos := (*[1 << 16]C.cndevMluInstanceInfo_t)(unsafe.Pointer(infs))[:miCount]
 	for i := 0; i < int(miCount); i++ {
 		info := infos[i]
 		miInfos = append(miInfos,
@@ -163,21 +202,44 @@ func (c *cndev) GetAllMLUInstanceInfo(idx uint) ([]MimInfo, error) {
 			})
 	}
 	log.Debugf("mim infos for device %d are %+v", idx, miInfos)
+
 	return miInfos, nil
 }
 
 func (c *cndev) GetAllSMluInfo(idx uint) ([]SmluInfo, error) {
+	smluCount := C.int(1 << 7)
 	var smluInfos []SmluInfo
-	smluCount := C.int(100)
 	var smluInfo C.cndevSMluInfo_t
 	infs := (*C.cndevSMluInfo_t)(C.malloc(C.size_t(smluCount) * C.size_t(unsafe.Sizeof(smluInfo))))
-	defer C.free(unsafe.Pointer(infs))
+	defer func() {
+		if infs != nil {
+			C.free(unsafe.Pointer(infs))
+		}
+	}()
+
 	infs.version = C.CNDEV_VERSION_6
 	r := C.cndevGetAllSMluInstanceInfo(&smluCount, infs, c.cndevHandleMap[idx])
-	if errorString(r) != nil {
+	if errorString(r) != nil && r != C.CNDEV_ERROR_INSUFFICIENT_SPACE {
 		return smluInfos, errorString(r)
 	}
-	infos := (*[100]C.cndevSMluInfo_t)(unsafe.Pointer(infs))[:smluCount]
+
+	// handle the case when the initial count is insufficient,
+	// after cndevGetAllSMluInstanceInfo smluCount will be set to real count,
+	// so just use it to reallocate and cndevGetAllSMluInstanceInfo again.
+	if r == C.CNDEV_ERROR_INSUFFICIENT_SPACE {
+		log.Debugf("cndevGetAllSMluInstanceInfo with insufficient space with real counts %d, with slot: %d, will try with the real counts", smluCount, idx)
+		newInfs := (*C.cndevSMluInfo_t)(C.realloc(unsafe.Pointer(infs), C.size_t(smluCount)*C.size_t(unsafe.Sizeof(smluInfo))))
+		if newInfs == nil {
+			return smluInfos, fmt.Errorf("realloc failed for cndevGetAllSMluInstanceInfo")
+		}
+		infs = newInfs
+		r := C.cndevGetAllSMluInstanceInfo(&smluCount, infs, c.cndevHandleMap[idx])
+		if errorString(r) != nil {
+			return smluInfos, errorString(r)
+		}
+	}
+
+	infos := (*[1 << 16]C.cndevSMluInfo_t)(unsafe.Pointer(infs))[:smluCount]
 	for i := 0; i < int(smluCount); i++ {
 		info := infos[i]
 		smluInfos = append(smluInfos,
@@ -191,15 +253,24 @@ func (c *cndev) GetAllSMluInfo(idx uint) ([]SmluInfo, error) {
 			})
 	}
 	log.Debugf("smlu infos for device %d are %+v", idx, smluInfos)
+
 	return smluInfos, nil
 }
 
 func (c *cndev) GetDeviceArmOsMemory(idx uint) (int64, int64, error) {
-	var cardArmOsMemInfo C.cndevArmOsMemoryInfo_t
-	cardArmOsMemInfo.version = C.CNDEV_VERSION_5
-	r := C.cndevGetArmOsMemoryUsage(&cardArmOsMemInfo, c.cndevHandleMap[idx])
-	//todo: this api interface is not stable at the moment, mock it first, fix when stable
-	return int64(5), int64(100), errorString(r)
+	type armOsMem struct {
+		version     int
+		memoryTotal int64
+		memoryUsed  int64
+	}
+	var armOsMemInfo armOsMem
+	memInfo := (*C.cndevArmOsMemoryInfo_t)(C.malloc(C.size_t(unsafe.Sizeof(armOsMemInfo))))
+	defer C.free(unsafe.Pointer(memInfo))
+	memInfo.version = C.CNDEV_VERSION_6
+	r := C.cndevGetArmOsMemoryUsage(memInfo, c.cndevHandleMap[idx])
+	armOsMemoryTotal := *(*int64)(unsafe.Pointer(uintptr(unsafe.Pointer(memInfo)) + unsafe.Sizeof(armOsMemInfo.version)))
+	armOsMemoryUsed := *(*int64)(unsafe.Pointer(uintptr(unsafe.Pointer(memInfo)) + unsafe.Sizeof(armOsMemInfo.version) + unsafe.Sizeof(armOsMemInfo.memoryTotal)))
+	return int64(armOsMemoryUsed), int64(armOsMemoryTotal), errorString(r)
 }
 
 func (c *cndev) GetDeviceClusterCount(idx uint) (int, error) {
@@ -263,6 +334,13 @@ func (c *cndev) GetDeviceDDRInfo(idx uint) (int, float64, error) {
 		return 0, 0, err
 	}
 	return int(cardDDRInfo.dataWidth), bandWidth, nil
+}
+
+func (c *cndev) GetDeviceDriverVersion(idx uint) (uint, uint, uint, error) {
+	var cardVersionInfo C.cndevVersionInfo_t
+	cardVersionInfo.version = C.CNDEV_VERSION_5
+	r := C.cndevGetVersionInfo(&cardVersionInfo, c.cndevHandleMap[idx])
+	return uint(cardVersionInfo.driverMajorVersion), uint(cardVersionInfo.driverMinorVersion), uint(cardVersionInfo.driverBuildVersion), errorString(r)
 }
 
 func (c *cndev) GetDeviceECCInfo(idx uint) (uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, error) {
@@ -363,13 +441,14 @@ func (c *cndev) GetDeviceMLULinkCapability(idx, link uint) (uint, uint, error) {
 	return uint(cardMLULinkCapability.p2pTransfer), uint(cardMLULinkCapability.interlakenSerdes), errorString(r)
 }
 
-func (c *cndev) GetDeviceMLULinkCounter(idx, link uint) (uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, error) {
+func (c *cndev) GetDeviceMLULinkCounter(idx, link uint) (uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, error) {
 	var cardMLULinkCount C.cndevMLULinkCounter_t
 	cardMLULinkCount.version = C.CNDEV_VERSION_5
 	r := C.cndevGetMLULinkCounter(&cardMLULinkCount, c.cndevHandleMap[idx], C.int(link))
 	return uint64(cardMLULinkCount.cntrReadByte), uint64(cardMLULinkCount.cntrReadPackage), uint64(cardMLULinkCount.cntrWriteByte), uint64(cardMLULinkCount.cntrWritePackage),
 		uint64(cardMLULinkCount.errCorrected), uint64(cardMLULinkCount.errCRC24), uint64(cardMLULinkCount.errCRC32), uint64(cardMLULinkCount.errEccDouble),
-		uint64(cardMLULinkCount.errFatal), uint64(cardMLULinkCount.errReplay), uint64(cardMLULinkCount.errUncorrected), errorString(r)
+		uint64(cardMLULinkCount.errFatal), uint64(cardMLULinkCount.errReplay), uint64(cardMLULinkCount.errUncorrected), uint64(cardMLULinkCount.cntrCnpPackage),
+		uint64(cardMLULinkCount.cntrPfcPackage), errorString(r)
 }
 
 func (c *cndev) GetDeviceMLULinkPortMode(idx, link uint) (int, error) {
@@ -463,23 +542,45 @@ func (c *cndev) GetDevicePower(idx uint) (int, error) {
 }
 
 func (c *cndev) GetDeviceProcessUtil(idx uint) ([]uint32, []uint32, []uint32, []uint32, []uint32, []uint32, error) {
-	processCount := 10 // maximum number of processes running on an MLU is 10
+	processCount := 1 << 4
+
 	var util C.cndevProcessUtilization_t
 	utils := (*C.cndevProcessUtilization_t)(C.malloc(C.size_t(processCount) * C.size_t(unsafe.Sizeof(util))))
-	defer C.free(unsafe.Pointer(utils))
+	defer func() {
+		if utils != nil {
+			C.free(unsafe.Pointer(utils))
+		}
+	}()
+
 	utils.version = C.CNDEV_VERSION_5
 	r := C.cndevGetProcessUtilization((*C.uint)(unsafe.Pointer(&processCount)), utils, c.cndevHandleMap[idx])
-	if err := errorString(r); err != nil {
+	if err := errorString(r); err != nil && r != C.CNDEV_ERROR_INSUFFICIENT_SPACE {
 		return nil, nil, nil, nil, nil, nil, err
 	}
+
+	// handle the case when the initial count is insufficient,
+	// after cndevGetProcessUtilization processCount will be set to real count,
+	// so just use it to reallocate and cndevGetProcessUtilization again.
+	if r == C.CNDEV_ERROR_INSUFFICIENT_SPACE {
+		log.Debugf("cndevGetProcessUtilization with insufficient space with real counts %d, with slot: %d, will try with the real counts", processCount, idx)
+		newUtils := (*C.cndevProcessUtilization_t)(C.realloc(unsafe.Pointer(utils), C.size_t(processCount)*C.size_t(unsafe.Sizeof(util))))
+		if newUtils == nil {
+			return nil, nil, nil, nil, nil, nil, fmt.Errorf("realloc failed for cndevGetProcessUtilization")
+		}
+		utils = newUtils
+		r = C.cndevGetProcessUtilization((*C.uint)(unsafe.Pointer(&processCount)), utils, c.cndevHandleMap[idx])
+		if err := errorString(r); err != nil {
+			return nil, nil, nil, nil, nil, nil, err
+		}
+	}
+
 	pids := make([]uint32, processCount)
 	ipuUtils := make([]uint32, processCount)
 	jpuUtils := make([]uint32, processCount)
 	memUtils := make([]uint32, processCount)
 	vpuDecUtils := make([]uint32, processCount)
 	vpuEncUtils := make([]uint32, processCount)
-	array := (*[10]C.cndevProcessUtilization_t)(unsafe.Pointer(utils))
-	results := array[:processCount]
+	results := (*[1 << 16]C.cndevProcessUtilization_t)(unsafe.Pointer(utils))[:processCount]
 	for i := 0; i < processCount; i++ {
 		pids[i] = uint32(results[i].pid)
 		ipuUtils[i] = uint32(results[i].ipuUtil)
@@ -488,10 +589,50 @@ func (c *cndev) GetDeviceProcessUtil(idx uint) ([]uint32, []uint32, []uint32, []
 		vpuDecUtils[i] = uint32(results[i].vpuDecUtil)
 		vpuEncUtils[i] = uint32(results[i].vpuEncUtil)
 	}
+
 	return pids, ipuUtils, jpuUtils, memUtils, vpuDecUtils, vpuEncUtils, nil
 }
 
 func (c *cndev) GetDeviceRemappedRows(idx uint) (uint32, uint32, uint32, uint32, error) {
+	major, minor, build, err := c.GetDeviceDriverVersion(idx)
+	if err != nil {
+		return 0, 0, 0, 0, err
+	}
+	v1, err := semver.NewVersion(fmt.Sprintf("%d.%d.%d", major, minor, build))
+	if err != nil {
+		return 0, 0, 0, 0, err
+	}
+	// cndevGetRemappedRowsV2 is only available in driver version later than 6.0.2
+	v2 := semver.MustParse("6.0.2")
+
+	if v1.GreaterThan(v2) {
+		var remappedRowsV2 C.cndevRemappedRowV2_t
+		remappedRowsV2.version = C.CNDEV_VERSION_5
+		r := C.cndevGetRemappedRowsV2(&remappedRowsV2, c.cndevHandleMap[idx])
+		if err := errorString(r); err != nil {
+			return 0, 0, 0, 0, err
+		}
+		var repairStatus C.cndevRepairStatus_t
+		repairStatus.version = C.CNDEV_VERSION_5
+		r = C.cndevGetRepairStatus(&repairStatus, c.cndevHandleMap[idx])
+		if err := errorString(r); err != nil {
+			return 0, 0, 0, 0, err
+		}
+		var pendingRows, failedRows uint32
+		if bool(repairStatus.isPending) {
+			pendingRows = 1
+		} else {
+			pendingRows = 0
+		}
+		if bool(repairStatus.isFailure) {
+			failedRows = 1
+		} else {
+			failedRows = 0
+		}
+		return uint32(remappedRowsV2.correctCounts), uint32(remappedRowsV2.uncorrectCounts),
+			uint32(pendingRows), uint32(failedRows), nil
+	}
+
 	var remappedRows C.cndevRemappedRow_t
 	remappedRows.version = C.CNDEV_VERSION_5
 	r := C.cndevGetRemappedRows(&remappedRows, c.cndevHandleMap[idx])
@@ -517,16 +658,16 @@ func (c *cndev) GetDeviceSN(idx uint) (string, error) {
 	return sn, nil
 }
 
-func (c *cndev) GetDeviceTemperature(idx uint) (int, int, []int, []int, error) {
+func (c *cndev) GetDeviceTemperature(idx uint) (int, int, int, []int, []int, error) {
 	var cardTemperature C.cndevTemperatureInfo_t
 	cardTemperature.version = C.CNDEV_VERSION_5
 	cluster, err := c.GetDeviceClusterCount(idx)
 	if err != nil {
-		return 0, 0, nil, nil, err
+		return 0, 0, 0, nil, nil, err
 	}
 	r := C.cndevGetTemperatureInfo(&cardTemperature, c.cndevHandleMap[idx])
 	if err := errorString(r); err != nil {
-		return 0, 0, nil, nil, err
+		return 0, 0, 0, nil, nil, err
 	}
 	clusterTemperature := make([]int, cluster)
 	for i := 0; i < cluster; i++ {
@@ -540,7 +681,8 @@ func (c *cndev) GetDeviceTemperature(idx uint) (int, int, []int, []int, error) {
 	for i := 0; i < memDie; i++ {
 		memDieTemperature[i] = int(cardTemperature.memoryDie[i])
 	}
-	return int(cardTemperature.board), int(cardTemperature.memory), clusterTemperature, memDieTemperature, nil
+
+	return int(cardTemperature.board), int(cardTemperature.memory), int(cardTemperature.chip), clusterTemperature, memDieTemperature, nil
 }
 
 func (c *cndev) GetDeviceTinyCoreUtil(idx uint) ([]int, error) {
@@ -615,23 +757,66 @@ func (c *cndev) GetDeviceVideoCodecUtil(idx uint) ([]int, error) {
 	return videoCodecUtil, nil
 }
 
-func (c *cndev) GetDeviceXidErrors(idx uint) (map[string]uint64, error) {
-	xidErrorMaps := map[string]uint64{}
-	var xidErrors C.cndevXidErrorV2_t
-	xidErrors.version = C.CNDEV_VERSION_5
-	index := C.int(idx)
-	if id, ok := c.cndevHandleMap[idx]; ok {
-		index = id
-	}
-	r := C.cndevGetXidErrorV2(&xidErrors, index)
+func (c *cndev) GetSupportedEventTypes(idx uint) error {
+	types := C.ulonglong(C.cndevEventTypeAll)
+	r := C.cndevGetSupportedEventTypes(&types, c.cndevHandleMap[idx])
+
+	return errorString(r)
+}
+
+func (c *cndev) RegisterEventsHandleAndWait(slots []int, ch chan XIDInfoWithTimestamp) error {
+	var handle C.cndevEventHandle
+	r := C.cndevEventHandleCreate(&handle)
 	if err := errorString(r); err != nil {
-		return xidErrorMaps, err
+		return err
 	}
-	for i, count := range xidErrors.xidCount {
-		errString := C.GoString(C.cndevGetXidErrorString(C.cndevXidEnum_t(i)))
-		xidErrorMaps[errString] = uint64(count)
+
+	for _, idx := range slots {
+		r := C.cndevRegisterEvents(handle, C.cndevEventTypeAll, c.cndevHandleMap[uint(idx)])
+		if err := errorString(r); err != nil {
+			log.Errorf("register event error: %v for slot %d", err, idx)
+		}
 	}
-	return xidErrorMaps, nil
+
+	go waitEvents(handle, ch)
+	return nil
+}
+
+func waitEvents(handle C.cndevEventHandle, ch chan XIDInfoWithTimestamp) {
+	var ret C.cndevRet_t
+	var eventData C.cndevEventData_t
+	for {
+		ret = C.cndevEventWait(handle, &eventData, -1)
+		if err := errorString(ret); err != nil {
+			log.Errorf("wait event failed: %v", err)
+			continue
+		}
+		if eventData.eventType != 1 {
+			log.Debugf("not xid event: %v", eventData)
+			continue
+		}
+
+		info := XIDInfoWithTimestamp{
+			XIDInfo: XIDInfo{
+				XID: int64(eventData.eventData),
+				DeviceInfo: DeviceInfo{
+					Device:            uint(eventData.device),
+					ComputeInstanceID: int32(eventData.computeInstanceId),
+					MLUInstanceID:     int32(eventData.mluInstanceId),
+				},
+			},
+
+			Timestamp: fmt.Sprintf("%d", eventData.timestamp),
+		}
+
+		select {
+		case ch <- info:
+		default:
+			// channel is full, delete the oldest data
+			<-ch
+			ch <- info
+		}
+	}
 }
 
 func errorString(ret C.cndevRet_t) error {

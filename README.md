@@ -67,7 +67,7 @@ docker run -d \
 --privileged=true \
 --pid=host \
 -e ENV_NODE_NAME={nodeName} \
-cambricon-mlu-exporter:v2.0.11
+cambricon-mlu-exporter:v2.0.14
 ```
 
 Then use the following command to get the metrics.
@@ -84,7 +84,7 @@ docker run -d \
 -v examples/metrics.yaml:/etc/mlu-exporter/metrics.yaml \
 --privileged=true \
 --pid=host \
-cambricon-mlu-exporter:v2.0.11 \
+cambricon-mlu-exporter:v2.0.14 \
 mlu-exporter \
 --metrics-config=/etc/mlu-exporter/metrics.yaml \
 --metrics-path=/metrics \
@@ -98,17 +98,24 @@ mlu-exporter \
 
 Command Args Description
 
-| arg            | description                                                            |
-| -------------- | ---------------------------------------------------------------------- |
-| collector      | collector names, cndev by default                                      |
-| env-share-num  | vf numbers under env share mode, should set virtual-mode to env-share  |
-| hostname       | machine hostname, or env:"ENV_NODE_NAME"                               |
-| log-level      | set log level: trace/debug/info/warn/error/fatal/panic" default:"info" |
-| metrics-config | configuration file of MLU exporter metrics                             |
-| metrics-path   | metrics path of the exporter service                                   |
-| metrics-prefix | prefix of all metric names                                             |
-| port           | exporter service port                                                  |
-| virtual-mode   | virtual mode, default "", support dynamic-smlu, env-share              |
+| arg                            | description                                                                                                                                          |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| collector                      | collector names, cndev by default                                                                                                                    |
+| env-share-num                  | vf numbers under env share mode, should set virtual-mode to env-share                                                                                |
+| hostname                       | machine hostname, or env:"ENV_NODE_NAME"                                                                                                             |
+| log-level                      | set log level: trace/debug/info/warn/error/fatal/panic" default:"info"                                                                               |
+| metrics-config                 | configuration file of MLU exporter metrics                                                                                                           |
+| metrics-path                   | metrics path of the exporter service                                                                                                                 |
+| metrics-prefix                 | prefix of all metric names                                                                                                                           |
+| port                           | exporter service port                                                                                                                                |
+| virtual-mode                   | virtual mode, default "", support env-share                                                                                                          |
+| push-gateway-url               | If set, metrics with push enabled will push to this server via prometheus push gateway protocol                                                      |
+| push-interval-ms               | numbers of metrics push interval in milliseconds, minimum 100, default 500                                                                           |
+| push-job-name                  | metrics push job name, default mlu-push-monitoring                                                                                                   |
+| cluster-name                   | cluster name, add cluster label for metrics push                                                                                                     |
+| xid-error-metric-name          | xid error metric name, push to push gateway immediately when xid event occurs                                                                        |
+| xid-error-retry-times          | retry times for push xid error metric failed                                                                                                         |
+| log-file-for-xid-metric-failed | log file to record xid information when push failed, should set related volume mount in `examples/cambricon-mlu-exporter-ds.yaml` for log collection |
 
 available collectors:
 
@@ -175,6 +182,35 @@ For installation by docker, you can modify the configuration file you passed by 
 For Kubernetes, you can modify the MLU exporter configMap to change metric and label names.
 
 For MLU370, mlu_temperature does not support cluster temperature, all cluster temperature metrics are set to 0.
+
+#### Push metrics
+
+If you want to push metrics to Prometheus Pushgateway or VictoriaMetrics, you can run exporter with setting `push-gateway-url` flag,
+and config `push: true` on metrics witch need pushing in metrics configuration.
+
+See examples/metrics-push.yaml for pushing some metrics, .
+
+```yaml
+utilization:
+  help: The utilization of Cambricon MLU, unit is '%'
+  labels:
+    driver: driver
+    mcu: mcu
+    mlu: mlu
+    model: model
+    node: node
+    sn: sn
+    type: type
+    uuid: uuid
+    vf: vf
+  name: utilization
+  # enable push
+  push: true
+```
+
+The metrics with `push: true` will be pushing to push-gateway-url, and metrics without this flag will export on metrics path.
+
+Warning, the metrics with `push: true` should not export on metrics path such as `/metrics`.
 
 ## Upgrade Notice
 

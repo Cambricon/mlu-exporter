@@ -33,6 +33,12 @@ import (
 
 var golden = flag.Bool("golden", false, "")
 
+// verify
+type testMetrics struct {
+	Desc   string
+	Metric dto.Metric
+}
+
 func TestCollect(t *testing.T) {
 	var (
 		// fake node info
@@ -43,11 +49,11 @@ func TestCollect(t *testing.T) {
 		hostMemFree  = float64(18470732)
 
 		// fake card info
-		uuid1   = "uuid1"
-		uuid2   = "uuid2"
-		uuid3   = "uuid3"
-		uuid4   = "uuid4"
-		mluStat = map[string]mluStat{
+		uuid1 = "uuid1"
+		uuid2 = "uuid2"
+		uuid3 = "uuid3"
+		uuid4 = "uuid4"
+		mst   = map[string]MLUStat{
 			uuid1: {
 				slot:       0,
 				model:      "MLU590",
@@ -172,6 +178,7 @@ func TestCollect(t *testing.T) {
 		// temperature
 		temperature         = []int{23, 23, 22, -100}
 		memTemperature      = []int{22, 24, 10, 11}
+		chipTemperature     = []int{22, 24, 10, 11}
 		clusterTemperatures = [][]int{
 			{22, 23, 24, 26},
 			{21, 23, 24, 36},
@@ -322,6 +329,8 @@ func TestCollect(t *testing.T) {
 		}
 		mluLinkPortNumber                 = 2
 		mluLinkCapabilityInterlakenSerdes = mluLinkCapabilityP2PTransfer
+		mluLinkCounterCntrCnpPackage      = mluLinkCounterCntrReadByte
+		mluLinkCounterCntrPfcPackage      = mluLinkCounterCntrReadByte
 		mluLinkCounterCntrReadPackage     = mluLinkCounterCntrReadByte
 		mluLinkCounterCntrWriteByte       = mluLinkCounterCntrReadByte
 		mluLinkCounterCntrWritePackage    = mluLinkCounterCntrReadByte
@@ -338,104 +347,142 @@ func TestCollect(t *testing.T) {
 		mluLinkMajor                      = mluLinkCapabilityP2PTransfer
 		mluLinkMinor                      = mluLinkCapabilityP2PTransfer
 		mluLinkBuild                      = mluLinkCapabilityP2PTransfer
-
-		// xid errors
-		xidErrors = map[string]uint64{
-			"CNDEV_XID_NO_ERROR":                 0,
-			"CNDEV_XID_SW_NOTIFY_ERROR":          1,
-			"CNDEV_XID_MCU_ERROR":                1,
-			"CNDEV_XID_ECC_ERROR":                100,
-			"CNDEV_XID_RPC_ERROR":                2,
-			"CNDEV_XID_ILLEGAL_ACCESS_ERROR":     0,
-			"CNDEV_XID_D2D_CRC_ERROR":            0,
-			"CNDEV_XID_MLULINK_ERROR":            0,
-			"CNDEV_XID_HBM_ERROR":                0,
-			"CNDEV_XID_OVER_TEMP_ERROR":          0,
-			"CNDEV_XID_PREV_HALT_ERROR":          0,
-			"CNDEV_XID_PCIE_REPLAY_ERROR":        0,
-			"CNDEV_XID_HEARTBEAT_ERROR":          0,
-			"CNDEV_XID_PAGE_RETIREMENT_ERROR":    0,
-			"CNDEV_XID_FALLEN_OFF_ERROR":         0,
-			"CNDEV_XID_DBE_ECC_ERROR":            0,
-			"CNDEV_XID_PCIE_DMA_ERROR":           0,
-			"CNDEV_XID_STOPPED_PROCESSING_ERROR": 0,
-			"CNDEV_XID_SMMU_ERROR":               0,
-			"CNDEV_XID_MLULINK_REPLAY_ERROR":     0,
-			"CNDEV_XID_IPU_RESET_ERROR":          10,
-		}
 	)
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	// cndev mock response
-	cndev := mock.NewCndev(ctrl)
-	cndev.EXPECT().Init(false).Return(nil).AnyTimes()
+	// mcndev mock response
+	mcndev := mock.NewCndev(ctrl)
+	mcndev.EXPECT().Init(false).Return(nil).AnyTimes()
 
-	for _, stat := range mluStat {
-		cndev.EXPECT().GetDeviceTemperature(stat.slot).Return(temperature[stat.slot], memTemperature[stat.slot], clusterTemperatures[stat.slot], memDieTemperatures[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceHealth(stat.slot).Return(health[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceVfState(stat.slot).Return(vfState[stat.slot], nil).AnyTimes()
+	slots := []int{}
+	for _, stat := range mst {
+		mcndev.EXPECT().GetDeviceTemperature(stat.slot).Return(temperature[stat.slot], memTemperature[stat.slot], chipTemperature[stat.slot], clusterTemperatures[stat.slot], memDieTemperatures[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceHealth(stat.slot).Return(health[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceVfState(stat.slot).Return(vfState[stat.slot], nil).AnyTimes()
 		for vf := 0; vf < len(virtualFunctionMemUsed[stat.slot]); vf++ {
-			cndev.EXPECT().GetDeviceMemory(uint((vf+1)<<8|int(stat.slot))).Return(virtualFunctionMemUsed[stat.slot][vf], virtualFunctionMemTotal, virtualMemUsed[stat.slot], virtualMemTotal, nil).AnyTimes()
-			cndev.EXPECT().GetDevicePower(uint((vf+1)<<8|int(stat.slot))).Return(virtualFunctionPowerUsage[stat.slot], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceMemory(uint((vf+1)<<8|int(stat.slot))).Return(virtualFunctionMemUsed[stat.slot][vf], virtualFunctionMemTotal, virtualMemUsed[stat.slot], virtualMemTotal, nil).AnyTimes()
+			mcndev.EXPECT().GetDevicePower(uint((vf+1)<<8|int(stat.slot))).Return(virtualFunctionPowerUsage[stat.slot], nil).AnyTimes()
 		}
-		cndev.EXPECT().GetDeviceMemory(stat.slot).Return(memUsed[stat.slot], memTotal, virtualMemUsed[stat.slot], virtualMemTotal, nil).AnyTimes()
-		cndev.EXPECT().GetDeviceUtil(stat.slot).Return(boardUtil[stat.slot], coreUtil[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceFanSpeed(stat.slot).Return(0, nil).AnyTimes()
-		cndev.EXPECT().GetAllSMluInfo(stat.slot).Return(stat.smluInfos, nil).AnyTimes()
-		cndev.EXPECT().GetDevicePower(stat.slot).Return(power[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDevicePCIeInfo(stat.slot).Return(pcieSlotID[stat.slot], pcieSubsystemID, pcieDeviceID, pcieVendor, pcieSubsystemVendor, pcieDomain, pcieBus[stat.slot], pcieDevice, pcieFunction, nil).AnyTimes()
-		cndev.EXPECT().GetDevicePCIeThroughput(stat.slot).Return(pcieRead[stat.slot], pcieWrite[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceCurrentPCIeInfo(stat.slot).Return(pcieSpeed, pcieWidth, nil).AnyTimes()
-		cndev.EXPECT().GetDevicePCIeReplayCount(stat.slot).Return(pcieReplay[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceCPUUtil(stat.slot).Return(chipCPUUtil[stat.slot], chipCPUCoreUtil[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceArmOsMemory(stat.slot).Return(armOsMemUsed[stat.slot], armOsMemTotal, nil).AnyTimes()
-		cndev.EXPECT().GetDeviceTinyCoreUtil(stat.slot).Return(tinyCoreUtil[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceNUMANodeID(stat.slot).Return(numaNodeID[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceDDRInfo(stat.slot).Return(ddrDataWidth[stat.slot], ddrBandWidth[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceFrequency(stat.slot).Return(frequency[stat.slot], ddrFrequency[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceRetiredPageInfo(stat.slot).Return(cause[stat.slot], pageCounts[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceRemappedRows(stat.slot).Return(correctRows[stat.slot], failedRows[stat.slot], pendingRows[stat.slot], uncorrectRows[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceVideoCodecUtil(stat.slot).Return(videoCodecUtil[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceImageCodecUtil(stat.slot).Return(imageCodecUtil[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceECCInfo(stat.slot).Return(eccAddressForbiddenError[stat.slot], eccCorrectedError[stat.slot], eccMultipleError[stat.slot], eccMultipleMultipleError[stat.slot], eccMultipleOneError[stat.slot], eccOneBitError[stat.slot], eccTotalError[stat.slot], eccUncorrectedError[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceCRCInfo(stat.slot).Return(d2dCRCError[stat.slot], d2dCRCErrorOverflow[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceMemEccCounter(stat.slot).Return(sramEccSbeCount[stat.slot], sramEccDbeCount[stat.slot], sramEccParityCount[stat.slot], dramEccSbeCount[stat.slot], dramEccDbeCount[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceHeartbeatCount(stat.slot).Return(heartbeatCount[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceCount().Return(deviceCount[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceMemory(stat.slot).Return(memUsed[stat.slot], memTotal, virtualMemUsed[stat.slot], virtualMemTotal, nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceUtil(stat.slot).Return(boardUtil[stat.slot], coreUtil[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceFanSpeed(stat.slot).Return(0, nil).AnyTimes()
+		mcndev.EXPECT().GetAllSMluInfo(stat.slot).Return(stat.smluInfos, nil).AnyTimes()
+		mcndev.EXPECT().GetDevicePower(stat.slot).Return(power[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDevicePCIeInfo(stat.slot).Return(pcieSlotID[stat.slot], pcieSubsystemID, pcieDeviceID, pcieVendor, pcieSubsystemVendor, pcieDomain, pcieBus[stat.slot], pcieDevice, pcieFunction, nil).AnyTimes()
+		mcndev.EXPECT().GetDevicePCIeThroughput(stat.slot).Return(pcieRead[stat.slot], pcieWrite[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceCurrentPCIeInfo(stat.slot).Return(pcieSpeed, pcieWidth, nil).AnyTimes()
+		mcndev.EXPECT().GetDevicePCIeReplayCount(stat.slot).Return(pcieReplay[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceCPUUtil(stat.slot).Return(chipCPUUtil[stat.slot], chipCPUCoreUtil[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceArmOsMemory(stat.slot).Return(armOsMemUsed[stat.slot], armOsMemTotal, nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceTinyCoreUtil(stat.slot).Return(tinyCoreUtil[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceNUMANodeID(stat.slot).Return(numaNodeID[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceDDRInfo(stat.slot).Return(ddrDataWidth[stat.slot], ddrBandWidth[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceFrequency(stat.slot).Return(frequency[stat.slot], ddrFrequency[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceRetiredPageInfo(stat.slot).Return(cause[stat.slot], pageCounts[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceRemappedRows(stat.slot).Return(correctRows[stat.slot], failedRows[stat.slot], pendingRows[stat.slot], uncorrectRows[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceVideoCodecUtil(stat.slot).Return(videoCodecUtil[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceImageCodecUtil(stat.slot).Return(imageCodecUtil[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceECCInfo(stat.slot).Return(eccAddressForbiddenError[stat.slot], eccCorrectedError[stat.slot], eccMultipleError[stat.slot], eccMultipleMultipleError[stat.slot], eccMultipleOneError[stat.slot], eccOneBitError[stat.slot], eccTotalError[stat.slot], eccUncorrectedError[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceCRCInfo(stat.slot).Return(d2dCRCError[stat.slot], d2dCRCErrorOverflow[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceMemEccCounter(stat.slot).Return(sramEccSbeCount[stat.slot], sramEccDbeCount[stat.slot], sramEccParityCount[stat.slot], dramEccSbeCount[stat.slot], dramEccDbeCount[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceHeartbeatCount(stat.slot).Return(heartbeatCount[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceCount().Return(deviceCount[stat.slot], nil).AnyTimes()
 		for link := 0; link < mluLinkPortNumber; link++ {
-			cndev.EXPECT().GetDeviceMLULinkCapability(stat.slot, uint(link)).Return(mluLinkCapabilityP2PTransfer[stat.slot][link], mluLinkCapabilityInterlakenSerdes[stat.slot][link], nil).AnyTimes()
-			cndev.EXPECT().GetDeviceMLULinkCounter(stat.slot, uint(link)).Return(mluLinkCounterCntrReadByte[stat.slot][link], mluLinkCounterCntrReadPackage[stat.slot][link], mluLinkCounterCntrWriteByte[stat.slot][link], mluLinkCounterCntrWritePackage[stat.slot][link],
-				mluLinkCounterErrCorrected[stat.slot][link], mluLinkCounterErrCRC24[stat.slot][link], mluLinkCounterErrCRC32[stat.slot][link], mluLinkCounterErrEccDouble[stat.slot][link], mluLinkCounterErrFatal[stat.slot][link], mluLinkCounterErrReplay[stat.slot][link], mluLinkCounterErrUncorrected[stat.slot][link], nil).AnyTimes()
-			cndev.EXPECT().GetDeviceMLULinkPortMode(stat.slot, uint(link)).Return(mluLinkPortMode[stat.slot][link], nil).AnyTimes()
-			cndev.EXPECT().GetDeviceMLULinkSpeedInfo(stat.slot, uint(link)).Return(mluLinkSpeedValue[stat.slot][link], mluLinkSpeedFormat[stat.slot][link], nil).AnyTimes()
-			cndev.EXPECT().GetDeviceMLULinkStatus(stat.slot, uint(link)).Return(mluLinkStatusIsActive[stat.slot][link], mluLinkStatusSerdesState[stat.slot][link], nil).AnyTimes()
-			cndev.EXPECT().GetDeviceMLULinkVersion(stat.slot, uint(link)).Return(mluLinkMajor[stat.slot][link], mluLinkMinor[stat.slot][link], mluLinkBuild[stat.slot][link], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceMLULinkCapability(stat.slot, uint(link)).Return(mluLinkCapabilityP2PTransfer[stat.slot][link], mluLinkCapabilityInterlakenSerdes[stat.slot][link], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceMLULinkCounter(stat.slot, uint(link)).Return(mluLinkCounterCntrReadByte[stat.slot][link], mluLinkCounterCntrReadPackage[stat.slot][link], mluLinkCounterCntrWriteByte[stat.slot][link], mluLinkCounterCntrWritePackage[stat.slot][link],
+				mluLinkCounterErrCorrected[stat.slot][link], mluLinkCounterErrCRC24[stat.slot][link], mluLinkCounterErrCRC32[stat.slot][link], mluLinkCounterErrEccDouble[stat.slot][link], mluLinkCounterErrFatal[stat.slot][link], mluLinkCounterErrReplay[stat.slot][link],
+				mluLinkCounterErrUncorrected[stat.slot][link], mluLinkCounterCntrCnpPackage[stat.slot][link], mluLinkCounterCntrPfcPackage[stat.slot][link], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceMLULinkPortMode(stat.slot, uint(link)).Return(mluLinkPortMode[stat.slot][link], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceMLULinkSpeedInfo(stat.slot, uint(link)).Return(mluLinkSpeedValue[stat.slot][link], mluLinkSpeedFormat[stat.slot][link], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceMLULinkStatus(stat.slot, uint(link)).Return(mluLinkStatusIsActive[stat.slot][link], mluLinkStatusSerdesState[stat.slot][link], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceMLULinkVersion(stat.slot, uint(link)).Return(mluLinkMajor[stat.slot][link], mluLinkMinor[stat.slot][link], mluLinkBuild[stat.slot][link], nil).AnyTimes()
 		}
-		cndev.EXPECT().GetDeviceProcessUtil(stat.slot).Return(pid[stat.slot], processIpuUtil[stat.slot], processJpuUtil[stat.slot], processMemUtil[stat.slot], processVpuDecodeUtil[stat.slot], processVpuEncodeUtil[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceParityError(stat.slot).Return(parityError[stat.slot], nil).AnyTimes()
-		cndev.EXPECT().GetDeviceXidErrors(stat.slot).Return(xidErrors, nil).AnyTimes()
-	}
+		mcndev.EXPECT().GetDeviceProcessUtil(stat.slot).Return(pid[stat.slot], processIpuUtil[stat.slot], processJpuUtil[stat.slot], processMemUtil[stat.slot], processVpuDecodeUtil[stat.slot], processVpuEncodeUtil[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceParityError(stat.slot).Return(parityError[stat.slot], nil).AnyTimes()
 
-	// podresource mock response
-	podresources := mock.NewPodResources(ctrl)
-	podresources.EXPECT().GetDeviceToPodInfo().Return(devicePodInfo, nil).AnyTimes()
+		slots = append(slots, int(stat.slot))
+	}
+	sort.Ints(slots)
+	mcndev.EXPECT().RegisterEventsHandleAndWait(slots, gomock.Any()).Return(nil).Times(2)
+
+	// pres mock response
+	pres := mock.NewPodResources(ctrl)
+	pres.EXPECT().GetDeviceToPodInfo().Return(devicePodInfo, nil).AnyTimes()
 
 	// host mock response
 	host := mock.NewHost(ctrl)
 	host.EXPECT().GetCPUStats().Return(hostCPUTotal, hostCPUIdle, nil).AnyTimes()
 	host.EXPECT().GetMemoryStats().Return(hostMemTotal, hostMemFree, nil).AnyTimes()
 
+	metricConfig := metrics.GetMetrics("../../examples/metrics.yaml", "")
 	// collect metrics
-	m := getMetrics(metrics.GetOrDie("../../examples/metrics.yaml"), "")
+	expectedMetrics := collectMetrics(node, mst, host, mcndev, pres, metricConfig)
+	goldFile := "testdata/collect_metrics.json"
+	out, err := json.MarshalIndent(expectedMetrics, "", "  ")
+	assert.NoError(t, err)
+	if *golden {
+		assert.NoError(t, os.WriteFile(goldFile, out, 0o644))
+	} else {
+		expect, err := os.ReadFile(goldFile)
+		assert.NoError(t, err)
+		assert.JSONEq(t, string(expect), string(out))
+	}
+
+	// collect push metrics
+	metricConfig = metrics.GetMetrics("../../examples/metrics-push.yaml", "")
+	expectedMetrics = collectMetrics(node, mst, host, mcndev, pres, metricConfig)
+	goldFile = "testdata/collect_push_metrics.json"
+	out, err = json.MarshalIndent(expectedMetrics, "", "  ")
+	assert.NoError(t, err)
+	if *golden {
+		assert.NoError(t, os.WriteFile(goldFile, out, 0o644))
+	} else {
+		expect, err := os.ReadFile(goldFile)
+		assert.NoError(t, err)
+		assert.JSONEq(t, string(expect), string(out))
+	}
+}
+
+func collectMetrics(node string, mst map[string]MLUStat, host *mock.Host, cndv *mock.Cndev, pres *mock.PodResources, m map[string]metrics.CollectorMetrics) []testMetrics {
 	bi := BaseInfo{
 		host: node,
 	}
 	cndevCollector := NewCndevCollector(m[Cndev], bi).(*cndevCollector)
-	cndevCollector.client = cndev
+	cndevCollector.client = cndv
+	cndevCollector.lastXID = map[cndev.DeviceInfo]int64{
+		{
+			Device:            0,
+			ComputeInstanceID: 0,
+			MLUInstanceID:     0,
+		}: 3155969,
+		{
+			Device:            1,
+			ComputeInstanceID: 0,
+			MLUInstanceID:     0,
+		}: 3155969,
+	}
+	cndevCollector.mluXIDCounter = map[cndev.XIDInfo]int{
+		{
+			DeviceInfo: cndev.DeviceInfo{
+				Device:            0,
+				ComputeInstanceID: 0,
+				MLUInstanceID:     0,
+			},
+			XID: 3155969,
+		}: 5,
+		{
+			DeviceInfo: cndev.DeviceInfo{
+				Device:            1,
+				ComputeInstanceID: 0,
+				MLUInstanceID:     0,
+			},
+			XID: 3155969,
+		}: 10,
+	}
 	podResourcesCollector := NewPodResourcesCollector(m[PodResources], bi).(*podResourcesCollector)
-	podResourcesCollector.client = podresources
+	podResourcesCollector.client = pres
 	hostCollector := NewHostCollector(m[Host], bi).(*hostCollector)
 	hostCollector.client = host
 	c := &Collectors{
@@ -447,7 +494,7 @@ func TestCollect(t *testing.T) {
 		metrics: m,
 	}
 	for _, collector := range c.collectors {
-		collector.init(mluStat)
+		collector.init(mst)
 	}
 	ch := make(chan prometheus.Metric)
 	go func() {
@@ -455,16 +502,11 @@ func TestCollect(t *testing.T) {
 		close(ch)
 	}()
 
-	// verify
-	type metrics struct {
-		Desc   string
-		Metric dto.Metric
-	}
-	expectedMetrics := []metrics{}
+	expectedMetrics := []testMetrics{}
 	for res := range ch {
 		ms := dto.Metric{}
 		res.Write(&ms)
-		expectedMetrics = append(expectedMetrics, metrics{
+		expectedMetrics = append(expectedMetrics, testMetrics{
 			Desc:   res.Desc().String(),
 			Metric: ms,
 		})
@@ -479,14 +521,5 @@ func TestCollect(t *testing.T) {
 		}
 		return expectedMetrics[i].Desc < expectedMetrics[j].Desc
 	})
-	goldFile := "testdata/collect_metrics.json"
-	out, err := json.MarshalIndent(expectedMetrics, "", "  ")
-	assert.NoError(t, err)
-	if *golden {
-		assert.NoError(t, os.WriteFile(goldFile, out, 0o644))
-	} else {
-		expect, err := os.ReadFile(goldFile)
-		assert.NoError(t, err)
-		assert.JSONEq(t, string(expect), string(out))
-	}
+	return expectedMetrics
 }

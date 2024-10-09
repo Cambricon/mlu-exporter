@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Cambricon/mlu-exporter/pkg/metrics"
 	"github.com/Cambricon/mlu-exporter/pkg/podresources"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
@@ -51,11 +52,11 @@ type podResourcesCollector struct {
 	client        podresources.PodResources
 	devicePodInfo map[string]podresources.PodInfo
 	fnMap         map[string]interface{}
-	metrics       collectorMetrics
-	sharedInfo    map[string]mluStat
+	metrics       metrics.CollectorMetrics
+	sharedInfo    map[string]MLUStat
 }
 
-func NewPodResourcesCollector(m collectorMetrics, bi BaseInfo) Collector {
+func NewPodResourcesCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 	c := &podResourcesCollector{
 		baseInfo: bi,
 		client:   podresources.NewPodResourcesClient(timeout, socket, resources, maxSize, bi.mode, bi.host, bi.client),
@@ -69,13 +70,13 @@ func NewPodResourcesCollector(m collectorMetrics, bi BaseInfo) Collector {
 	return c
 }
 
-func (c *podResourcesCollector) init(info map[string]mluStat) error {
+func (c *podResourcesCollector) init(info map[string]MLUStat) error {
 	c.sharedInfo = info
 	_, err := os.Stat(socket)
 	return err
 }
 
-func (c *podResourcesCollector) updateMetrics(m collectorMetrics) {
+func (c *podResourcesCollector) updateMetrics(m metrics.CollectorMetrics) {
 	c.metrics = m
 }
 
@@ -89,7 +90,7 @@ func (c *podResourcesCollector) collect(ch chan<- prometheus.Metric) {
 	c.devicePodInfo = info
 	for name, m := range c.metrics {
 		fn := c.fnMap[name]
-		f, ok := fn.(func(chan<- prometheus.Metric, metric))
+		f, ok := fn.(func(chan<- prometheus.Metric, metrics.Metric))
 		if !ok {
 			log.Warnf("type assertion for fn %s failed, skip", name)
 		} else {
@@ -98,7 +99,7 @@ func (c *podResourcesCollector) collect(ch chan<- prometheus.Metric) {
 	}
 }
 
-func (c *podResourcesCollector) collectBoardAllocated(ch chan<- prometheus.Metric, m metric) {
+func (c *podResourcesCollector) collectBoardAllocated(ch chan<- prometheus.Metric, m metrics.Metric) {
 	mlus := make(map[string]bool)
 	for device := range c.devicePodInfo {
 		uuid := device
@@ -113,11 +114,11 @@ func (c *podResourcesCollector) collectBoardAllocated(ch chan<- prometheus.Metri
 		driver = info.driver
 		break
 	}
-	labelValues := getLabelValues(m.labels, labelInfo{stat: mluStat{model: model, driver: driver}, host: c.baseInfo.host})
-	ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(len(mlus)), labelValues...)
+	labelValues := getLabelValues(m.Labels, labelInfo{stat: MLUStat{model: model, driver: driver}, host: c.baseInfo.host})
+	ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(len(mlus)), labelValues...)
 }
 
-func (c *podResourcesCollector) collectMLUContainer(ch chan<- prometheus.Metric, m metric) {
+func (c *podResourcesCollector) collectMLUContainer(ch chan<- prometheus.Metric, m metrics.Metric) {
 	devs := map[string]struct{}{}
 	for dev := range c.sharedInfo {
 		devs[dev] = void
@@ -177,17 +178,17 @@ func (c *podResourcesCollector) collectMLUContainer(ch chan<- prometheus.Metric,
 		filterDup[uuid+vf] = void
 		delete(devs, uuid)
 		if c.baseInfo.mode == "dynamic-smlu" {
-			labelValues := getLabelValues(m.labels, labelInfo{stat: c.sharedInfo[uuid], host: c.baseInfo.host, podInfo: podInfo, typ: "vcore", vf: vf})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, 1, labelValues...)
-			labelValues = getLabelValues(m.labels, labelInfo{stat: c.sharedInfo[uuid], host: c.baseInfo.host, podInfo: podInfo, typ: "vmemory", vf: vf})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, 1, labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: c.sharedInfo[uuid], host: c.baseInfo.host, podInfo: podInfo, typ: "vcore", vf: vf})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, 1, labelValues...)
+			labelValues = getLabelValues(m.Labels, labelInfo{stat: c.sharedInfo[uuid], host: c.baseInfo.host, podInfo: podInfo, typ: "vmemory", vf: vf})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, 1, labelValues...)
 		} else {
-			labelValues := getLabelValues(m.labels, labelInfo{stat: c.sharedInfo[uuid], host: c.baseInfo.host, podInfo: podInfo, vf: vf})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, 1, labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: c.sharedInfo[uuid], host: c.baseInfo.host, podInfo: podInfo, vf: vf})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, 1, labelValues...)
 		}
 	}
 	for dev := range devs {
-		labelValues := getLabelValues(m.labels, labelInfo{stat: c.sharedInfo[dev], host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, 0, labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: c.sharedInfo[dev], host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, 0, labelValues...)
 	}
 }

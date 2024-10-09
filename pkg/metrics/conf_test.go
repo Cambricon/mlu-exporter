@@ -36,10 +36,10 @@ cndev:
       model: "model"
 `,
 	))
-	c := GetOrDie(f.Name())
+	c := getConfOrDie(f.Name())
 	expected := Conf{
 		"cndev": {
-			"temperature": Metric{
+			"temperature": info{
 				Name: "temperature test",
 				Help: "help message",
 				Labels: Labels{

@@ -18,13 +18,17 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/Cambricon/mlu-exporter/pkg/cndev"
 	"github.com/Cambricon/mlu-exporter/pkg/collector"
-	flags "github.com/jessevdk/go-flags"
+	"github.com/Cambricon/mlu-exporter/pkg/metrics"
+	"github.com/jessevdk/go-flags"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/client_golang/prometheus/push"
+	"github.com/prometheus/common/expfmt"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -44,6 +48,15 @@ type Options struct {
 	Port          uint     `long:"port" description:"exporter service port" default:"30108" env:"ENV_SERVE_PORT"`
 	Version       bool     `long:"version" description:"print out version"`
 	VirtualMode   string   `long:"virtual-mode" description:"virtual mode for devices" default:"" choice:"dynamic-smlu" choice:"env-share"`
+
+	PushGatewayURL string `long:"push-gateway-url" description:"If set, metrics with push enabled will push to this server via prometheus push gateway protocol" env:"PUSH_GATEWAY_URL"`
+	PushIntervalMS uint   `long:"push-interval-ms" description:"numbers of metrics push interval in milliseconds, minimum 100" default:"500" env:"PUSH_INTERVAL_MS"`
+	PushJobName    string `long:"push-job-name" description:"metrics push job name" default:"mlu-push-monitoring" env:"PUSH_JOB_NAME"`
+	ClusterName    string `long:"cluster-name" description:"cluster name, add cluster label for metrics push" env:"CLUSTER_NAME"`
+
+	XIDErrorMetricName        string `long:"xid-error-metric-name" description:"xid error metric name in config, if not set, not push this metric data" env:"XID_ERROR_METRIC_NAME"`
+	XIDErrorRetryTimes        int    `long:"xid-error-retry-times" description:"retry times when push xid error metric failed" default:"10" env:"XID_ERROR_RETRY_TIMES"`
+	LogFileForXIDMetricFailed string `long:"log-file-for-xid-metric-failed" description:"when report xid metric failed, write log to this file" env:"LOG_FILE_FOR_XID_METRIC_FAILED"`
 }
 
 func ParseFlags() Options {
@@ -64,6 +77,8 @@ func ParseFlags() Options {
 
 func main() {
 	options := ParseFlags()
+	log.Printf("Final options: %v", options)
+
 	if options.Version {
 		fmt.Println("Version:", version)
 		return
@@ -86,14 +101,30 @@ func main() {
 		log.SetLevel(log.PanicLevel)
 	}
 
+	cndevcli := cndev.NewCndevClient()
+	if err := cndevcli.Init(false); err != nil {
+		log.Fatal(errors.Wrap(err, "Init cndev client"))
+	}
+	defer cndevcli.Release()
+	mluInfo := collector.CollectMLUInfo(cndevcli)
+	metricConfig := metrics.GetMetrics(options.MetricsConfig, options.MetricsPrefix)
+	go metrics.WatchMetrics(options.MetricsConfig, options.MetricsPrefix)
+
+	if options.PushGatewayURL != "" {
+		startPushMode(options, metricConfig, mluInfo)
+		startCallbackMode(options, metricConfig, mluInfo)
+	}
+
 	c := collector.NewCollectors(
 		options.Collector,
+		metricConfig,
 		options.EnvShareNum,
 		options.Hostname,
-		options.MetricsConfig,
-		options.MetricsPrefix,
 		options.VirtualMode,
+		mluInfo,
+		false,
 	)
+	metrics.RegisterWatcher(c.UpdateMetrics)
 	r := prometheus.NewRegistry()
 	r.MustRegister(c)
 
@@ -117,4 +148,72 @@ func main() {
 
 	log.Printf("start serving at %s", server.Addr)
 	log.Fatal(server.ListenAndServe())
+}
+
+func startPushMode(options Options, metricConfig map[string]metrics.CollectorMetrics, mluInfo map[string]collector.MLUStat) {
+	if options.PushIntervalMS < 100 {
+		log.Fatal("minimum of push-interval-ms is 100")
+	}
+
+	pushc := collector.NewCollectors(
+		options.Collector,
+		metricConfig,
+		options.EnvShareNum,
+		options.Hostname,
+		options.VirtualMode,
+		mluInfo,
+		true,
+	)
+
+	metrics.RegisterWatcher(pushc.UpdateMetrics)
+	pushr := prometheus.NewRegistry()
+	pushr.MustRegister(pushc)
+	pusher := push.New(options.PushGatewayURL, options.PushJobName).Format(expfmt.FmtText).Collector(pushr)
+
+	if options.ClusterName != "" {
+		pusher = pusher.Grouping("cluster", options.ClusterName)
+	}
+
+	ticker := time.NewTicker(time.Duration(options.PushIntervalMS) * time.Millisecond)
+	defer ticker.Stop()
+
+	go func() {
+		for range ticker.C {
+			if err := pusher.Push(); err != nil {
+				log.Errorln("Could not push to Pushgateway:", err)
+			} else {
+				log.Debugln("Metrics pushed to Pushgateway")
+			}
+		}
+	}()
+}
+
+func startCallbackMode(options Options, metricConfig map[string]metrics.CollectorMetrics, mluInfo map[string]collector.MLUStat) {
+	cb, err := collector.NewCallback(
+		metricConfig,
+		mluInfo,
+		options.XIDErrorMetricName,
+		options.Hostname,
+		options.LogFileForXIDMetricFailed,
+		options.XIDErrorRetryTimes,
+	)
+	if err != nil {
+		log.Debugln("XID Callback not enabled")
+		return
+	}
+	if cb == nil {
+		return
+	}
+
+	metrics.RegisterWatcher(cb.UpdateMetrics)
+
+	pushr := prometheus.NewRegistry()
+	pushr.MustRegister(cb)
+	pusher := push.New(options.PushGatewayURL, options.PushJobName).Format(expfmt.FmtText).Collector(pushr)
+
+	if options.ClusterName != "" {
+		pusher = pusher.Grouping("cluster", options.ClusterName)
+	}
+
+	go cb.Start(pusher.Push)
 }

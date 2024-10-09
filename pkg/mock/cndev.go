@@ -349,7 +349,7 @@ func (mr *CndevMockRecorder) GetDeviceMLULinkCapability(arg0, arg1 interface{}) 
 }
 
 // GetDeviceMLULinkCounter mocks base method.
-func (m *Cndev) GetDeviceMLULinkCounter(arg0, arg1 uint) (uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, error) {
+func (m *Cndev) GetDeviceMLULinkCounter(arg0, arg1 uint) (uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDeviceMLULinkCounter", arg0, arg1)
 	ret0, _ := ret[0].(uint64)
@@ -363,8 +363,10 @@ func (m *Cndev) GetDeviceMLULinkCounter(arg0, arg1 uint) (uint64, uint64, uint64
 	ret8, _ := ret[8].(uint64)
 	ret9, _ := ret[9].(uint64)
 	ret10, _ := ret[10].(uint64)
-	ret11, _ := ret[11].(error)
-	return ret0, ret1, ret2, ret3, ret4, ret5, ret6, ret7, ret8, ret9, ret10, ret11
+	ret11, _ := ret[11].(uint64)
+	ret12, _ := ret[12].(uint64)
+	ret13, _ := ret[13].(error)
+	return ret0, ret1, ret2, ret3, ret4, ret5, ret6, ret7, ret8, ret9, ret10, ret11, ret12, ret13
 }
 
 // GetDeviceMLULinkCounter indicates an expected call of GetDeviceMLULinkCounter.
@@ -686,15 +688,16 @@ func (mr *CndevMockRecorder) GetDeviceSN(arg0 interface{}) *gomock.Call {
 }
 
 // GetDeviceTemperature mocks base method.
-func (m *Cndev) GetDeviceTemperature(arg0 uint) (int, int, []int, []int, error) {
+func (m *Cndev) GetDeviceTemperature(arg0 uint) (int, int, int, []int, []int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDeviceTemperature", arg0)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(int)
-	ret2, _ := ret[2].([]int)
+	ret2, _ := ret[2].(int)
 	ret3, _ := ret[3].([]int)
-	ret4, _ := ret[4].(error)
-	return ret0, ret1, ret2, ret3, ret4
+	ret4, _ := ret[4].([]int)
+	ret5, _ := ret[5].(error)
+	return ret0, ret1, ret2, ret3, ret4, ret5
 }
 
 // GetDeviceTemperature indicates an expected call of GetDeviceTemperature.
@@ -799,19 +802,18 @@ func (mr *CndevMockRecorder) GetDeviceVideoCodecUtil(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceVideoCodecUtil", reflect.TypeOf((*Cndev)(nil).GetDeviceVideoCodecUtil), arg0)
 }
 
-// GetDeviceXidErrors mocks base method.
-func (m *Cndev) GetDeviceXidErrors(arg0 uint) (map[string]uint64, error) {
+// GetSupportedEventTypes mocks base method.
+func (m *Cndev) GetSupportedEventTypes(arg0 uint) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDeviceXidErrors", arg0)
-	ret0, _ := ret[0].(map[string]uint64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "GetSupportedEventTypes", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
-// GetDeviceXidErrors indicates an expected call of GetDeviceXidErrors.
-func (mr *CndevMockRecorder) GetDeviceXidErrors(arg0 interface{}) *gomock.Call {
+// GetSupportedEventTypes indicates an expected call of GetSupportedEventTypes.
+func (mr *CndevMockRecorder) GetSupportedEventTypes(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceXidErrors", reflect.TypeOf((*Cndev)(nil).GetDeviceXidErrors), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSupportedEventTypes", reflect.TypeOf((*Cndev)(nil).GetSupportedEventTypes), arg0)
 }
 
 // Init mocks base method.
@@ -826,6 +828,20 @@ func (m *Cndev) Init(arg0 bool) error {
 func (mr *CndevMockRecorder) Init(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*Cndev)(nil).Init), arg0)
+}
+
+// RegisterEventsHandleAndWait mocks base method.
+func (m *Cndev) RegisterEventsHandleAndWait(arg0 []int, arg1 chan cndev.XIDInfoWithTimestamp) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RegisterEventsHandleAndWait", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RegisterEventsHandleAndWait indicates an expected call of RegisterEventsHandleAndWait.
+func (mr *CndevMockRecorder) RegisterEventsHandleAndWait(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterEventsHandleAndWait", reflect.TypeOf((*Cndev)(nil).RegisterEventsHandleAndWait), arg0, arg1)
 }
 
 // Release mocks base method.

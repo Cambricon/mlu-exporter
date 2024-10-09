@@ -16,67 +16,48 @@ package collector
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/Cambricon/mlu-exporter/pkg/cndev"
+	"github.com/Cambricon/mlu-exporter/pkg/metrics"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 )
 
-var capacity = map[string]float64{
-	"MLU100":      64,
-	"MLU270":      128,
-	"MLU270-X5K":  140,
-	"MLU220":      16,
-	"MLU220-M2":   8,
-	"MLU290":      512,
-	"MLU370-EVBS": 131,
-	"MLU370-S4":   192,
-	"MLU370-M8":   332.8,
-	"MLU370":      256,
-	"MLU365":      64,
-	"MLU580":      419,
-	"MLU590":      629,
-}
-
 const maxFanSpeed = 5400
-
-func getModelCapacity(model string) float64 {
-	var modelCapacity float64
-	if c, ok := capacity[model]; ok {
-		modelCapacity = c
-	} else {
-		m := strings.Split(model, "-")[0]
-		modelCapacity = capacity[m]
-	}
-	return modelCapacity
-}
 
 func init() {
 	registerCollector(Cndev, NewCndevCollector)
 }
 
 type cndevCollector struct {
-	baseInfo   BaseInfo
-	client     cndev.Cndev
-	fnMap      map[string]interface{}
-	metrics    collectorMetrics
-	sharedInfo map[string]mluStat
+	baseInfo      BaseInfo
+	client        cndev.Cndev
+	fnMap         map[string]interface{}
+	metrics       metrics.CollectorMetrics
+	sharedInfo    map[string]MLUStat
+	mluXIDCounter map[cndev.XIDInfo]int
+	lastXID       map[cndev.DeviceInfo]int64
 }
 
-func NewCndevCollector(m collectorMetrics, bi BaseInfo) Collector {
+func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 	c := &cndevCollector{
-		baseInfo: bi,
-		client:   cndev.NewCndevClient(),
-		metrics:  m,
+		baseInfo:      bi,
+		client:        cndev.NewCndevClient(),
+		metrics:       m,
+		mluXIDCounter: map[cndev.XIDInfo]int{},
+		lastXID:       map[cndev.DeviceInfo]int64{},
 	}
+
 	c.fnMap = map[string]interface{}{
 		ArmOsMemTotal:                     c.collectArmOsMemTotal,
 		ArmOsMemUsed:                      c.collectArmOsMemUsed,
-		Capacity:                          c.collectCapacity,
 		ChipCPUUtil:                       c.collectChipCPUUtil,
+		ChipTemperature:                   c.collectChipTemperature,
+		ClusterTemperature:                c.collectClusterTemperature,
 		CoreUtil:                          c.collectCoreUtil,
 		D2DCRCError:                       c.collectD2DCRCError,
 		D2DCRCErrorOverflow:               c.collectD2DCRCErrorOverflow,
@@ -106,6 +87,8 @@ func NewCndevCollector(m collectorMetrics, bi BaseInfo) Collector {
 		MemUtil:                           c.collectMemUtil,
 		MLULinkCapabilityP2PTransfer:      c.collectMLULinkCapabilityP2PTransfer,
 		MLULinkCapabilityInterlakenSerdes: c.collectMLULinkCapabilityInterlakenSerdes,
+		MLULinkCounterCntrCnpPackage:      c.collectMLULinkCounterCntrCnpPackage,
+		MLULinkCounterCntrPfcPackage:      c.collectMLULinkCounterCntrPfcPackage,
 		MLULinkCounterCntrReadByte:        c.collectMLULinkCounterCntrReadByte,
 		MLULinkCounterCntrReadPackage:     c.collectMLULinkCounterCntrReadPackage,
 		MLULinkCounterCntrWriteByte:       c.collectMLULinkCounterCntrWriteByte,
@@ -145,7 +128,6 @@ func NewCndevCollector(m collectorMetrics, bi BaseInfo) Collector {
 		SramEccSbeCount:                   c.collectSramEccSbeCount,
 		Temperature:                       c.collectTemperature,
 		TinyCoreUtil:                      c.collectTinyCoreUtil,
-		Usage:                             c.collectUsage,
 		Util:                              c.collectUtil,
 		Version:                           c.collectVersion,
 		VideoCodecUtil:                    c.collectVideoCodecUtil,
@@ -154,25 +136,31 @@ func NewCndevCollector(m collectorMetrics, bi BaseInfo) Collector {
 		VirtualFunctionUtil:               c.collectVirtualFunctionUtil,
 		VirtualMemTotal:                   c.collectVirtualMemTotal,
 		VirtualMemUsed:                    c.collectVirtualMemUsed,
-		XidErrors:                         c.collectXidErrors,
+		LastXIDError:                      c.collectLastXIDError,
+		XIDErrorCount:                     c.collectXIDErrorCount,
 	}
+
 	log.Debugf("cndevCollector: %+v", c)
 	return c
 }
 
-func (c *cndevCollector) init(info map[string]mluStat) error {
+func (c *cndevCollector) init(info map[string]MLUStat) error {
 	c.sharedInfo = info
-	return c.client.Init(false)
+	if err := c.client.Init(false); err != nil {
+		return err
+	}
+	go c.waitXIDEvents()
+	return nil
 }
 
-func (c *cndevCollector) updateMetrics(m collectorMetrics) {
+func (c *cndevCollector) updateMetrics(m metrics.CollectorMetrics) {
 	c.metrics = m
 }
 
 func (c *cndevCollector) collect(ch chan<- prometheus.Metric) {
 	for name, m := range c.metrics {
 		fn := c.fnMap[name]
-		f, ok := fn.(func(chan<- prometheus.Metric, metric))
+		f, ok := fn.(func(chan<- prometheus.Metric, metrics.Metric))
 		if !ok {
 			log.Warnf("type assertion for fn %s failed, skip", name)
 		} else {
@@ -181,54 +169,77 @@ func (c *cndevCollector) collect(ch chan<- prometheus.Metric) {
 	}
 }
 
-func (c *cndevCollector) collectArmOsMemTotal(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectArmOsMemTotal(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		_, total, err := c.client.GetDeviceArmOsMemory(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceArmOsMemory", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(total*1024), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(total*1024), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectArmOsMemUsed(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectArmOsMemUsed(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		used, _, err := c.client.GetDeviceArmOsMemory(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceArmOsMemory", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(used*1024), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(used*1024), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectCapacity(ch chan<- prometheus.Metric, m metric) {
-	for _, stat := range c.sharedInfo {
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, getModelCapacity(stat.model), labelValues...)
-	}
-}
-
-func (c *cndevCollector) collectChipCPUUtil(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectChipCPUUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		board, coreUtil, err := c.client.GetDeviceCPUUtil(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceCPUUtil", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, cpuCore: ""})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(board), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, cpuCore: ""})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(board), labelValues...)
 		for core, util := range coreUtil {
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, cpuCore: fmt.Sprintf("%d", core)})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(util), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, cpuCore: fmt.Sprintf("%d", core)})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectCoreUtil(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectChipTemperature(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo {
+		_, _, chip, _, _, err := c.client.GetDeviceTemperature(stat.slot)
+		if err != nil {
+			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceTemperature", stat.slot))
+			continue
+		}
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(chip), labelValues...)
+	}
+}
+
+func (c *cndevCollector) collectClusterTemperature(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo {
+		_, _, _, clusters, _, err := c.client.GetDeviceTemperature(stat.slot)
+		if err != nil {
+			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceTemperature", stat.slot))
+			continue
+		}
+		for index, cluster := range clusters {
+			if cluster < 0 {
+				log.Debugf("Slot %d, cluster index %d, temperature %d is invalid", stat.slot, index, cluster)
+				continue
+			}
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, cluster: fmt.Sprintf("%d", index)})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(cluster), labelValues...)
+		}
+	}
+}
+
+func (c *cndevCollector) collectCoreUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		_, coreUtil, err := c.client.GetDeviceUtil(stat.slot)
 		if err != nil {
@@ -236,13 +247,13 @@ func (c *cndevCollector) collectCoreUtil(ch chan<- prometheus.Metric, m metric) 
 			continue
 		}
 		for core, util := range coreUtil {
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, core: core})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(util), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, core: core})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectD2DCRCError(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectD2DCRCError(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.crcDisabled {
 			continue
@@ -252,12 +263,12 @@ func (c *cndevCollector) collectD2DCRCError(ch chan<- prometheus.Metric, m metri
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceCRCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(d2dCRCError), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(d2dCRCError), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectD2DCRCErrorOverflow(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectD2DCRCErrorOverflow(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.crcDisabled {
 			continue
@@ -267,48 +278,48 @@ func (c *cndevCollector) collectD2DCRCErrorOverflow(ch chan<- prometheus.Metric,
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceCRCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(d2dCRCErrorOverflow), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(d2dCRCErrorOverflow), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectDDRBandWidth(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectDDRBandWidth(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		_, bandWidth, err := c.client.GetDeviceDDRInfo(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceDDRInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, bandWidth, labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, bandWidth, labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectDDRDataWidth(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectDDRDataWidth(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		dataWidth, _, err := c.client.GetDeviceDDRInfo(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceDDRInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(dataWidth), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(dataWidth), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectDDRFrequency(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectDDRFrequency(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		_, ddrFrequency, err := c.client.GetDeviceFrequency(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceFrequency", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(ddrFrequency), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(ddrFrequency), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectDoubleBitRetiredPageCount(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectDoubleBitRetiredPageCount(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.retiredPageDisabled {
 			continue
@@ -318,16 +329,16 @@ func (c *cndevCollector) collectDoubleBitRetiredPageCount(ch chan<- prometheus.M
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRetiredPageInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
 		if cause != 1 {
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, 0, labelValues...)
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, 0, labelValues...)
 			continue
 		}
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(pageCount), labelValues...)
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(pageCount), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectDramEccDbeCount(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectDramEccDbeCount(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.memEccDisabled {
 			continue
@@ -337,12 +348,12 @@ func (c *cndevCollector) collectDramEccDbeCount(ch chan<- prometheus.Metric, m m
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemEccCounter", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(dramEccDbeCounter), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(dramEccDbeCounter), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectDramEccSbeCount(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectDramEccSbeCount(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.memEccDisabled {
 			continue
@@ -352,12 +363,12 @@ func (c *cndevCollector) collectDramEccSbeCount(ch chan<- prometheus.Metric, m m
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemEccCounter", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(dramEccSbeCounter), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(dramEccSbeCounter), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectECCAddressForbiddenError(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectECCAddressForbiddenError(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.eccDisabled {
 			continue
@@ -367,12 +378,12 @@ func (c *cndevCollector) collectECCAddressForbiddenError(ch chan<- prometheus.Me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(addressForbiddenError), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(addressForbiddenError), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectECCCorrectedError(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectECCCorrectedError(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.eccDisabled {
 			continue
@@ -382,12 +393,12 @@ func (c *cndevCollector) collectECCCorrectedError(ch chan<- prometheus.Metric, m
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(correctedError), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(correctedError), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectECCMultipleError(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectECCMultipleError(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.eccDisabled {
 			continue
@@ -397,12 +408,12 @@ func (c *cndevCollector) collectECCMultipleError(ch chan<- prometheus.Metric, m 
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(multipleError), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(multipleError), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectECCMultipleMultipleError(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectECCMultipleMultipleError(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.eccDisabled {
 			continue
@@ -412,12 +423,12 @@ func (c *cndevCollector) collectECCMultipleMultipleError(ch chan<- prometheus.Me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(multipleMultipleError), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(multipleMultipleError), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectECCMultipleOneError(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectECCMultipleOneError(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.eccDisabled {
 			continue
@@ -427,12 +438,12 @@ func (c *cndevCollector) collectECCMultipleOneError(ch chan<- prometheus.Metric,
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(multipleOneError), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(multipleOneError), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectECCOneBitError(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectECCOneBitError(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.eccDisabled {
 			continue
@@ -442,12 +453,12 @@ func (c *cndevCollector) collectECCOneBitError(ch chan<- prometheus.Metric, m me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(oneBitError), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(oneBitError), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectECCTotalError(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectECCTotalError(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.eccDisabled {
 			continue
@@ -457,12 +468,12 @@ func (c *cndevCollector) collectECCTotalError(ch chan<- prometheus.Metric, m met
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(totalError), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(totalError), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectECCUncorrectedError(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectECCUncorrectedError(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.eccDisabled {
 			continue
@@ -472,12 +483,12 @@ func (c *cndevCollector) collectECCUncorrectedError(ch chan<- prometheus.Metric,
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(uncorrectedError), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(uncorrectedError), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectFanSpeed(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectFanSpeed(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		fan, err := c.client.GetDeviceFanSpeed(stat.slot)
 		var speed float64
@@ -490,36 +501,36 @@ func (c *cndevCollector) collectFanSpeed(ch chan<- prometheus.Metric, m metric) 
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceFanSpeed", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, speed, labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, speed, labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectFrequency(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectFrequency(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		frequency, _, err := c.client.GetDeviceFrequency(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceFrequency", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(frequency), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(frequency), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectHealth(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectHealth(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		health, err := c.client.GetDeviceHealth(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceHealth", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(health), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(health), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectHeartbeatCount(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectHeartbeatCount(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.heartBeatDisabled {
 			continue
@@ -529,12 +540,12 @@ func (c *cndevCollector) collectHeartbeatCount(ch chan<- prometheus.Metric, m me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceHeartbeatCount", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(heartbeatCount), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(heartbeatCount), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectImageCodecUtil(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectImageCodecUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		vpuUtil, err := c.client.GetDeviceImageCodecUtil(stat.slot)
 		if err != nil {
@@ -542,70 +553,70 @@ func (c *cndevCollector) collectImageCodecUtil(ch chan<- prometheus.Metric, m me
 			continue
 		}
 		for core, util := range vpuUtil {
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, core: core})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(util), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, core: core})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMachineMLUNums(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMachineMLUNums(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		num, err := c.client.GetDeviceCount()
 		if err != nil {
 			log.Error(errors.Wrap(err, "GetDeviceCount"))
 			return
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: mluStat{model: stat.model, driver: stat.driver}, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(num), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: MLUStat{model: stat.model, driver: stat.driver}, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(num), labelValues...)
 		return
 	}
 }
 
-func (c *cndevCollector) collectMemTemperature(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMemTemperature(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
-		_, mem, _, memDies, err := c.client.GetDeviceTemperature(stat.slot)
+		_, mem, _, _, memDies, err := c.client.GetDeviceTemperature(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceTemperature", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, memoryDie: ""})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(mem), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, memoryDie: ""})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(mem), labelValues...)
 		for index, memDie := range memDies {
 			if memDie < 0 {
 				log.Debugf("Slot %d, cluster index %d, temperature %d is invalid", stat.slot, index, memDie)
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, memoryDie: fmt.Sprintf("%d", index)})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(memDie), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, memoryDie: fmt.Sprintf("%d", index)})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(memDie), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMemTotal(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMemTotal(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		_, total, _, _, err := c.client.GetDeviceMemory(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(total*1024), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(total*1024), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectMemUsed(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMemUsed(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		used, _, _, _, err := c.client.GetDeviceMemory(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(used*1024), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(used*1024), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectMemUtil(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMemUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		used, total, _, _, err := c.client.GetDeviceMemory(stat.slot)
 		if err != nil {
@@ -613,8 +624,8 @@ func (c *cndevCollector) collectMemUtil(ch chan<- prometheus.Metric, m metric) {
 			continue
 		}
 		util := float64(used) / float64(total) * 100
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: ""})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, util, labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: ""})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, util, labelValues...)
 
 		if stat.smluEnabled {
 			smluInfos, err := c.client.GetAllSMluInfo(stat.slot)
@@ -626,19 +637,19 @@ func (c *cndevCollector) collectMemUtil(ch chan<- prometheus.Metric, m metric) {
 			for _, info := range smluInfos {
 				var labelValues []string
 				if c.baseInfo.mode == "dynamic-smlu" {
-					labelValues = getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, typ: "vmemory", vf: fmt.Sprintf("%d", info.InstanceID)})
+					labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, typ: "vmemory", vf: fmt.Sprintf("%d", info.InstanceID)})
 				} else {
-					labelValues = getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", info.InstanceID)})
+					labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", info.InstanceID)})
 				}
-				ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(info.MemUsed)/float64(info.MemTotal)*100, labelValues...)
+				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(info.MemUsed)/float64(info.MemTotal)*100, labelValues...)
 			}
 			continue
 		}
 
 		if c.baseInfo.num > 0 {
 			for i := uint(0); i < c.baseInfo.num; i++ {
-				labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", i+1)})
-				ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, util, labelValues...)
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", i+1)})
+				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, util, labelValues...)
 			}
 			continue
 		}
@@ -659,15 +670,15 @@ func (c *cndevCollector) collectMemUtil(ch chan<- prometheus.Metric, m metric) {
 					continue
 				}
 				util := float64(used) / float64(total) * 100
-				labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", vf)})
-				ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, util, labelValues...)
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", vf)})
+				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, util, labelValues...)
 			}
 			state >>= 1
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkCapabilityP2PTransfer(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkCapabilityP2PTransfer(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			p2p, _, err := c.client.GetDeviceMLULinkCapability(stat.slot, uint(i))
@@ -675,13 +686,13 @@ func (c *cndevCollector) collectMLULinkCapabilityP2PTransfer(ch chan<- prometheu
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCapability", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(p2p), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(p2p), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkCapabilityInterlakenSerdes(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkCapabilityInterlakenSerdes(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			_, interlakenSerdes, err := c.client.GetDeviceMLULinkCapability(stat.slot, uint(i))
@@ -689,200 +700,234 @@ func (c *cndevCollector) collectMLULinkCapabilityInterlakenSerdes(ch chan<- prom
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCapability", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(interlakenSerdes), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(interlakenSerdes), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkCounterCntrReadByte(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkCounterCntrCnpPackage(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			if !stat.linkActive[i] {
 				continue
 			}
-			cntrReadByte, _, _, _, _, _, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
+			_, _, _, _, _, _, _, _, _, _, _, cntrCnpPackage, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(cntrReadByte), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(cntrCnpPackage), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkCounterCntrReadPackage(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkCounterCntrPfcPackage(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			if !stat.linkActive[i] {
 				continue
 			}
-			_, cntrReadPackage, _, _, _, _, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
+			_, _, _, _, _, _, _, _, _, _, _, _, cntrPfcPackage, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(cntrReadPackage), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(cntrPfcPackage), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkCounterCntrWriteByte(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkCounterCntrReadByte(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			if !stat.linkActive[i] {
 				continue
 			}
-			_, _, cntrWriteByte, _, _, _, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
+			cntrReadByte, _, _, _, _, _, _, _, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(cntrWriteByte), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(cntrReadByte), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkCounterCntrWritePackage(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkCounterCntrReadPackage(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			if !stat.linkActive[i] {
 				continue
 			}
-			_, _, _, cntrWritePackage, _, _, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
+			_, cntrReadPackage, _, _, _, _, _, _, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(cntrWritePackage), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(cntrReadPackage), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkCounterErrCorrected(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkCounterCntrWriteByte(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			if !stat.linkActive[i] {
 				continue
 			}
-			_, _, _, _, errCorrected, _, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
+			_, _, cntrWriteByte, _, _, _, _, _, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(errCorrected), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(cntrWriteByte), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkCounterErrCRC24(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkCounterCntrWritePackage(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			if !stat.linkActive[i] {
 				continue
 			}
-			_, _, _, _, _, errCRC24, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
+			_, _, _, cntrWritePackage, _, _, _, _, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(errCRC24), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(cntrWritePackage), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkCounterErrCRC32(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkCounterErrCorrected(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			if !stat.linkActive[i] {
 				continue
 			}
-			_, _, _, _, _, _, errCRC32, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
+			_, _, _, _, errCorrected, _, _, _, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(errCRC32), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(errCorrected), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkCounterErrEccDouble(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkCounterErrCRC24(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			if !stat.linkActive[i] {
 				continue
 			}
-			_, _, _, _, _, _, _, errEccDouble, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
+			_, _, _, _, _, errCRC24, _, _, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(errEccDouble), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(errCRC24), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkCounterErrFatal(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkCounterErrCRC32(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			if !stat.linkActive[i] {
 				continue
 			}
-			_, _, _, _, _, _, _, _, errFatal, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
+			_, _, _, _, _, _, errCRC32, _, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(errFatal), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(errCRC32), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkCounterErrReplay(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkCounterErrEccDouble(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			if !stat.linkActive[i] {
 				continue
 			}
-			_, _, _, _, _, _, _, _, _, errReplay, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
+			_, _, _, _, _, _, _, errEccDouble, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(errReplay), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(errEccDouble), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkCounterErrUncorrected(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkCounterErrFatal(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			if !stat.linkActive[i] {
 				continue
 			}
-			_, _, _, _, _, _, _, _, _, _, errUncorrected, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
+			_, _, _, _, _, _, _, _, errFatal, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(errUncorrected), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(errFatal), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkPortMode(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkCounterErrReplay(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo {
+		for i := 0; i < stat.link; i++ {
+			if !stat.linkActive[i] {
+				continue
+			}
+			_, _, _, _, _, _, _, _, _, errReplay, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
+			if err != nil {
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
+				continue
+			}
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(errReplay), labelValues...)
+		}
+	}
+}
+
+func (c *cndevCollector) collectMLULinkCounterErrUncorrected(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo {
+		for i := 0; i < stat.link; i++ {
+			if !stat.linkActive[i] {
+				continue
+			}
+			_, _, _, _, _, _, _, _, _, _, errUncorrected, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
+			if err != nil {
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
+				continue
+			}
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(errUncorrected), labelValues...)
+		}
+	}
+}
+
+func (c *cndevCollector) collectMLULinkPortMode(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			mode, err := c.client.GetDeviceMLULinkPortMode(stat.slot, uint(i))
@@ -890,13 +935,13 @@ func (c *cndevCollector) collectMLULinkPortMode(ch chan<- prometheus.Metric, m m
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkPortMode", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(mode), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(mode), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkSpeedFormat(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkSpeedFormat(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			if !stat.linkActive[i] {
@@ -907,13 +952,13 @@ func (c *cndevCollector) collectMLULinkSpeedFormat(ch chan<- prometheus.Metric, 
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkSpeedInfo", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(speedFormat), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(speedFormat), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkSpeedValue(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkSpeedValue(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			if !stat.linkActive[i] {
@@ -924,26 +969,26 @@ func (c *cndevCollector) collectMLULinkSpeedValue(ch chan<- prometheus.Metric, m
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkSpeedInfo", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(speedValue), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(speedValue), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkStatusIsActive(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkStatusIsActive(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			var active int
 			if stat.linkActive[i] {
 				active = 1
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(active), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(active), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkStatusSerdesState(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkStatusSerdesState(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			_, serdes, err := c.client.GetDeviceMLULinkStatus(stat.slot, uint(i))
@@ -951,13 +996,13 @@ func (c *cndevCollector) collectMLULinkStatusSerdesState(ch chan<- prometheus.Me
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkStatus", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(serdes), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(serdes), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectMLULinkVersion(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectMLULinkVersion(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
 			major, minor, build, err := c.client.GetDeviceMLULinkVersion(stat.slot, uint(i))
@@ -966,25 +1011,25 @@ func (c *cndevCollector) collectMLULinkVersion(ch chan<- prometheus.Metric, m me
 				continue
 			}
 			v := calcVersion(major, minor, build)
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, linkVersion: v})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(1), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, linkVersion: v})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(1), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectNUMANodeID(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectNUMANodeID(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		numaNodeID, err := c.client.GetDeviceNUMANodeID(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceNUMANodeId", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(numaNodeID), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(numaNodeID), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectParityError(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectParityError(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		switch strings.Split(strings.ToLower(stat.model), "-")[0] {
 		case "mlu220", "mlu270", "mlu290", "mlu370":
@@ -995,12 +1040,12 @@ func (c *cndevCollector) collectParityError(ch chan<- prometheus.Metric, m metri
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceParityError", stat.slot))
 			break
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(parityError), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(parityError), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectPCIeInfo(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectPCIeInfo(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		slotID, subsystemID, deviceID, vendor, subsystemVendor, domain, bus, device, function, err := c.client.GetDevicePCIeInfo(stat.slot)
 		if err != nil {
@@ -1022,69 +1067,69 @@ func (c *cndevCollector) collectPCIeInfo(ch chan<- prometheus.Metric, m metric) 
 			pcieSpeed:           calcPCIeSpeed(speed),
 			pcieWidth:           fmt.Sprintf("%d", width),
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, pcieInfo: pcieInfo})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, 1, labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, pcieInfo: pcieInfo})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, 1, labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectPCIeReadThroughput(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectPCIeReadThroughput(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		read, _, err := c.client.GetDevicePCIeThroughput(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDevicePCIeThroughput", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(read), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(read), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectPCIeReplayCount(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectPCIeReplayCount(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		count, err := c.client.GetDevicePCIeReplayCount(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDevicePCIeReplayCount", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(count), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(count), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectPCIeWriteThroughput(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectPCIeWriteThroughput(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		_, write, err := c.client.GetDevicePCIeThroughput(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDevicePCIeThroughput", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(write), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(write), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectPowerUsage(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectPowerUsage(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		power, err := c.client.GetDevicePower(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDevicePower", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: ""})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(power), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: ""})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(power), labelValues...)
 
 		if c.baseInfo.num > 0 {
 			for i := uint(0); i < c.baseInfo.num; i++ {
-				labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", i+1)})
-				ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(power), labelValues...)
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", i+1)})
+				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(power), labelValues...)
 			}
 			continue
 		}
 
 		if stat.mimEnabled {
 			for _, info := range stat.mimInfos {
-				labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", info.InstanceID)})
-				ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(power), labelValues...)
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", info.InstanceID)})
+				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(power), labelValues...)
 			}
 			continue
 		}
@@ -1100,11 +1145,11 @@ func (c *cndevCollector) collectPowerUsage(ch chan<- prometheus.Metric, m metric
 			for _, info := range smluInfos {
 				var labelValues []string
 				if c.baseInfo.mode == "dynamic-smlu" {
-					labelValues = getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, typ: "vcore", vf: fmt.Sprintf("%d", info.InstanceID)})
+					labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, typ: "vcore", vf: fmt.Sprintf("%d", info.InstanceID)})
 				} else {
-					labelValues = getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", info.InstanceID)})
+					labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", info.InstanceID)})
 				}
-				ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(power), labelValues...)
+				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(power), labelValues...)
 			}
 			continue
 		}
@@ -1123,15 +1168,15 @@ func (c *cndevCollector) collectPowerUsage(ch chan<- prometheus.Metric, m metric
 					log.Errorln(errors.Wrapf(err, "Slot %d VF %d GetDevicePower", stat.slot, vf))
 					continue
 				}
-				labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", vf)})
-				ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(power), labelValues...)
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", vf)})
+				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(power), labelValues...)
 			}
 			state >>= 1
 		}
 	}
 }
 
-func (c *cndevCollector) collectProcessIpuUtil(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectProcessIpuUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.processUtilDisabled {
 			continue
@@ -1142,13 +1187,13 @@ func (c *cndevCollector) collectProcessIpuUtil(ch chan<- prometheus.Metric, m me
 			continue
 		}
 		for i, util := range ipu {
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, pid: pid[i]})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(util), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, pid: pid[i]})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectProcessJpuUtil(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectProcessJpuUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.processUtilDisabled {
 			continue
@@ -1159,13 +1204,13 @@ func (c *cndevCollector) collectProcessJpuUtil(ch chan<- prometheus.Metric, m me
 			continue
 		}
 		for i, util := range jpu {
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, pid: pid[i]})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(util), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, pid: pid[i]})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectProcessMemoryUtil(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectProcessMemoryUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.processUtilDisabled {
 			continue
@@ -1176,13 +1221,13 @@ func (c *cndevCollector) collectProcessMemoryUtil(ch chan<- prometheus.Metric, m
 			continue
 		}
 		for i, util := range mem {
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, pid: pid[i]})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(util), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, pid: pid[i]})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectProcessVpuDecodeUtil(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectProcessVpuDecodeUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.processUtilDisabled {
 			continue
@@ -1193,13 +1238,13 @@ func (c *cndevCollector) collectProcessVpuDecodeUtil(ch chan<- prometheus.Metric
 			continue
 		}
 		for i, util := range vpuDecode {
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, pid: pid[i]})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(util), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, pid: pid[i]})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectProcessVpuEncodeUtil(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectProcessVpuEncodeUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.processUtilDisabled {
 			continue
@@ -1210,13 +1255,13 @@ func (c *cndevCollector) collectProcessVpuEncodeUtil(ch chan<- prometheus.Metric
 			continue
 		}
 		for i, util := range vpuEncode {
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, pid: pid[i]})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(util), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, pid: pid[i]})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectRemappedCorrectRows(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectRemappedCorrectRows(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.remappedRowsDisabled {
 			continue
@@ -1226,12 +1271,12 @@ func (c *cndevCollector) collectRemappedCorrectRows(ch chan<- prometheus.Metric,
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRemappedRows", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(correctRows), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(correctRows), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectRemappedFailedRows(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectRemappedFailedRows(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.remappedRowsDisabled {
 			continue
@@ -1241,12 +1286,12 @@ func (c *cndevCollector) collectRemappedFailedRows(ch chan<- prometheus.Metric, 
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRemappedRows", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(failedRows), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(failedRows), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectRemappedPendingRows(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectRemappedPendingRows(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.remappedRowsDisabled {
 			continue
@@ -1256,12 +1301,12 @@ func (c *cndevCollector) collectRemappedPendingRows(ch chan<- prometheus.Metric,
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRemappedRows", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(pendingRows), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(pendingRows), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectRemappedUncorrectRows(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectRemappedUncorrectRows(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.remappedRowsDisabled {
 			continue
@@ -1271,12 +1316,12 @@ func (c *cndevCollector) collectRemappedUncorrectRows(ch chan<- prometheus.Metri
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRemappedRows", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(uncorrectRows), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(uncorrectRows), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectSingleBitRetiredPageCount(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectSingleBitRetiredPageCount(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.retiredPageDisabled {
 			continue
@@ -1286,16 +1331,16 @@ func (c *cndevCollector) collectSingleBitRetiredPageCount(ch chan<- prometheus.M
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRetiredPageInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
 		if cause != 0 {
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, 0, labelValues...)
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, 0, labelValues...)
 			continue
 		}
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(pageCount), labelValues...)
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(pageCount), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectSramEccDbeCount(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectSramEccDbeCount(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.memEccDisabled {
 			continue
@@ -1305,12 +1350,12 @@ func (c *cndevCollector) collectSramEccDbeCount(ch chan<- prometheus.Metric, m m
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemEccCounter", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(sramEccDbeCounter), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(sramEccDbeCounter), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectSramEccParityCount(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectSramEccParityCount(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.memEccDisabled {
 			continue
@@ -1320,12 +1365,12 @@ func (c *cndevCollector) collectSramEccParityCount(ch chan<- prometheus.Metric, 
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemEccCounter", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(sramEccParityCounter), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(sramEccParityCounter), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectSramEccSbeCount(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectSramEccSbeCount(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.memEccDisabled {
 			continue
@@ -1335,32 +1380,24 @@ func (c *cndevCollector) collectSramEccSbeCount(ch chan<- prometheus.Metric, m m
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemEccCounter", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(sramEccSbeCounter), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(sramEccSbeCounter), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectTemperature(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectTemperature(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
-		board, _, clusters, _, err := c.client.GetDeviceTemperature(stat.slot)
+		board, _, _, _, _, err := c.client.GetDeviceTemperature(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceTemperature", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, cluster: ""})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(board), labelValues...)
-		for index, cluster := range clusters {
-			if cluster < 0 {
-				log.Debugf("Slot %d, cluster index %d, temperature %d is invalid", stat.slot, index, cluster)
-				continue
-			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, cluster: fmt.Sprintf("%d", index)})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(cluster), labelValues...)
-		}
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(board), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectTinyCoreUtil(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectTinyCoreUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		vpuUtil, err := c.client.GetDeviceTinyCoreUtil(stat.slot)
 		if err != nil {
@@ -1368,39 +1405,26 @@ func (c *cndevCollector) collectTinyCoreUtil(ch chan<- prometheus.Metric, m metr
 			continue
 		}
 		for core, util := range vpuUtil {
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, core: core})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(util), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, core: core})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectUsage(ch chan<- prometheus.Metric, m metric) {
-	for _, stat := range c.sharedInfo {
-		board, _, err := c.client.GetDeviceUtil(stat.slot)
-		if err != nil {
-			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceUtil", stat.slot))
-			continue
-		}
-		usage := getModelCapacity(stat.model) * float64(board) / 100
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, usage, labelValues...)
-	}
-}
-
-func (c *cndevCollector) collectUtil(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		board, coreUtil, err := c.client.GetDeviceUtil(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceUtil", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: ""})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(board), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: ""})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(board), labelValues...)
 
 		if c.baseInfo.num > 0 {
 			for i := uint(0); i < c.baseInfo.num; i++ {
-				labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", i+1)})
-				ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(board), labelValues...)
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", i+1)})
+				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(board), labelValues...)
 			}
 			continue
 		}
@@ -1408,8 +1432,8 @@ func (c *cndevCollector) collectUtil(ch chan<- prometheus.Metric, m metric) {
 		if stat.mimEnabled {
 			for _, info := range stat.mimInfos {
 				util := calcMimUtil(info, coreUtil)
-				labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", info.InstanceID)})
-				ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(util), labelValues...)
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", info.InstanceID)})
+				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 			}
 			continue
 		}
@@ -1425,11 +1449,11 @@ func (c *cndevCollector) collectUtil(ch chan<- prometheus.Metric, m metric) {
 			for _, info := range smluInfos {
 				var labelValues []string
 				if c.baseInfo.mode == "dynamic-smlu" {
-					labelValues = getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, typ: "vcore", vf: fmt.Sprintf("%d", info.InstanceID)})
+					labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, typ: "vcore", vf: fmt.Sprintf("%d", info.InstanceID)})
 				} else {
-					labelValues = getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", info.InstanceID)})
+					labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", info.InstanceID)})
 				}
-				ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(info.IpuUtil), labelValues...)
+				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(info.IpuUtil), labelValues...)
 			}
 			continue
 		}
@@ -1450,20 +1474,20 @@ func (c *cndevCollector) collectUtil(ch chan<- prometheus.Metric, m metric) {
 				log.Errorln(errors.Wrapf(err, "vf %d calcVFUtil, util %v, vfNum: %d", vfID, coreUtil, vfNum))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", vfID)})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, util, labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", vfID)})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, util, labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectVersion(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectVersion(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, 1, labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, 1, labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectVideoCodecUtil(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectVideoCodecUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		vpuUtil, err := c.client.GetDeviceVideoCodecUtil(stat.slot)
 		if err != nil {
@@ -1471,13 +1495,13 @@ func (c *cndevCollector) collectVideoCodecUtil(ch chan<- prometheus.Metric, m me
 			continue
 		}
 		for core, util := range vpuUtil {
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, core: core})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(util), labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, core: core})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectVirtualFunctionMemUtil(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectVirtualFunctionMemUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		state, err := c.client.GetDeviceVfState(stat.slot)
 		if err != nil {
@@ -1494,15 +1518,15 @@ func (c *cndevCollector) collectVirtualFunctionMemUtil(ch chan<- prometheus.Metr
 					continue
 				}
 				util := float64(used) / float64(total) * 100
-				labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", vf)})
-				ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, util, labelValues...)
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", vf)})
+				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, util, labelValues...)
 			}
 			state >>= 1
 		}
 	}
 }
 
-func (c *cndevCollector) collectVirtualFunctionPowerUsage(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectVirtualFunctionPowerUsage(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		state, err := c.client.GetDeviceVfState(stat.slot)
 		if err != nil {
@@ -1518,15 +1542,15 @@ func (c *cndevCollector) collectVirtualFunctionPowerUsage(ch chan<- prometheus.M
 					log.Errorln(errors.Wrapf(err, "Slot %d VF %d GetDevicePower", stat.slot, vf))
 					continue
 				}
-				labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", vf)})
-				ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(power), labelValues...)
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", vf)})
+				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(power), labelValues...)
 			}
 			state >>= 1
 		}
 	}
 }
 
-func (c *cndevCollector) collectVirtualFunctionUtil(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectVirtualFunctionUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		_, coreUtil, err := c.client.GetDeviceUtil(stat.slot)
 		if err != nil {
@@ -1536,8 +1560,8 @@ func (c *cndevCollector) collectVirtualFunctionUtil(ch chan<- prometheus.Metric,
 		if stat.mimEnabled {
 			for _, info := range stat.mimInfos {
 				util := calcMimUtil(info, coreUtil)
-				labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", info.InstanceID)})
-				ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(util), labelValues...)
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", info.InstanceID)})
+				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 			}
 			continue
 		}
@@ -1558,53 +1582,99 @@ func (c *cndevCollector) collectVirtualFunctionUtil(ch chan<- prometheus.Metric,
 				log.Errorln(errors.Wrapf(err, "vf %d calcVFUtil, util %v, vfNum: %d", vfID, coreUtil, vfNum))
 				continue
 			}
-			labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", vfID)})
-			ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, util, labelValues...)
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", vfID)})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, util, labelValues...)
 		}
 	}
 }
 
-func (c *cndevCollector) collectVirtualMemTotal(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectVirtualMemTotal(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		_, _, _, total, err := c.client.GetDeviceMemory(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(total*1024), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(total*1024), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectVirtualMemUsed(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectVirtualMemUsed(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		_, _, used, _, err := c.client.GetDeviceMemory(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.desc, prometheus.GaugeValue, float64(used*1024), labelValues...)
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(used*1024), labelValues...)
 	}
 }
 
-func (c *cndevCollector) collectXidErrors(ch chan<- prometheus.Metric, m metric) {
+func (c *cndevCollector) collectLastXIDError(ch chan<- prometheus.Metric, m metrics.Metric) {
+	slotInfo := map[uint]MLUStat{}
 	for _, stat := range c.sharedInfo {
-		if stat.xidDisabled {
-			continue
-		}
-		xidsMap, err := c.client.GetDeviceXidErrors(stat.slot)
-		if err != nil {
-			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceXidErrors", stat.slot))
-			continue
-		}
-		for k, v := range xidsMap {
-			if v > 0 {
-				labelValues := getLabelValues(m.labels, labelInfo{stat: stat, host: c.baseInfo.host, xidErrorType: k})
-				ch <- prometheus.MustNewConstMetric(m.desc, prometheus.CounterValue, float64(v), labelValues...)
-			}
-		}
+		slotInfo[stat.slot] = stat
 	}
+
+	for info, xid := range c.lastXID {
+		labelValues := getLabelValues(m.Labels, labelInfo{
+			stat: slotInfo[info.Device],
+			host: c.baseInfo.host,
+			xidInfo: cndev.XIDInfoWithTimestamp{
+				XIDInfo: cndev.XIDInfo{
+					DeviceInfo: info,
+				},
+			},
+		})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(xid), labelValues...)
+	}
+}
+
+func (c *cndevCollector) collectXIDErrorCount(ch chan<- prometheus.Metric, m metrics.Metric) {
+	slotInfo := map[uint]MLUStat{}
+	for _, stat := range c.sharedInfo {
+		slotInfo[stat.slot] = stat
+	}
+
+	for info, count := range c.mluXIDCounter {
+		labelValues := getLabelValues(m.Labels, labelInfo{
+			stat: slotInfo[info.Device],
+			host: c.baseInfo.host,
+			xidInfo: cndev.XIDInfoWithTimestamp{
+				XIDInfo: info,
+			},
+		})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(count), labelValues...)
+	}
+}
+
+func (c *cndevCollector) waitXIDEvents() error {
+	slots := []int{}
+	for _, stat := range c.sharedInfo {
+		if stat.xidCallbackDisabled {
+			continue
+		}
+		slots = append(slots, int(stat.slot))
+	}
+	if len(slots) == 0 {
+		return nil
+	}
+	sort.Ints(slots)
+
+	ch := make(chan cndev.XIDInfoWithTimestamp, 10)
+	if err := c.client.RegisterEventsHandleAndWait(slots, ch); err != nil {
+		log.Errorln(errors.Wrap(err, "register event handle"))
+		return err
+	}
+
+	for event := range ch {
+		c.mluXIDCounter[event.XIDInfo]++
+		c.lastXID[event.DeviceInfo] = event.XID
+	}
+
+	return nil
 }
 
 func calcVFUtil(utils []int, vfNum int, vfID int) (float64, error) {
@@ -1657,10 +1727,6 @@ func calcPCIeSpeed(speed int) string {
 	}
 	log.Debugf("PCIeSpeed: %v", pcieSpeed)
 	return pcieSpeed
-}
-
-func calcVersion(major uint, minor uint, build uint) string {
-	return fmt.Sprintf("v%d.%d.%d", major, minor, build)
 }
 
 func calcMimUtil(info cndev.MimInfo, utils []int) float64 {

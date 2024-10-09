@@ -74,6 +74,7 @@ cndev:
       type: type
       uuid: uuid
     name: core
+    push: true
   d2d_crc_error_overflow_total:
     help: The d2d CRC error overflow counts of Cambricon MLU
     labels:
@@ -372,6 +373,7 @@ cndev:
       type: type
       uuid: uuid
     name: memory_used
+    push: true
   memory_utilization:
     help: The memory utilization of Cambricon MLU, unit is '%'
     labels:
@@ -385,6 +387,7 @@ cndev:
       uuid: uuid
       vf: vf
     name: memory_utilization
+    push: true
   mlulink_cntr_cnp_package_total:
     help: The cntr cnp package counts of Cambricon MLU MLULink
     labels:
@@ -951,6 +954,7 @@ cndev:
       uuid: uuid
       vf: vf
     name: utilization
+    push: true
   version:
     help: The version info of Cambricon MLU
     labels:
@@ -989,6 +993,7 @@ cndev:
       uuid: uuid
       vf: vf
     name: virtual_function_memory_utilization
+    push: true
   virtual_function_power_usage:
     help: Deprecated, use 'power_usage' instead
     labels:
@@ -1015,6 +1020,7 @@ cndev:
       uuid: uuid
       vf: vf
     name: virtual_function_utilization
+    push: true
   virtual_memory_total:
     help: The total virtual memory of Cambricon MLU, unit is 'B'
     labels:
@@ -1039,6 +1045,24 @@ cndev:
       type: type
       uuid: uuid
     name: virtual_memory_used
+    push: true
+  xid_error:
+    help: The xid error of Cambricon MLU
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+      xid: xid
+      xid_timestamp: xid_timestamp
+      xid_compute_instance_id: xid_compute_instance_id
+      xid_mlu_instance_id: xid_mlu_instance_id
+    name: xid_error
+    push: true
   xid_error_count:
     help: The xid error count of Cambricon MLU
     labels:
@@ -1098,6 +1122,7 @@ podresources:
       node: node
       type: type
     name: allocated
+    push: true
   container:
     help: The k8s container info of Cambricon MLUs allocated
     labels:
@@ -1114,3 +1139,4 @@ podresources:
       uuid: uuid
       vf: vf
     name: container
+    push: true

@@ -15,52 +15,90 @@
 package metrics
 
 import (
-	"os"
+	"fmt"
+	"sort"
 
+	"github.com/fsnotify/fsnotify"
+	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
 )
 
-type Conf map[string]Metrics
-
-type Metrics map[string]Metric
+type CollectorMetrics map[string]Metric
 
 type Metric struct {
-	Name   string `yaml:"name"`
-	Help   string `yaml:"help"`
-	Labels Labels `yaml:"labels"`
+	Name   string
+	Desc   *prometheus.Desc
+	Labels []string
+	Push   bool
 }
 
-type Labels map[string]string
+var listeners []func(map[string]CollectorMetrics)
 
-func (l Labels) GetKeys() []string {
-	keys := []string{}
-	for k := range l {
-		keys = append(keys, k)
-	}
-	return keys
+func RegisterWatcher(f func(map[string]CollectorMetrics)) {
+	listeners = append(listeners, f)
 }
 
-func load(c *Conf, path string) error {
-	f, err := os.ReadFile(path)
-	if os.IsNotExist(err) {
-		log.Errorf("Can not find config file %s", path)
+func GetMetrics(configFile string, prefix string) map[string]CollectorMetrics {
+	return getMetrics(configFile, prefix)
+}
+
+func getMetrics(configFile string, prefix string) map[string]CollectorMetrics {
+	cfg := getConfOrDie(configFile)
+	m := make(map[string]CollectorMetrics)
+	for collector, metricsMap := range cfg {
+		cms := make(CollectorMetrics)
+		for key, value := range metricsMap {
+			fqName := value.Name
+			if prefix != "" {
+				fqName = fmt.Sprintf("%s_%s", prefix, fqName)
+			}
+			labels := value.Labels.keys()
+			sort.Strings(labels)
+			labelNames := []string{}
+			for _, l := range labels {
+				labelNames = append(labelNames, value.Labels[l])
+			}
+			cms[key] = Metric{
+				Name:   value.Name,
+				Desc:   prometheus.NewDesc(fqName, value.Help, labelNames, nil),
+				Labels: labels,
+				Push:   value.Push,
+			}
+		}
+		m[collector] = cms
 	}
+	log.Debugf("collectorMetrics: %+v", m)
+	return m
+}
+
+func WatchMetrics(configFile string, prefix string) {
+	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return err
+		log.Errorf("failed to create watcher, err %v", err)
+		return
 	}
-	return yaml.Unmarshal(f, c)
-}
-
-func GetOrDie(path string) Conf {
-	var conf Conf
-	if err := load(&conf, path); err != nil {
-		log.Fatal(err)
-	}
-	actual, err := yaml.Marshal(conf)
+	defer watcher.Close()
+	err = watcher.Add(configFile)
 	if err != nil {
-		log.Fatal(err)
+		log.Infof("failed to add config to watcher, err %v", err)
+		return
 	}
-	log.Debugf("Get config:\n%s", actual)
-	return conf
+	log.Infof("start watching metrics config %s", configFile)
+	defer log.Infof("stop watching metrics config %s", configFile)
+	for {
+		select {
+		case event := <-watcher.Events:
+			if event.Name == configFile && event.Op&fsnotify.Remove == fsnotify.Remove {
+				log.Infof("inotify: %v, reload config", event.String())
+				watcher.Remove(event.Name)
+				watcher.Add(configFile)
+				m := getMetrics(configFile, prefix)
+				for _, l := range listeners {
+					l(m)
+				}
+			}
+		case err := <-watcher.Errors:
+			log.Errorf("watcher error: %v", err)
+		}
+	}
 }
