@@ -16,6 +16,7 @@ package collector
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"sort"
 	"sync"
@@ -23,35 +24,34 @@ import (
 	"github.com/Cambricon/mlu-exporter/pkg/cndev"
 	"github.com/Cambricon/mlu-exporter/pkg/metrics"
 	"github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 )
 
 type Callback struct {
 	cndevcli   cndev.Cndev
+	client     *HTTPClient
 	metric     *metrics.Metric
 	metricName string
 	sharedInfo map[string]MLUStat
-	host       string
 	retryTimes int
 	logFile    string
 
-	currentXID  cndev.XIDInfoWithTimestamp
 	metricMutex sync.Mutex
-	xidMutex    sync.Mutex
 }
 
 func NewCallback(
+	importURL string,
 	metricConfig map[string]metrics.CollectorMetrics,
 	info map[string]MLUStat,
-	metricName, host, logFile string,
+	metricName, metricPrefix, host, logFile string,
 	retryTimes int,
+	jobName string,
 ) (*Callback, error) {
 
 	// xid callback was disabled
 	disabled := true
 	for _, i := range info {
-		if !i.xidCallbackDisabled {
+		if !i.cndevInterfaceDisabled["xidCallbackDisabled"] {
 			disabled = false
 			break
 		}
@@ -64,16 +64,24 @@ func NewCallback(
 	if m == nil {
 		return nil, nil
 	}
+	fqName := metricName
+	if metricPrefix != "" {
+		fqName = fmt.Sprintf("%s_%s", metricPrefix, fqName)
+	}
+	client, err := NewClient(importURL, info, m.Labels, host, fqName, jobName)
+	if err != nil {
+		return nil, err
+	}
 	cndevcli := cndev.NewCndevClient()
 	if err := cndevcli.Init(false); err != nil {
 		return nil, err
 	}
 	c := &Callback{
 		cndevcli:   cndevcli,
+		client:     client,
 		sharedInfo: info,
 		metric:     m,
 		metricName: metricName,
-		host:       host,
 		retryTimes: retryTimes,
 		logFile:    logFile,
 	}
@@ -94,7 +102,7 @@ func filterMetric(cfg map[string]metrics.CollectorMetrics, metricName string) *m
 	return nil
 }
 
-func (c *Callback) Start(f func() error) {
+func (c *Callback) Start() {
 	slots := []int{}
 	for _, stat := range c.sharedInfo {
 		slots = append(slots, int(stat.slot))
@@ -108,28 +116,21 @@ func (c *Callback) Start(f func() error) {
 	}
 
 	for event := range ch {
-		c.xidMutex.Lock()
-		c.currentXID = event
-		c.work(f)
-		c.currentXID = cndev.XIDInfoWithTimestamp{}
-		c.xidMutex.Unlock()
+		c.work(event)
 	}
 }
 
-func (c *Callback) work(f func() error) {
-	for i := 0; i < c.retryTimes; i++ {
-		err := f()
-		if err == nil {
-			return
-		}
-		log.Errorln(errors.Wrap(err, "push failed"))
+func (c *Callback) work(event cndev.XIDInfoWithTimestamp) {
+	err := c.client.PushWithRetries(event, c.retryTimes)
+	if err == nil {
+		return
 	}
+	log.Errorln(errors.Wrap(err, "push failed"))
 
 	if c.logFile == "" {
 		return
 	}
 
-	var file *os.File
 	file, err := os.OpenFile(c.logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Errorln(errors.Wrapf(err, "open log file: %v failed", c.logFile))
@@ -140,7 +141,7 @@ func (c *Callback) work(f func() error) {
 		Event cndev.XIDInfoWithTimestamp `json:"event"`
 		Retry int                        `json:"retry"`
 	}{
-		Event: c.currentXID,
+		Event: event,
 		Retry: c.retryTimes,
 	}
 	entryS, err := json.Marshal(entry)
@@ -159,25 +160,4 @@ func (c *Callback) UpdateMetrics(metricConfig map[string]metrics.CollectorMetric
 	c.metricMutex.Lock()
 	defer c.metricMutex.Unlock()
 	c.metric = m
-}
-
-func (c *Callback) Collect(ch chan<- prometheus.Metric) {
-	if c.metric == nil {
-		return
-	}
-	slotInfo := map[uint]MLUStat{}
-	for _, stat := range c.sharedInfo {
-		slotInfo[stat.slot] = stat
-	}
-	event := c.currentXID
-	labelValues := getLabelValues(c.metric.Labels, labelInfo{
-		stat:    slotInfo[uint(event.Device)],
-		host:    c.host,
-		xidInfo: event,
-	})
-	ch <- prometheus.MustNewConstMetric(c.metric.Desc, prometheus.GaugeValue, 1, labelValues...)
-}
-
-func (c *Callback) Describe(ch chan<- *prometheus.Desc) {
-	ch <- c.metric.Desc
 }

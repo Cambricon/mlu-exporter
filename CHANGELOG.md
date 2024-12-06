@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.0.15
+
+- Add power and temperature related metrics
+- Add pcie and util related metrics
+- Add mlulink and ecc related metrics
+- add mim and smlu info metrics
+- Support to deploy with helm
+- Bump `cndev` to version 3.13.0
+
 ## v2.0.14
 
 - Support obtaining `xid` through `cndev` callback function

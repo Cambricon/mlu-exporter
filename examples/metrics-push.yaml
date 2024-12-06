@@ -1,4 +1,136 @@
 cndev:
+  address_swaps_correct_count:
+    help: The address swaps correct counts of Cambricon MLU
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: address_swaps_correct_count
+  address_swaps_max:
+    help: The number of Cambricon MLU memory banks/channels where repair resources are unused
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: address_swaps_max
+  address_swaps_none:
+    help: The number of Cambricon MLU memory banks/channels where repair resources are used up
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: address_swaps_none
+  address_swaps_partial:
+    help: The number of Cambricon MLU memory banks/channels where repair resources are partially used
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: address_swaps_partial
+  address_swaps_uncorrect_count:
+    help: The address swaps uncorrect counts of Cambricon MLU
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: address_swaps_uncorrect_count
+  aggr_dram_ecc_dbe_count:
+    help: The aggregate dram ecc dbe counts of Cambricon MLU
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: aggr_dram_ecc_dbe_count
+  aggr_dram_ecc_sbe_count:
+    help: The aggregate dram ecc sbe counts of Cambricon MLU
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: aggr_dram_ecc_sbe_count
+  aggr_sram_ecc_dbe_count:
+    help: The aggregate sram ecc dbe counts of Cambricon MLU
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: aggr_sram_ecc_dbe_count
+  aggr_sram_ecc_parity_count:
+    help: The aggregate sram ecc parity counts of Cambricon MLU
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: aggr_sram_ecc_parity_count
+  aggr_sram_ecc_sbe_count:
+    help: The aggregate sram ecc sbe counts of Cambricon MLU
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: aggr_sram_ecc_sbe_count
+  aggr_sram_ecc_threshold_exceed:
+    help: The aggregate sram ecc threshold exceed of Cambricon MLU
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: aggr_sram_ecc_threshold_exceed
   arm_os_memory_total:
     help: The total arm os memory of Cambricon MLU, unit is 'B'
     labels:
@@ -23,6 +155,42 @@ cndev:
       type: type
       uuid: uuid
     name: arm_os_memory_used
+  bar4_memory_total:
+    help: The total bar4 memory of Cambricon MLU, unit is 'B'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: bar4_memory_total
+  bar4_memory_used:
+    help: The used bar4 memory of Cambricon MLU, unit is 'B'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: bar4_memory_used
+  bar4_memory_free:
+    help: The free bar4 memory of Cambricon MLU, unit is 'B'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: bar4_memory_free
   chip_cpu_utilization:
     help: The utilization of Cambricon MLU chip cpu, unit is '%'
     labels:
@@ -36,6 +204,71 @@ cndev:
       type: type
       uuid: uuid
     name: chip_cpu_utilization
+  chip_cpu_hi:
+    help: The hardware interrupt utilization of Cambricon MLU chip cpu, unit is '%'
+    labels:
+      cpu_core: cpu_core
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: chip_cpu_hi
+  chip_cpu_nice:
+    help: The nice utilization of Cambricon MLU chip cpu, unit is '%'
+    labels:
+      cpu_core: cpu_core
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: chip_cpu_nice
+  chip_cpu_si:
+    help: The software interrupt utilizatio of Cambricon MLU chip cpu, unit is '%'
+    labels:
+      cpu_core: cpu_core
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: chip_cpu_si
+  chip_cpu_sys:
+    help: The sys utilization of Cambricon MLU chip cpu, unit is '%'
+    labels:
+      cpu_core: cpu_core
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: chip_cpu_sys
+  chip_cpu_user:
+    help: The user utilization of Cambricon MLU chip cpu, unit is '%'
+    labels:
+      cpu_core: cpu_core
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: chip_cpu_user
   chip_temperature:
     help: The chip temperature of Cambricon MLU, unit is 'celsius'
     labels:
@@ -61,6 +294,19 @@ cndev:
       type: type
       uuid: uuid
     name: cluster_temperature
+  core_current:
+    help: The IPU core current of Cambricon MLU , unit is 'mA'
+    labels:
+      cluster: device_cluster
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: core_current
   core_utilization:
     help: The utilization metric of Cambricon MLU core, unit is '%'
     labels:
@@ -73,8 +319,20 @@ cndev:
       sn: sn
       type: type
       uuid: uuid
-    name: core
-    push: true
+    name: core_utilization
+  core_voltage:
+    help: The IPU core voltage of Cambricon MLU , unit is 'mV'
+    labels:
+      cluster: device_cluster
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: core_voltage
   d2d_crc_error_overflow_total:
     help: The d2d CRC error overflow counts of Cambricon MLU
     labels:
@@ -195,6 +453,18 @@ cndev:
       type: type
       uuid: uuid
     name: ecc_corrected_error_total
+  ecc_current_mode:
+    help: The current ECC mode of Cambricon MLU, '0' means 'disable', '1' means 'enable'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: ecc_current_mode
   ecc_error_total:
     help: The ECC total error counts of Cambricon MLU
     labels:
@@ -255,6 +525,18 @@ cndev:
       type: type
       uuid: uuid
     name: ecc_one_bit_error_total
+  ecc_pending_mode:
+    help: The pending ECC mode of Cambricon MLU, '0' means 'disable', '1' means 'enable'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: ecc_pending_mode
   ecc_uncorrected_error_total:
     help: The ECC uncorrected error counts of Cambricon MLU
     labels:
@@ -336,6 +618,31 @@ cndev:
       node: node
       type: type
     name: machine_mlu_nums
+  memory_current:
+    help: The memory current of Cambricon MLU , unit is 'mA'
+    labels:
+      cluster: device_cluster
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: memory_current
+  memory_free:
+    help: The free physical memory of Cambricon MLU, unit is 'B'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: memory_free
   memory_temperature:
     help: The memory temperature of Cambricon MLU, unit is 'celsius'
     labels:
@@ -388,6 +695,95 @@ cndev:
       vf: vf
     name: memory_utilization
     push: true
+  memory_voltage:
+    help: The memory voltage of Cambricon MLU , unit is 'mV'
+    labels:
+      cluster: device_cluster
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: memory_voltage
+  mim_instance_info:
+    help: The MIM instance info of Cambricon MLU
+    labels:
+      cluster: device_cluster
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+      mim_instance_name: mim_instance_name
+      mim_instance_id: mim_instance_id
+      mim_uuid: mim_uuid
+      mim_gdma_count: mim_gdma_count
+      mim_jpu_count: mim_jpu_count
+      mim_memory_size: mim_memory_size
+      mim_core_count: mim_core_count
+      mim_profile_id: mim_profile_id
+      mim_profile_name: mim_profile_name
+      mim_vpu_count: mim_vpu_count
+    name: mim_instance_info
+  mim_profile_info:
+    help: The MIM profile info of Cambricon MLU
+    labels:
+      cluster: device_cluster
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+      mim_gdma_count: mim_gdma_count
+      mim_jpu_count: mim_jpu_count
+      mim_memory_size: mim_memory_size
+      mim_core_count: mim_core_count
+      mim_profile_id: mim_profile_id
+      mim_profile_name: mim_profile_name
+      mim_vpu_count: mim_vpu_count
+    name: mim_profile_info
+  mim_profile_total_capacity:
+    help: The max instance number of Cambricon MLU MIM profile
+    labels:
+      cluster: device_cluster
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+      mim_gdma_count: mim_gdma_count
+      mim_jpu_count: mim_jpu_count
+      mim_memory_size: mim_memory_size
+      mim_core_count: mim_core_count
+      mim_profile_id: mim_profile_id
+      mim_profile_name: mim_profile_name
+      mim_vpu_count: mim_vpu_count
+    name: mim_profile_total_capacity
+  mlulink_cable_status:
+    help: The cable status of Cambricon MLU MLULink, '0' means 'not connected', '1' means 'connected', '2' means 'not supported'
+    labels:
+      driver: driver
+      link: link
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: mlulink_cable_status
   mlulink_cntr_cnp_package_total:
     help: The cntr cnp package counts of Cambricon MLU MLULink
     labels:
@@ -466,6 +862,19 @@ cndev:
       type: type
       uuid: uuid
     name: mlulink_cntr_write_package_total
+  mlulink_connect_type:
+    help: The connect type of device that connected with MLULink, '0' means 'mlu', '1' means 'switch'
+    labels:
+      driver: driver
+      link: link
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: mlulink_connect_type
   mlulink_err_corrected_total:
     help: The corrected error counts of Cambricon MLU MLULink
     labels:
@@ -557,6 +966,19 @@ cndev:
       type: type
       uuid: uuid
     name: mlulink_err_uncorrected_total
+  mlulink_illegal_access:
+    help: The illegal access counts of Cambricon MLU MLULink
+    labels:
+      driver: driver
+      link: link
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: mlulink_illegal_access
   mlulink_interlaken_serdes_capability:
     help: The interlaken serdes capability of Cambricon MLU MLULink, '0' means 'disable', '1' means 'enable'
     labels:
@@ -583,6 +1005,19 @@ cndev:
       type: type
       uuid: uuid
     name: mlulink_p2p_transfer_capability
+  mlulink_link_down_total:
+    help: The link down counts of Cambricon MLU MLULink
+    labels:
+      driver: driver
+      link: link
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: mlulink_link_down_total
   mlulink_port_mode:
     help: The port mode of Cambricon MLU MLULink, '0' means 'uninitialized', '1' means 'all support', '2' means 'mlulink', '3' means 'roce'
     labels:
@@ -596,6 +1031,40 @@ cndev:
       type: type
       uuid: uuid
     name: mlulink_port_mode
+  mlulink_port_number:
+    help: The number of Cambricon MLU MLULink ports
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: mlulink_port_number
+  mlulink_remote_info:
+    help: The remote info that connected with MLULink
+    labels:
+      driver: driver
+      link: link
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+      remote_mc_sn: remote_mc_sn
+      remote_ba_sn: remote_ba_sn
+      remote_slot_id: remote_slot_id
+      remote_port_id: remote_port_id
+      remote_ncs_uuid64: remote_ncs_uuid64
+      remote_ip: remote_ip
+      remote_mac: remote_mac
+      remote_uuid: remote_uuid
+      remote_port_name: remote_port_name
+    name: mlulink_remote_info
   mlulink_serdes_status:
     help: The serdes status of Cambricon MLU MLULink, '0' means 'disable', '1' means 'enable'
     labels:
@@ -674,6 +1143,121 @@ cndev:
       type: type
       uuid: uuid
     name: numa_node_id
+  optical_status:
+    help: The optical module or cable status of Cambricon MLU MLULink, '0' means 'absent', '1' means 'present', '2' means 'not supported'
+    labels:
+      driver: driver
+      link: link
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: optical_status
+  optical_rx_power:
+    help: The input optical power of Cambricon MLU MLULink, unit is 'dBm'
+    labels:
+      driver: driver
+      link: link
+      lane: lane
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: optical_rx_power
+  optical_temperature:
+    help: The optical module temperature of Cambricon MLU, unit is 'celsius'
+    labels:
+      driver: driver
+      link: link
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: optical_temperature
+  optical_tx_power:
+    help: The output optical power of Cambricon MLU MLULink, unit is 'dBm'
+    labels:
+      driver: driver
+      link: link
+      lane: lane
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: optical_tx_power
+  optical_voltage:
+    help: The optical module voltage of Cambricon MLU, unit is 'V'
+    labels:
+      driver: driver
+      link: link
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: optical_voltage
+  over_temp_power_off_total:
+    help: The over temperature causing poweroff counts of Cambricon MLU
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: over_temp_power_off_total
+  over_temp_power_off_threshold:
+    help: The over temperature causing poweroff threshold of Cambricon MLU
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: over_temp_power_off_threshold
+  over_temp_under_clock_total:
+    help: The over temperature causing underClock counts of Cambricon MLU
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: over_temp_under_clock_total
+  over_temp_under_clock_threshold:
+    help: The over temperature causing underClock threshold of Cambricon MLU
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: over_temp_under_clock_threshold
   parity_error:
     help: The parity error counts of Cambricon MLU
     labels:
@@ -686,6 +1270,30 @@ cndev:
       type: type
       uuid: uuid
     name: parity_error
+  pcie_max_speed:
+    help: The pcie max speed of Cambricon MLU
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: pcie_max_speed
+  pcie_max_width:
+    help: The pcie max width of Cambricon MLU
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: pcie_max_width
   pcie_info:
     help: The pcie information of MLU
     labels:
@@ -742,6 +1350,54 @@ cndev:
       type: type
       uuid: uuid
     name: pcie_write_throughput
+  power_current_limit:
+    help: The power current limit of Cambricon MLU, unit is 'w'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: power_current_limit
+  power_default_limit:
+    help: The power default limit of Cambricon MLU, unit is 'w'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: power_default_limit
+  power_max_limit:
+    help: The power max limit of Cambricon MLU, unit is 'w'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: power_max_limit
+  power_min_limit:
+    help: The power max limit of Cambricon MLU, unit is 'w'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: power_min_limit
   power_usage:
     help: The power usage of Cambricon MLU, unit is 'w'
     labels:
@@ -868,6 +1524,30 @@ cndev:
       type: type
       uuid: uuid
     name: remapped_uncorrect_rows
+  repair_retire_pending:
+    help: The status of Cambricon MLU memory error retirement operation
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: repair_retire_pending
+  retired_pages_operation_status:
+    help: The retire page operation status of Cambricon MLU, '0' means 'disable', '1' means 'enable'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: retired_pages_operation_status
   single_bit_retired_page_count:
     help: The single bit retired page counts of Cambricon MLU
     labels:
@@ -880,6 +1560,86 @@ cndev:
       type: type
       uuid: uuid
     name: single_bit_retired_page_count
+  smlu_instance_info:
+    help: The sMLU instance info of Cambricon MLU
+    labels:
+      cluster: device_cluster
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+      smlu_instance_name: smlu_instance_name
+      smlu_instance_id: smlu_instance_id
+      smlu_uuid: smlu_uuid
+      smlu_ipu_total: smlu_ipu_total
+      smlu_mem_total: smlu_mem_total
+      smlu_profile_id: smlu_profile_id
+      smlu_profile_name: smlu_profile_name
+    name: smlu_instance_info
+  smlu_profile_info:
+    help: The sMLU profile info of Cambricon MLU
+    labels:
+      cluster: device_cluster
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+      smlu_ipu_total: smlu_ipu_total
+      smlu_mem_total: smlu_mem_total
+      smlu_profile_id: smlu_profile_id
+      smlu_profile_name: smlu_profile_name
+    name: smlu_profile_info
+  smlu_profile_total_capacity:
+    help: The max instance number of Cambricon MLU sMLU profile
+    labels:
+      cluster: device_cluster
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+      smlu_ipu_total: smlu_ipu_total
+      smlu_mem_total: smlu_mem_total
+      smlu_profile_id: smlu_profile_id
+      smlu_profile_name: smlu_profile_name
+    name: smlu_profile_total_capacity
+  soc_current:
+    help: The soc current of Cambricon MLU , unit is 'mA'
+    labels:
+      cluster: device_cluster
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: soc_current
+  soc_voltage:
+    help: The soc voltage of Cambricon MLU , unit is 'mV'
+    labels:
+      cluster: device_cluster
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: soc_voltage
   sram_ecc_dbe_count:
     help: The sram ecc dbe counts of Cambricon MLU
     labels:
@@ -928,6 +1688,18 @@ cndev:
       type: type
       uuid: uuid
     name: temperature
+  thermal_slow_down:
+    help: The thermal slowdown of Cambricon MLU, '0' means 'disable', '1' means 'enable'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: thermal_slow_down
   tiny_core_utilization:
     help: The utilization of Cambricon MLU image codec, unit is '%'
     labels:
@@ -958,6 +1730,8 @@ cndev:
   version:
     help: The version info of Cambricon MLU
     labels:
+      cndev_version: cndev_version
+      compute_capability: compute_capability
       driver: driver
       mcu: mcu
       mlu: mlu
@@ -980,6 +1754,19 @@ cndev:
       type: type
       uuid: uuid
     name: video_codec_utilization
+  video_decoder_utilization:
+    help: The utilization of Cambricon MLU video decoder, unit is '%'
+    labels:
+      core: decoder_core
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: video_decoder_utilization
   virtual_function_memory_utilization:
     help: Deprecated, use 'memory_utilization' instead
     labels:
@@ -1021,6 +1808,18 @@ cndev:
       vf: vf
     name: virtual_function_utilization
     push: true
+  virtual_memory_free:
+    help: The free virtual memory of Cambricon MLU, unit is 'B'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: virtual_memory_free
   virtual_memory_total:
     help: The total virtual memory of Cambricon MLU, unit is 'B'
     labels:
@@ -1046,7 +1845,19 @@ cndev:
       uuid: uuid
     name: virtual_memory_used
     push: true
-  xid_error:
+  virtual_mode:
+    help: The mode id of Cambricon MLU, '0' means 'full', '1' means 'MIM', '2' means 'sMLU', '3' means 'env-share'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: virtual_mode
+  xid_error: # only from callback to push metrics, no pull or push
     help: The xid error of Cambricon MLU
     labels:
       driver: driver
@@ -1062,7 +1873,6 @@ cndev:
       xid_compute_instance_id: xid_compute_instance_id
       xid_mlu_instance_id: xid_mlu_instance_id
     name: xid_error
-    push: true
   xid_error_count:
     help: The xid error count of Cambricon MLU
     labels:

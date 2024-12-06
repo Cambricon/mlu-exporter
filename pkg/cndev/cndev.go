@@ -28,21 +28,47 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type MimInstanceInfo struct {
+	InstanceName string
+	InstanceID   int
+	UUID         string
+}
+
+type MimProfileInfo struct {
+	GDMACount    int
+	JPUCount     int
+	MemorySize   int
+	MLUCoreCount int
+	ProfileID    int
+	ProfileName  string
+	VPUCount     int
+}
+
 type MimInfo struct {
-	InstanceID     int
-	Name           string
-	PlacementSize  int
+	InstanceInfo   MimInstanceInfo
+	ProfileInfo    MimProfileInfo
 	PlacementStart int
-	UUID           string
+	PlacementSize  int
+}
+
+type SmluInstanceInfo struct {
+	InstanceID   int
+	InstanceName string
+	UUID         string
+}
+
+type SmluProfileInfo struct {
+	IpuTotal    uint32
+	MemTotal    uint64
+	ProfileID   int
+	ProfileName string
 }
 
 type SmluInfo struct {
-	InstanceID int
-	IpuUtil    int
-	MemUsed    int64
-	MemTotal   int64
-	Name       string
-	UUID       string
+	InstanceInfo SmluInstanceInfo
+	ProfileInfo  SmluProfileInfo
+	IpuUtil      uint32
+	MemUsed      uint64
 }
 
 type DeviceInfo struct {
@@ -57,7 +83,7 @@ type XIDInfo struct {
 }
 
 type XIDInfoWithTimestamp struct {
-	Timestamp string
+	Timestamp int64
 	XIDInfo
 }
 
@@ -69,40 +95,63 @@ type Cndev interface {
 	DeviceSmluModeEnabled(idx uint) (bool, error)
 	GetAllMLUInstanceInfo(idx uint) ([]MimInfo, error)
 	GetAllSMluInfo(idx uint) ([]SmluInfo, error)
+	GetDeviceAddressSwaps(idx uint) (uint32, uint32, uint32, uint32, uint32, error)
 	GetDeviceArmOsMemory(idx uint) (int64, int64, error)
+	GetDeviceBAR4MemoryInfo(idx uint) (uint64, uint64, uint64, error)
 	GetDeviceClusterCount(idx uint) (int, error)
+	GetDeviceCndevVersion() (uint, uint, uint, error)
+	GetDeviceComputeCapability(idx uint) (uint, uint, error)
 	GetDeviceCoreNum(idx uint) (uint, error)
 	GetDeviceCount() (uint, error)
-	GetDeviceCPUUtil(idx uint) (uint16, []uint8, error)
+	GetDeviceCPUUtil(idx uint) (uint16, []uint8, []uint8, []uint8, []uint8, []uint8, []uint8, error)
 	GetDeviceCRCInfo(idx uint) (uint64, uint64, error)
+	GetDeviceCurrentInfo(idx uint) (int, int, int, error)
 	GetDeviceCurrentPCIeInfo(idx uint) (int, int, error)
 	GetDeviceDDRInfo(idx uint) (int, float64, error)
 	GetDeviceECCInfo(idx uint) (uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, error)
+	GetDeviceEccMode(idx uint) (int, int, error)
 	GetDeviceFanSpeed(idx uint) (int, error)
 	GetDeviceHealth(idx uint) (int, error)
 	GetDeviceHeartbeatCount(idx uint) (uint32, error)
 	GetDeviceImageCodecUtil(idx uint) ([]int, error)
-	GetDeviceMemEccCounter(idx uint) (uint32, uint32, uint32, uint32, uint32, error)
+	GetDeviceMaxPCIeInfo(idx uint) (int, int, error)
+	GetDeviceMemEccCounter(idx uint) ([]uint32, []uint64, error)
 	GetDeviceMemory(idx uint) (int64, int64, int64, int64, error)
 	GetDeviceMemoryDieCount(idx uint) (int, error)
+	GetDeviceMimProfileInfo(idx uint) ([]MimProfileInfo, error)
+	GetDeviceMimProfileMaxInstanceCount(idx, profile uint) (int, error)
 	GetDeviceMLULinkCapability(idx, link uint) (uint, uint, error)
 	GetDeviceMLULinkCounter(idx, link uint) (uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, error)
+	GetDeviceMLULinkErrorCounter(idx, link uint) (uint64, error)
+	GetDeviceMLULinkEventCounter(idx, link uint) (uint64, error)
 	GetDeviceMLULinkPortMode(idx, link uint) (int, error)
 	GetDeviceMLULinkPortNumber(idx uint) int
+	GetDeviceMLULinkRemoteInfo(idx, link uint) (uint64, uint64, uint32, uint32, int32, uint64, string, string, string, string, error)
 	GetDeviceMLULinkSpeedInfo(idx, link uint) (float32, int, error)
-	GetDeviceMLULinkStatus(idx, link uint) (int, int, error)
+	GetDeviceMLULinkStatus(idx, link uint) (int, int, int, error)
 	GetDeviceMLULinkVersion(idx, link uint) (uint, uint, uint, error)
 	GetDeviceMLUInstanceByID(idx uint, instanceID int) (uint, error)
 	GetDeviceModel(idx uint) string
 	GetDeviceNUMANodeID(idx uint) (int, error)
+	GetDeviceOpticalInfo(idx, link uint) (uint8, float32, float32, []float32, []float32, error)
+	GetDeviceOverTemperatureInfo(idx uint) (uint32, uint32, error)
+	GetDeviceOverTemperatureShutdownThreshold(idx uint) (int, error)
+	GetDeviceOverTemperatureSlowdownThreshold(idx uint) (int, error)
 	GetDeviceParityError(idx uint) (int, error)
 	GetDevicePCIeInfo(idx uint) (int, uint, uint, uint16, uint16, uint, uint, uint, uint, error)
 	GetDevicePCIeReplayCount(idx uint) (uint32, error)
 	GetDevicePCIeThroughput(idx uint) (int64, int64, error)
+	GetDevicePerformanceThrottleReason(idx uint) (bool, error)
 	GetDevicePower(idx uint) (int, error)
+	GetDevicePowerManagementDefaultLimitation(idx uint) (uint16, error)
+	GetDevicePowerManagementLimitation(idx uint) (uint16, error)
+	GetDevicePowerManagementLimitRange(idx uint) (uint16, uint16, error)
 	GetDeviceProcessUtil(idx uint) ([]uint32, []uint32, []uint32, []uint32, []uint32, []uint32, error)
-	GetDeviceRemappedRows(idx uint) (uint32, uint32, uint32, uint32, error)
-	GetDeviceRetiredPageInfo(idx uint) (int, uint32, error)
+	GetDeviceRemappedRows(idx uint) (uint32, uint32, uint32, uint32, uint32, error)
+	GetDeviceRetiredPageInfo(idx uint) (uint32, uint32, error)
+	GetDeviceRetiredPagesOperation(idx uint) (int, error)
+	GetDeviceSMluProfileIDInfo(idx uint) ([]int, error)
+	GetDeviceSMluProfileInfo(idx, profile uint) (SmluProfileInfo, uint32, uint32, error)
 	GetDeviceSN(idx uint) (string, error)
 	GetDeviceTemperature(idx uint) (int, int, int, []int, []int, error)
 	GetDeviceTinyCoreUtil(idx uint) ([]int, error)
@@ -111,7 +160,8 @@ type Cndev interface {
 	GetDeviceUUID(idx uint) (string, error)
 	GetDeviceVersion(idx uint) (uint, uint, uint, uint, uint, uint, error)
 	GetDeviceVfState(idx uint) (int, error)
-	GetDeviceVideoCodecUtil(idx uint) ([]int, error)
+	GetDeviceVideoCodecUtil(idx uint) ([]int, []int, error)
+	GetDeviceVoltageInfo(idx uint) (int, int, int, error)
 	RegisterEventsHandleAndWait(slots []int, ch chan XIDInfoWithTimestamp) error
 	GetSupportedEventTypes(idx uint) error
 }
@@ -156,11 +206,16 @@ func (c *cndev) DeviceSmluModeEnabled(idx uint) (bool, error) {
 	return mode.smluMode == C.CNDEV_FEATURE_ENABLED, errorString(r)
 }
 
-func (c *cndev) GetAllMLUInstanceInfo(idx uint) ([]MimInfo, error) {
+func (c *cndev) GetAllMLUInstanceInfo(idx uint) (_ []MimInfo, err error) {
+	defer panicHandler(&err)
+
 	miCount := C.int(1 << 4)
 	var miInfos []MimInfo
 	var miInfo C.cndevMluInstanceInfo_t
 	infs := (*C.cndevMluInstanceInfo_t)(C.malloc(C.size_t(miCount) * C.size_t(unsafe.Sizeof(miInfo))))
+	if infs == nil {
+		return miInfos, fmt.Errorf("malloc failed for GetAllMLUInstanceInfo")
+	}
 	defer func() {
 		if infs != nil {
 			C.free(unsafe.Pointer(infs))
@@ -175,18 +230,24 @@ func (c *cndev) GetAllMLUInstanceInfo(idx uint) ([]MimInfo, error) {
 
 	// handle the case when the initial count is insufficient,
 	// after cndevGetAllMluInstanceInfo miCount will be set to real count,
-	// so just use it to reallocate and cndevGetAllMluInstanceInfo again.
-	if r == C.CNDEV_ERROR_INSUFFICIENT_SPACE {
-		log.Debugf("cndevGetAllMluInstanceInfo with insufficient space with real counts %d, with slot: %d, will try with the real counts", miCount, idx)
-		newInfs := (*C.cndevMluInstanceInfo_t)(C.realloc(unsafe.Pointer(infs), C.size_t(miCount)*C.size_t(unsafe.Sizeof(miInfo))))
-		if newInfs == nil {
-			return miInfos, fmt.Errorf("realloc failed for cndevGetAllMluInstanceInfo")
+	// while new process may be produced between two cndevGetAllMluInstanceInfo calls,
+	// so need to loop until this corner case vanishes
+	for {
+		err := errorString(r)
+		if err == nil {
+			break
 		}
-		infs = newInfs
-		r := C.cndevGetAllMluInstanceInfo(&miCount, infs, c.cndevHandleMap[idx])
-		if errorString(r) != nil {
-			return miInfos, errorString(r)
+		if r == C.CNDEV_ERROR_INSUFFICIENT_SPACE {
+			log.Debugf("cndevGetAllMluInstanceInfo with insufficient space with real counts %d, with slot: %d, will try with the real counts", miCount, idx)
+			newInfs := (*C.cndevMluInstanceInfo_t)(C.realloc(unsafe.Pointer(infs), C.size_t(miCount)*C.size_t(unsafe.Sizeof(miInfo))))
+			if newInfs == nil {
+				return miInfos, fmt.Errorf("realloc failed for cndevGetAllMluInstanceInfo")
+			}
+			infs = newInfs
+			r = C.cndevGetAllMluInstanceInfo(&miCount, infs, c.cndevHandleMap[idx])
+			continue
 		}
+		return miInfos, err
 	}
 
 	infos := (*[1 << 16]C.cndevMluInstanceInfo_t)(unsafe.Pointer(infs))[:miCount]
@@ -194,9 +255,20 @@ func (c *cndev) GetAllMLUInstanceInfo(idx uint) ([]MimInfo, error) {
 		info := infos[i]
 		miInfos = append(miInfos,
 			MimInfo{
-				Name:           C.GoString((*C.char)(unsafe.Pointer(&info.profileName))),
-				UUID:           C.GoString((*C.char)(unsafe.Pointer(&info.uuid))),
-				InstanceID:     int(info.instanceId),
+				InstanceInfo: MimInstanceInfo{
+					InstanceName: C.GoString((*C.char)(unsafe.Pointer(&info.instanceName))),
+					InstanceID:   int(info.instanceId),
+					UUID:         C.GoString((*C.char)(unsafe.Pointer(&info.uuid))),
+				},
+				ProfileInfo: MimProfileInfo{
+					GDMACount:    int(info.gdmaCount),
+					JPUCount:     int(info.jpuCount),
+					MemorySize:   int(info.memorySize),
+					MLUCoreCount: int(info.mluCoreCount),
+					ProfileID:    int(info.profileId),
+					ProfileName:  C.GoString((*C.char)(unsafe.Pointer(&info.profileName))),
+					VPUCount:     int(info.vpuCount),
+				},
 				PlacementStart: int(info.placement.start),
 				PlacementSize:  int(info.placement.size),
 			})
@@ -206,11 +278,16 @@ func (c *cndev) GetAllMLUInstanceInfo(idx uint) ([]MimInfo, error) {
 	return miInfos, nil
 }
 
-func (c *cndev) GetAllSMluInfo(idx uint) ([]SmluInfo, error) {
+func (c *cndev) GetAllSMluInfo(idx uint) (_ []SmluInfo, err error) {
+	defer panicHandler(&err)
+
 	smluCount := C.int(1 << 7)
 	var smluInfos []SmluInfo
 	var smluInfo C.cndevSMluInfo_t
 	infs := (*C.cndevSMluInfo_t)(C.malloc(C.size_t(smluCount) * C.size_t(unsafe.Sizeof(smluInfo))))
+	if infs == nil {
+		return smluInfos, fmt.Errorf("malloc failed for GetAllSMluInfo")
+	}
 	defer func() {
 		if infs != nil {
 			C.free(unsafe.Pointer(infs))
@@ -225,18 +302,24 @@ func (c *cndev) GetAllSMluInfo(idx uint) ([]SmluInfo, error) {
 
 	// handle the case when the initial count is insufficient,
 	// after cndevGetAllSMluInstanceInfo smluCount will be set to real count,
-	// so just use it to reallocate and cndevGetAllSMluInstanceInfo again.
-	if r == C.CNDEV_ERROR_INSUFFICIENT_SPACE {
-		log.Debugf("cndevGetAllSMluInstanceInfo with insufficient space with real counts %d, with slot: %d, will try with the real counts", smluCount, idx)
-		newInfs := (*C.cndevSMluInfo_t)(C.realloc(unsafe.Pointer(infs), C.size_t(smluCount)*C.size_t(unsafe.Sizeof(smluInfo))))
-		if newInfs == nil {
-			return smluInfos, fmt.Errorf("realloc failed for cndevGetAllSMluInstanceInfo")
+	// while new process may be produced between two cndevGetAllSMluInstanceInfo calls,
+	// so need to loop until this corner case vanishes
+	for {
+		err := errorString(r)
+		if err == nil {
+			break
 		}
-		infs = newInfs
-		r := C.cndevGetAllSMluInstanceInfo(&smluCount, infs, c.cndevHandleMap[idx])
-		if errorString(r) != nil {
-			return smluInfos, errorString(r)
+		if r == C.CNDEV_ERROR_INSUFFICIENT_SPACE {
+			log.Debugf("cndevGetAllSMluInstanceInfo with insufficient space with real counts %d, with slot: %d, will try with the real counts", smluCount, idx)
+			newInfs := (*C.cndevSMluInfo_t)(C.realloc(unsafe.Pointer(infs), C.size_t(smluCount)*C.size_t(unsafe.Sizeof(smluInfo))))
+			if newInfs == nil {
+				return smluInfos, fmt.Errorf("realloc failed for cndevGetAllSMluInstanceInfo")
+			}
+			infs = newInfs
+			r = C.cndevGetAllSMluInstanceInfo(&smluCount, infs, c.cndevHandleMap[idx])
+			continue
 		}
+		return smluInfos, err
 	}
 
 	infos := (*[1 << 16]C.cndevSMluInfo_t)(unsafe.Pointer(infs))[:smluCount]
@@ -244,12 +327,19 @@ func (c *cndev) GetAllSMluInfo(idx uint) ([]SmluInfo, error) {
 		info := infos[i]
 		smluInfos = append(smluInfos,
 			SmluInfo{
-				InstanceID: int(info.instanceId),
-				Name:       C.GoString((*C.char)(unsafe.Pointer(&info.profileName))),
-				IpuUtil:    int(info.mluQuota[C.CNDEV_SMLU_USAGE]),
-				MemUsed:    int64(info.memorySize[C.CNDEV_SMLU_USAGE]),
-				MemTotal:   int64(info.memorySize[C.CNDEV_SMLU_MAX]),
-				UUID:       C.GoString((*C.char)(unsafe.Pointer(&info.uuid))),
+				InstanceInfo: SmluInstanceInfo{
+					InstanceID:   int(info.instanceId),
+					InstanceName: C.GoString((*C.char)(unsafe.Pointer(&info.instanceName))),
+					UUID:         C.GoString((*C.char)(unsafe.Pointer(&info.uuid))),
+				},
+				ProfileInfo: SmluProfileInfo{
+					IpuTotal:    uint32(info.mluQuota[C.CNDEV_SMLU_MAX]),
+					MemTotal:    uint64(info.memorySize[C.CNDEV_SMLU_MAX]),
+					ProfileID:   int(info.profileId),
+					ProfileName: C.GoString((*C.char)(unsafe.Pointer(&info.profileName))),
+				},
+				IpuUtil: uint32(info.mluQuota[C.CNDEV_SMLU_USAGE]),
+				MemUsed: uint64(info.memorySize[C.CNDEV_SMLU_USAGE]),
 			})
 	}
 	log.Debugf("smlu infos for device %d are %+v", idx, smluInfos)
@@ -257,7 +347,16 @@ func (c *cndev) GetAllSMluInfo(idx uint) ([]SmluInfo, error) {
 	return smluInfos, nil
 }
 
-func (c *cndev) GetDeviceArmOsMemory(idx uint) (int64, int64, error) {
+func (c *cndev) GetDeviceAddressSwaps(idx uint) (uint32, uint32, uint32, uint32, uint32, error) {
+	var addressSwap C.cndevAddressSwap_t
+	addressSwap.version = C.CNDEV_VERSION_6
+	r := C.cndevGetAddressSwaps(&addressSwap, c.cndevHandleMap[idx])
+	return uint32(addressSwap.correctCounts), uint32(addressSwap.uncorrectCounts), uint32(addressSwap.histogram[C.CNDEV_AVAILABILITY_XLABLE_NONE]), uint32(addressSwap.histogram[C.CNDEV_AVAILABILITY_XLABLE_PARTIAL]), uint32(addressSwap.histogram[C.CNDEV_AVAILABILITY_XLABLE_MAX]), errorString(r)
+}
+
+func (c *cndev) GetDeviceArmOsMemory(idx uint) (_ int64, _ int64, err error) {
+	defer panicHandler(&err)
+
 	type armOsMem struct {
 		version     int
 		memoryTotal int64
@@ -265,6 +364,9 @@ func (c *cndev) GetDeviceArmOsMemory(idx uint) (int64, int64, error) {
 	}
 	var armOsMemInfo armOsMem
 	memInfo := (*C.cndevArmOsMemoryInfo_t)(C.malloc(C.size_t(unsafe.Sizeof(armOsMemInfo))))
+	if memInfo == nil {
+		return 0, 0, fmt.Errorf("malloc failed for cndevGetArmOsMemoryUsage")
+	}
 	defer C.free(unsafe.Pointer(memInfo))
 	memInfo.version = C.CNDEV_VERSION_6
 	r := C.cndevGetArmOsMemoryUsage(memInfo, c.cndevHandleMap[idx])
@@ -273,11 +375,30 @@ func (c *cndev) GetDeviceArmOsMemory(idx uint) (int64, int64, error) {
 	return int64(armOsMemoryUsed), int64(armOsMemoryTotal), errorString(r)
 }
 
+func (c *cndev) GetDeviceBAR4MemoryInfo(idx uint) (uint64, uint64, uint64, error) {
+	var memInfo C.cndevBAR4Memory_t
+	r := C.cndevGetBAR4MemoryInfo(&memInfo, c.cndevHandleMap[idx])
+	return uint64(memInfo.total_size), uint64(memInfo.used_size), uint64(memInfo.free_size), errorString(r)
+}
+
 func (c *cndev) GetDeviceClusterCount(idx uint) (int, error) {
 	var cardClusterNum C.cndevCardClusterCount_t
 	cardClusterNum.version = C.CNDEV_VERSION_5
 	r := C.cndevGetClusterCount(&cardClusterNum, c.cndevHandleMap[idx])
 	return int(cardClusterNum.count), errorString(r)
+}
+
+func (c *cndev) GetDeviceCndevVersion() (uint, uint, uint, error) {
+	var cndevVersion C.cndevLibVersionInfo_t
+	cndevVersion.version = C.CNDEV_VERSION_5
+	r := C.cndevGetLibVersion(&cndevVersion)
+	return uint(cndevVersion.libMajorVersion), uint(cndevVersion.libMinorVersion), uint(cndevVersion.libBuildVersion), errorString(r)
+}
+
+func (c *cndev) GetDeviceComputeCapability(idx uint) (uint, uint, error) {
+	var major, minor C.uint
+	r := C.cndevGetComputeCapability(&major, &minor, c.cndevHandleMap[idx])
+	return uint(major), uint(minor), errorString(r)
 }
 
 func (c *cndev) GetDeviceCoreNum(idx uint) (uint, error) {
@@ -294,18 +415,29 @@ func (c *cndev) GetDeviceCount() (uint, error) {
 	return uint(cardInfo.number), errorString(r)
 }
 
-func (c *cndev) GetDeviceCPUUtil(idx uint) (uint16, []uint8, error) {
-	var cardCPUUtil C.cndevDeviceCPUUtilization_t
-	cardCPUUtil.version = C.CNDEV_VERSION_5
-	r := C.cndevGetDeviceCPUUtilization(&cardCPUUtil, c.cndevHandleMap[idx])
+func (c *cndev) GetDeviceCPUUtil(idx uint) (uint16, []uint8, []uint8, []uint8, []uint8, []uint8, []uint8, error) {
+	var cardCPUUtil C.cndevDeviceCPUUtilizationV2_t
+	cardCPUUtil.version = C.CNDEV_VERSION_6
+	r := C.cndevGetDeviceCPUUtilizationV2(&cardCPUUtil, c.cndevHandleMap[idx])
 	if err := errorString(r); err != nil {
-		return 0, nil, err
+		return 0, nil, nil, nil, nil, nil, nil, err
 	}
 	coreCPUUtil := make([]uint8, uint8(cardCPUUtil.coreNumber))
+	coreCPUUser := make([]uint8, uint8(cardCPUUtil.coreNumber))
+	coreCPUNice := make([]uint8, uint8(cardCPUUtil.coreNumber))
+	coreCPUSys := make([]uint8, uint8(cardCPUUtil.coreNumber))
+	coreCPUSi := make([]uint8, uint8(cardCPUUtil.coreNumber))
+	coreCPUHi := make([]uint8, uint8(cardCPUUtil.coreNumber))
+
 	for i := uint8(0); i < uint8(cardCPUUtil.coreNumber); i++ {
 		coreCPUUtil[i] = uint8(cardCPUUtil.coreUtilization[i])
+		coreCPUUser[i] = uint8(cardCPUUtil.coreStateUtilization[i][0])
+		coreCPUNice[i] = uint8(cardCPUUtil.coreStateUtilization[i][1])
+		coreCPUSys[i] = uint8(cardCPUUtil.coreStateUtilization[i][2])
+		coreCPUSi[i] = uint8(cardCPUUtil.coreStateUtilization[i][3])
+		coreCPUHi[i] = uint8(cardCPUUtil.coreStateUtilization[i][4])
 	}
-	return uint16(cardCPUUtil.chipUtilization), coreCPUUtil, nil
+	return uint16(cardCPUUtil.chipUtilization), coreCPUUtil, coreCPUUser, coreCPUNice, coreCPUSys, coreCPUSi, coreCPUHi, nil
 }
 
 func (c *cndev) GetDeviceCRCInfo(idx uint) (uint64, uint64, error) {
@@ -313,6 +445,12 @@ func (c *cndev) GetDeviceCRCInfo(idx uint) (uint64, uint64, error) {
 	cardCRCInfo.version = C.CNDEV_VERSION_5
 	r := C.cndevGetCRCInfo(&cardCRCInfo, c.cndevHandleMap[idx])
 	return uint64(cardCRCInfo.die2dieCRCError), uint64(cardCRCInfo.die2dieCRCErrorOverflow), errorString(r)
+}
+
+func (c *cndev) GetDeviceCurrentInfo(idx uint) (int, int, int, error) {
+	var currentInfo C.cndevCurrentInfo_t
+	r := C.cndevGetCurrentInfo(&currentInfo, c.cndevHandleMap[idx])
+	return int(currentInfo.ipuCoreCurrent), int(currentInfo.socCurrent), int(currentInfo.hbmCurrent), errorString(r)
 }
 
 func (c *cndev) GetDeviceCurrentPCIeInfo(idx uint) (int, int, error) {
@@ -348,6 +486,14 @@ func (c *cndev) GetDeviceECCInfo(idx uint) (uint64, uint64, uint64, uint64, uint
 	cardECCInfo.version = C.CNDEV_VERSION_5
 	r := C.cndevGetECCInfo(&cardECCInfo, c.cndevHandleMap[idx])
 	return uint64(cardECCInfo.addressForbiddenError), uint64(cardECCInfo.correctedError), uint64(cardECCInfo.multipleError), uint64(cardECCInfo.multipleMultipleError), uint64(cardECCInfo.multipleOneError), uint64(cardECCInfo.oneBitError), uint64(cardECCInfo.totalError), uint64(cardECCInfo.uncorrectedError), errorString(r)
+}
+
+func (c *cndev) GetDeviceEccMode(idx uint) (int, int, error) {
+	var currentMode, pendingMode C.cndevEccMode_t
+	currentMode.version = C.CNDEV_VERSION_6
+	pendingMode.version = C.CNDEV_VERSION_6
+	r := C.cndevGetEccMode(&currentMode, &pendingMode, c.cndevHandleMap[idx])
+	return int(currentMode.mode), int(pendingMode.mode), errorString(r)
 }
 
 func (c *cndev) GetDeviceFanSpeed(idx uint) (int, error) {
@@ -402,18 +548,42 @@ func (c *cndev) GetDeviceImageCodecUtil(idx uint) ([]int, error) {
 	return imageCodecUtil, nil
 }
 
-func (c *cndev) GetDeviceMemEccCounter(idx uint) (uint32, uint32, uint32, uint32, uint32, error) {
+func (c *cndev) GetDeviceMaxPCIeInfo(idx uint) (int, int, error) {
+	var pcieInfo C.cndevPCIInfo_t
+	pcieInfo.version = C.CNDEV_VERSION_6
+	r := C.cndevGetMaxPCIInfo(&pcieInfo, c.cndevHandleMap[idx])
+	return int(pcieInfo.maxSpeed), int(pcieInfo.maxWidth), errorString(r)
+}
+
+func (c *cndev) GetDeviceMemEccCounter(idx uint) ([]uint32, []uint64, error) {
 	var memEccCounter C.cndevMemEccCounter_t
-	memEccCounter.version = C.CNDEV_VERSION_5
+	memEccCounter.version = C.CNDEV_VERSION_6
 	index := C.int(idx)
 	if id, ok := c.cndevHandleMap[idx]; ok {
 		index = id
 	}
 	r := C.cndevGetMemEccCounter(&memEccCounter, index)
 	if err := errorString(r); err != nil {
-		return 0, 0, 0, 0, 0, err
+		return nil, nil, err
 	}
-	return uint32(memEccCounter.volatileSramEccSbeCounter), uint32(memEccCounter.volatileSramEccDbeCounter), uint32(memEccCounter.volatileSramEccParityCounter), uint32(memEccCounter.volatileDramEccSbeCounter), uint32(memEccCounter.volatileDramEccDbeCounter), nil
+	volatile := make([]uint32, 5)
+	aggregate := make([]uint64, 6)
+	volatile[0] = uint32(memEccCounter.volatileSramEccSbeCounter)
+	volatile[1] = uint32(memEccCounter.volatileSramEccDbeCounter)
+	volatile[2] = uint32(memEccCounter.volatileSramEccParityCounter)
+	volatile[3] = uint32(memEccCounter.volatileDramEccSbeCounter)
+	volatile[4] = uint32(memEccCounter.volatileDramEccDbeCounter)
+	aggregate[0] = uint64(memEccCounter.aggregateDramEccSbeCounter)
+	aggregate[1] = uint64(memEccCounter.aggregateDramEccDbeCounter)
+	aggregate[2] = uint64(memEccCounter.aggregateSramEccSbeCounter)
+	aggregate[3] = uint64(memEccCounter.aggregateSramEccDbeCounter)
+	aggregate[4] = uint64(memEccCounter.aggregateSramEccParityCounter)
+	if bool(memEccCounter.aggregateSramEccThresholdExceeded) {
+		aggregate[5] = 1
+	} else {
+		aggregate[5] = 0
+	}
+	return volatile, aggregate, nil
 }
 
 func (c *cndev) GetDeviceMemory(idx uint) (int64, int64, int64, int64, error) {
@@ -434,6 +604,38 @@ func (c *cndev) GetDeviceMemoryDieCount(idx uint) (int, error) {
 	return int(cardMemoryDieNum.count), errorString(r)
 }
 
+func (c *cndev) GetDeviceMimProfileInfo(idx uint) ([]MimProfileInfo, error) {
+	var mimProfileInfos []MimProfileInfo
+
+	for profileID := 0; profileID < C.CNDEV_MLUINSTANCE_PROFILE_COUNT; profileID++ {
+		var profileInfo C.cndevMluInstanceProfileInfo_t
+		profileInfo.version = C.CNDEV_VERSION_6
+		r := C.cndevGetMluInstanceProfileInfo(&profileInfo, C.int(profileID), c.cndevHandleMap[idx])
+		if err := errorString(r); r == C.CNDEV_ERROR_NOT_SUPPORTED || r == C.CNDEV_ERROR_NOT_FOUND {
+			continue
+		} else if err != nil {
+			return mimProfileInfos, err
+		}
+		mimProfileInfos = append(mimProfileInfos,
+			MimProfileInfo{
+				GDMACount:    int(profileInfo.gdmaCount),
+				JPUCount:     int(profileInfo.jpuCount),
+				MemorySize:   int(profileInfo.memorySize),
+				MLUCoreCount: int(profileInfo.mluCoreCount),
+				ProfileID:    int(profileInfo.profileId),
+				ProfileName:  C.GoString((*C.char)(unsafe.Pointer(&profileInfo.name))),
+				VPUCount:     int(profileInfo.vpuCount),
+			})
+	}
+	return mimProfileInfos, nil
+}
+
+func (c *cndev) GetDeviceMimProfileMaxInstanceCount(idx, profile uint) (int, error) {
+	var count C.int
+	r := C.cndevGetMaxMluInstanceCount(&count, C.int(profile), c.cndevHandleMap[idx])
+	return int(count), errorString(r)
+}
+
 func (c *cndev) GetDeviceMLULinkCapability(idx, link uint) (uint, uint, error) {
 	var cardMLULinkCapability C.cndevMLULinkCapability_t
 	cardMLULinkCapability.version = C.CNDEV_VERSION_5
@@ -449,6 +651,18 @@ func (c *cndev) GetDeviceMLULinkCounter(idx, link uint) (uint64, uint64, uint64,
 		uint64(cardMLULinkCount.errCorrected), uint64(cardMLULinkCount.errCRC24), uint64(cardMLULinkCount.errCRC32), uint64(cardMLULinkCount.errEccDouble),
 		uint64(cardMLULinkCount.errFatal), uint64(cardMLULinkCount.errReplay), uint64(cardMLULinkCount.errUncorrected), uint64(cardMLULinkCount.cntrCnpPackage),
 		uint64(cardMLULinkCount.cntrPfcPackage), errorString(r)
+}
+
+func (c *cndev) GetDeviceMLULinkErrorCounter(idx, link uint) (uint64, error) {
+	var cardMLULinkErrorCounter C.cndevMLULinkErrorCounter_t
+	r := C.cndevGetMLULinkErrorCounter(&cardMLULinkErrorCounter, c.cndevHandleMap[idx], C.int(link))
+	return uint64(cardMLULinkErrorCounter.illegalAccessCnt), errorString(r)
+}
+
+func (c *cndev) GetDeviceMLULinkEventCounter(idx, link uint) (uint64, error) {
+	var cardMLULinkEventCounter C.cndevMLULinkEventCounter_t
+	r := C.cndevGetMLULinkEventCounter(&cardMLULinkEventCounter, c.cndevHandleMap[idx], C.int(link))
+	return uint64(cardMLULinkEventCounter.linkDown), errorString(r)
 }
 
 func (c *cndev) GetDeviceMLULinkPortMode(idx, link uint) (int, error) {
@@ -469,11 +683,26 @@ func (c *cndev) GetDeviceMLULinkSpeedInfo(idx, link uint) (float32, int, error) 
 	return float32(cardMLULinkSpeedInfo.speedValue), int(cardMLULinkSpeedInfo.speedFormat), errorString(r)
 }
 
-func (c *cndev) GetDeviceMLULinkStatus(idx, link uint) (int, int, error) {
+func (c *cndev) GetDeviceMLULinkRemoteInfo(idx, link uint) (uint64, uint64, uint32, uint32, int32, uint64, string, string, string, string, error) {
+	var cardMLULinkRemoteInfo C.cndevMLULinkRemoteInfo_t
+	cardMLULinkRemoteInfo.version = C.CNDEV_VERSION_6
+	r := C.cndevGetMLULinkRemoteInfo(&cardMLULinkRemoteInfo, c.cndevHandleMap[idx], C.int(link))
+	if err := errorString(r); err != nil {
+		return 0, 0, 0, 0, 0, 0, "", "", "", "", err
+	}
+	var ip, mac, uuid, portName string
+	ip = C.GoString((*C.char)(unsafe.Pointer(&cardMLULinkRemoteInfo.devIp)))
+	mac = fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", cardMLULinkRemoteInfo.mac_addr[0], cardMLULinkRemoteInfo.mac_addr[1], cardMLULinkRemoteInfo.mac_addr[2], cardMLULinkRemoteInfo.mac_addr[3], cardMLULinkRemoteInfo.mac_addr[4], cardMLULinkRemoteInfo.mac_addr[5])
+	uuid = C.GoString((*C.char)(unsafe.Pointer(&cardMLULinkRemoteInfo.uuid)))
+	portName = C.GoString((*C.char)(unsafe.Pointer(&cardMLULinkRemoteInfo.port_name)))
+	return uint64(cardMLULinkRemoteInfo.mcSn), uint64(cardMLULinkRemoteInfo.baSn), uint32(cardMLULinkRemoteInfo.slotId), uint32(cardMLULinkRemoteInfo.portId), int32(cardMLULinkRemoteInfo.connectType), uint64(cardMLULinkRemoteInfo.ncsUUID64), ip, mac, uuid, portName, errorString(r)
+}
+
+func (c *cndev) GetDeviceMLULinkStatus(idx, link uint) (int, int, int, error) {
 	var cardMLULinkStatus C.cndevMLULinkStatus_t
 	cardMLULinkStatus.version = C.CNDEV_VERSION_5
 	r := C.cndevGetMLULinkStatus(&cardMLULinkStatus, c.cndevHandleMap[idx], C.int(link))
-	return int(cardMLULinkStatus.isActive), int(cardMLULinkStatus.serdesState), errorString(r)
+	return int(cardMLULinkStatus.isActive), int(cardMLULinkStatus.serdesState), int(cardMLULinkStatus.cableState), errorString(r)
 }
 
 func (c *cndev) GetDeviceMLULinkVersion(idx, link uint) (uint, uint, uint, error) {
@@ -498,6 +727,92 @@ func (c *cndev) GetDeviceNUMANodeID(idx uint) (int, error) {
 	cardNUMANodeID.version = C.CNDEV_VERSION_5
 	r := C.cndevGetNUMANodeIdByDevId(&cardNUMANodeID, c.cndevHandleMap[idx])
 	return int(cardNUMANodeID.nodeId), errorString(r)
+}
+
+func (c *cndev) GetDeviceOverTemperatureInfo(idx uint) (uint32, uint32, error) {
+	var overTemperatureInfo C.cndevOverTemperatureInfo_t
+	overTemperatureInfo.version = C.CNDEV_VERSION_6
+	r := C.cndevGetOverTemperatureInfo(&overTemperatureInfo, c.cndevHandleMap[idx])
+	return uint32(overTemperatureInfo.powerOffCounter), uint32(overTemperatureInfo.underClockCounter), errorString(r)
+}
+
+func (c *cndev) GetDeviceOpticalInfo(idx, link uint) (uint8, float32, float32, []float32, []float32, error) {
+	var opticalInfo C.cndevOpticalInfo_t
+	r := C.cndevGetOpticalInfo(&opticalInfo, c.cndevHandleMap[idx], C.int(link))
+	if err := errorString(r); err != nil {
+		return 0, 0, 0, nil, nil, err
+	}
+	txpwr := make([]float32, uint(opticalInfo.valid_lane_num))
+	for i := uint(0); i < uint(opticalInfo.valid_lane_num); i++ {
+		txpwr[i] = float32(opticalInfo.txpwr[i])
+	}
+	rxpwr := make([]float32, uint(opticalInfo.valid_lane_num))
+	for i := uint(0); i < uint(opticalInfo.valid_lane_num); i++ {
+		rxpwr[i] = float32(opticalInfo.rxpwr[i])
+	}
+	return uint8(opticalInfo.present), float32(opticalInfo.temp), float32(opticalInfo.volt), txpwr, rxpwr, errorString(r)
+}
+
+func (c *cndev) GetDeviceOverTemperatureShutdownThreshold(idx uint) (_ int, err error) {
+	defer panicHandler(&err)
+
+	type fieldVaule struct {
+		fieldID     int32
+		ret         int32
+		value       int
+		valueType   int
+		latencyUsec int64
+		timestamp   int64
+		scopeID     uint
+	}
+	var fieldVauleInfo fieldVaule
+	value := (*C.cndevFieldVaule_t)(C.malloc(C.size_t(unsafe.Sizeof(fieldVauleInfo))))
+	if value == nil {
+		return 0, fmt.Errorf("malloc failed for cndevDeviceGetFieldValues")
+	}
+	defer C.free(unsafe.Pointer(value))
+
+	value.fieldId = C.cndevFieldTemperatureShutDown
+	r := C.cndevDeviceGetFieldValues(c.cndevHandleMap[idx], C.int(1), value)
+	if err := errorString(r); err != nil {
+		return 0, err
+	}
+	if err := errorString(value.ret); err != nil {
+		return 0, err
+	}
+	shutdown := *(*int)(unsafe.Pointer(uintptr(unsafe.Pointer(value)) + unsafe.Sizeof(fieldVauleInfo.fieldID) + unsafe.Sizeof(fieldVauleInfo.ret)))
+	return int(shutdown), nil
+}
+
+func (c *cndev) GetDeviceOverTemperatureSlowdownThreshold(idx uint) (_ int, err error) {
+	defer panicHandler(&err)
+
+	type fieldVaule struct {
+		fieldID     int32
+		ret         int32
+		value       int
+		valueType   int
+		latencyUsec int64
+		timestamp   int64
+		scopeID     uint
+	}
+	var fieldVauleInfo fieldVaule
+	value := (*C.cndevFieldVaule_t)(C.malloc(C.size_t(unsafe.Sizeof(fieldVauleInfo))))
+	if value == nil {
+		return 0, fmt.Errorf("malloc failed for cndevDeviceGetFieldValues")
+	}
+	defer C.free(unsafe.Pointer(value))
+
+	value.fieldId = C.cndevFieldTemperatureSlowDown
+	r := C.cndevDeviceGetFieldValues(c.cndevHandleMap[idx], C.int(1), value)
+	if err := errorString(r); err != nil {
+		return 0, err
+	}
+	if err := errorString(value.ret); err != nil {
+		return 0, err
+	}
+	slowDown := *(*int)(unsafe.Pointer(uintptr(unsafe.Pointer(value)) + unsafe.Sizeof(fieldVauleInfo.fieldID) + unsafe.Sizeof(fieldVauleInfo.ret)))
+	return int(slowDown), nil
 }
 
 func (c *cndev) GetDeviceParityError(idx uint) (int, error) {
@@ -541,11 +856,43 @@ func (c *cndev) GetDevicePower(idx uint) (int, error) {
 	return int(cardPower.usage), errorString(r)
 }
 
-func (c *cndev) GetDeviceProcessUtil(idx uint) ([]uint32, []uint32, []uint32, []uint32, []uint32, []uint32, error) {
-	processCount := 1 << 4
+func (c *cndev) GetDevicePowerManagementDefaultLimitation(idx uint) (uint16, error) {
+	var powerManagementLimitation C.cndevPowerManagementLimitation_t
+	powerManagementLimitation.version = C.CNDEV_VERSION_6
+	r := C.cndevGetPowerManagementDefaultLimitation(&powerManagementLimitation, c.cndevHandleMap[idx])
+	return uint16(powerManagementLimitation.powerLimit), errorString(r)
+}
 
+func (c *cndev) GetDevicePowerManagementLimitation(idx uint) (uint16, error) {
+	var powerManagementLimitation C.cndevPowerManagementLimitation_t
+	powerManagementLimitation.version = C.CNDEV_VERSION_6
+	r := C.cndevGetPowerManagementLimitation(&powerManagementLimitation, c.cndevHandleMap[idx])
+	return uint16(powerManagementLimitation.powerLimit), errorString(r)
+}
+
+func (c *cndev) GetDevicePowerManagementLimitRange(idx uint) (uint16, uint16, error) {
+	var powerManagementLimitRange C.cndevPowerManagementLimitationRange_t
+	powerManagementLimitRange.version = C.CNDEV_VERSION_6
+	r := C.cndevGetPowerManagementLimitationRange(&powerManagementLimitRange, c.cndevHandleMap[idx])
+	return uint16(powerManagementLimitRange.minPowerLimit), uint16(powerManagementLimitRange.maxPowerLimit), errorString(r)
+}
+
+func (c *cndev) GetDevicePerformanceThrottleReason(idx uint) (bool, error) {
+	var performanceThrottleReason C.cndevPerformanceThrottleReason_t
+	performanceThrottleReason.version = C.CNDEV_VERSION_6
+	r := C.cndevGetPerformanceThrottleReason(&performanceThrottleReason, c.cndevHandleMap[idx])
+	return performanceThrottleReason.thermalSlowdown == C.CNDEV_FEATURE_ENABLED, errorString(r)
+}
+
+func (c *cndev) GetDeviceProcessUtil(idx uint) (_ []uint32, _ []uint32, _ []uint32, _ []uint32, _ []uint32, _ []uint32, err error) {
+	defer panicHandler(&err)
+
+	processCount := 1 << 4
 	var util C.cndevProcessUtilization_t
 	utils := (*C.cndevProcessUtilization_t)(C.malloc(C.size_t(processCount) * C.size_t(unsafe.Sizeof(util))))
+	if utils == nil {
+		return nil, nil, nil, nil, nil, nil, fmt.Errorf("malloc failed for cndevGetProcessUtilization")
+	}
 	defer func() {
 		if utils != nil {
 			C.free(unsafe.Pointer(utils))
@@ -559,19 +906,25 @@ func (c *cndev) GetDeviceProcessUtil(idx uint) ([]uint32, []uint32, []uint32, []
 	}
 
 	// handle the case when the initial count is insufficient,
-	// after cndevGetProcessUtilization processCount will be set to real count,
-	// so just use it to reallocate and cndevGetProcessUtilization again.
-	if r == C.CNDEV_ERROR_INSUFFICIENT_SPACE {
-		log.Debugf("cndevGetProcessUtilization with insufficient space with real counts %d, with slot: %d, will try with the real counts", processCount, idx)
-		newUtils := (*C.cndevProcessUtilization_t)(C.realloc(unsafe.Pointer(utils), C.size_t(processCount)*C.size_t(unsafe.Sizeof(util))))
-		if newUtils == nil {
-			return nil, nil, nil, nil, nil, nil, fmt.Errorf("realloc failed for cndevGetProcessUtilization")
+	// after cndevGetProcessUtilization call the processCount will be set to real count,
+	// while new process may be produced between two cndevGetProcessUtilization calls,
+	// so need to loop until this corner case vanishes
+	for {
+		err := errorString(r)
+		if err == nil {
+			break
 		}
-		utils = newUtils
-		r = C.cndevGetProcessUtilization((*C.uint)(unsafe.Pointer(&processCount)), utils, c.cndevHandleMap[idx])
-		if err := errorString(r); err != nil {
-			return nil, nil, nil, nil, nil, nil, err
+		if r == C.CNDEV_ERROR_INSUFFICIENT_SPACE {
+			log.Debugf("cndevGetProcessUtilization with insufficient space with real counts %d, with slot: %d, will try with the real counts", processCount, idx)
+			newUtils := (*C.cndevProcessUtilization_t)(C.realloc(unsafe.Pointer(utils), C.size_t(processCount)*C.size_t(unsafe.Sizeof(util))))
+			if newUtils == nil {
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("realloc failed for cndevGetProcessUtilization")
+			}
+			utils = newUtils
+			r = C.cndevGetProcessUtilization((*C.uint)(unsafe.Pointer(&processCount)), utils, c.cndevHandleMap[idx])
+			continue
 		}
+		return nil, nil, nil, nil, nil, nil, err
 	}
 
 	pids := make([]uint32, processCount)
@@ -593,32 +946,32 @@ func (c *cndev) GetDeviceProcessUtil(idx uint) ([]uint32, []uint32, []uint32, []
 	return pids, ipuUtils, jpuUtils, memUtils, vpuDecUtils, vpuEncUtils, nil
 }
 
-func (c *cndev) GetDeviceRemappedRows(idx uint) (uint32, uint32, uint32, uint32, error) {
+func (c *cndev) GetDeviceRemappedRows(idx uint) (uint32, uint32, uint32, uint32, uint32, error) {
 	major, minor, build, err := c.GetDeviceDriverVersion(idx)
 	if err != nil {
-		return 0, 0, 0, 0, err
+		return 0, 0, 0, 0, 0, err
 	}
 	v1, err := semver.NewVersion(fmt.Sprintf("%d.%d.%d", major, minor, build))
 	if err != nil {
-		return 0, 0, 0, 0, err
+		return 0, 0, 0, 0, 0, err
 	}
 	// cndevGetRemappedRowsV2 is only available in driver version later than 6.0.2
 	v2 := semver.MustParse("6.0.2")
 
 	if v1.GreaterThan(v2) {
 		var remappedRowsV2 C.cndevRemappedRowV2_t
-		remappedRowsV2.version = C.CNDEV_VERSION_5
+		remappedRowsV2.version = C.CNDEV_VERSION_6
 		r := C.cndevGetRemappedRowsV2(&remappedRowsV2, c.cndevHandleMap[idx])
 		if err := errorString(r); err != nil {
-			return 0, 0, 0, 0, err
+			return 0, 0, 0, 0, 0, err
 		}
 		var repairStatus C.cndevRepairStatus_t
-		repairStatus.version = C.CNDEV_VERSION_5
+		repairStatus.version = C.CNDEV_VERSION_6
 		r = C.cndevGetRepairStatus(&repairStatus, c.cndevHandleMap[idx])
 		if err := errorString(r); err != nil {
-			return 0, 0, 0, 0, err
+			return 0, 0, 0, 0, 0, err
 		}
-		var pendingRows, failedRows uint32
+		var pendingRows, failedRows, retirePending uint32
 		if bool(repairStatus.isPending) {
 			pendingRows = 1
 		} else {
@@ -629,22 +982,78 @@ func (c *cndev) GetDeviceRemappedRows(idx uint) (uint32, uint32, uint32, uint32,
 		} else {
 			failedRows = 0
 		}
+		if bool(repairStatus.isRetirePending) {
+			retirePending = 1
+		} else {
+			retirePending = 0
+		}
 		return uint32(remappedRowsV2.correctCounts), uint32(remappedRowsV2.uncorrectCounts),
-			uint32(pendingRows), uint32(failedRows), nil
+			uint32(pendingRows), uint32(failedRows), uint32(retirePending), nil
 	}
 
 	var remappedRows C.cndevRemappedRow_t
-	remappedRows.version = C.CNDEV_VERSION_5
+	remappedRows.version = C.CNDEV_VERSION_6
 	r := C.cndevGetRemappedRows(&remappedRows, c.cndevHandleMap[idx])
 	return uint32(remappedRows.correctRows), uint32(remappedRows.uncorrectRows),
-		uint32(remappedRows.pendingRows), uint32(remappedRows.failedRows), errorString(r)
+		uint32(remappedRows.pendingRows), uint32(remappedRows.failedRows), 0, errorString(r)
 }
 
-func (c *cndev) GetDeviceRetiredPageInfo(idx uint) (int, uint32, error) {
+func (c *cndev) GetDeviceRetiredPageInfo(idx uint) (uint32, uint32, error) {
 	var retiredPage C.cndevRetiredPageInfo_t
 	retiredPage.version = C.CNDEV_VERSION_5
+	retiredPage.cause = 0
 	r := C.cndevGetRetiredPages(&retiredPage, c.cndevHandleMap[idx])
-	return int(retiredPage.cause), uint32(retiredPage.pageCount), errorString(r)
+	if err := errorString(r); err != nil {
+		return 0, 0, err
+	}
+	single := uint32(retiredPage.pageCount)
+	retiredPage.cause = 1
+	r = C.cndevGetRetiredPages(&retiredPage, c.cndevHandleMap[idx])
+	if err := errorString(r); err != nil {
+		return single, 0, err
+	}
+	double := uint32(retiredPage.pageCount)
+	return single, double, errorString(r)
+}
+
+func (c *cndev) GetDeviceRetiredPagesOperation(idx uint) (int, error) {
+	var retirement C.cndevRetiredPageOperation_t
+	retirement.version = C.CNDEV_VERSION_6
+	r := C.cndevGetRetiredPagesOperation(&retirement, c.cndevHandleMap[idx])
+	return int(retirement.retirePageOption), errorString(r)
+}
+
+func (c *cndev) GetDeviceSMluProfileIDInfo(idx uint) ([]int, error) {
+	var profileIDInfo C.cndevSMluProfileIdInfo_t
+	profileIDInfo.version = C.CNDEV_VERSION_6
+	r := C.cndevGetSMluProfileIdInfo(&profileIDInfo, c.cndevHandleMap[idx])
+	if err := errorString(r); err != nil {
+		return nil, err
+	}
+	info := make([]int, int(profileIDInfo.count))
+	for i := 0; i < int(profileIDInfo.count); i++ {
+		info[i] = int(profileIDInfo.profileId[i])
+	}
+	return info, nil
+}
+
+func (c *cndev) GetDeviceSMluProfileInfo(idx, profile uint) (SmluProfileInfo, uint32, uint32, error) {
+	var profileInfo C.cndevSMluProfileInfo_t
+	var smluProfileInfo SmluProfileInfo
+	profileInfo.version = C.CNDEV_VERSION_6
+	r := C.cndevGetSMluProfileInfo(&profileInfo, C.int(profile), c.cndevHandleMap[idx])
+	if err := errorString(r); err != nil {
+		return smluProfileInfo, 0, 0, err
+	}
+	total := uint32(profileInfo.totalCapacity)
+	remain := uint32(profileInfo.remainCapacity)
+	smluProfileInfo = SmluProfileInfo{
+		IpuTotal:    uint32(profileInfo.mluQuota[C.CNDEV_SMLU_MAX]),
+		MemTotal:    uint64(profileInfo.memorySize[C.CNDEV_SMLU_MAX]),
+		ProfileID:   int(profileInfo.profileId),
+		ProfileName: C.GoString((*C.char)(unsafe.Pointer(&profileInfo.name))),
+	}
+	return smluProfileInfo, total, remain, nil
 }
 
 func (c *cndev) GetDeviceSN(idx uint) (string, error) {
@@ -743,18 +1152,29 @@ func (c *cndev) GetDeviceVfState(idx uint) (int, error) {
 	return int(vfstate.vfState), errorString(r)
 }
 
-func (c *cndev) GetDeviceVideoCodecUtil(idx uint) ([]int, error) {
+func (c *cndev) GetDeviceVideoCodecUtil(idx uint) ([]int, []int, error) {
 	var cardVideoCodecUtil C.cndevVideoCodecUtilization_t
 	cardVideoCodecUtil.version = C.CNDEV_VERSION_5
 	r := C.cndevGetVideoCodecUtilization(&cardVideoCodecUtil, c.cndevHandleMap[idx])
 	if err := errorString(r); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	videoCodecUtil := make([]int, uint(cardVideoCodecUtil.vpuCount))
 	for i := uint(0); i < uint(cardVideoCodecUtil.vpuCount); i++ {
 		videoCodecUtil[i] = int(cardVideoCodecUtil.vpuCodecUtilization[i])
 	}
-	return videoCodecUtil, nil
+	videoDecoderUtil := make([]int, uint(cardVideoCodecUtil.decoderCount))
+	for i := uint(0); i < uint(cardVideoCodecUtil.decoderCount); i++ {
+		videoDecoderUtil[i] = int(cardVideoCodecUtil.vpuCodecUtilization[i])
+	}
+
+	return videoCodecUtil, videoDecoderUtil, nil
+}
+
+func (c *cndev) GetDeviceVoltageInfo(idx uint) (int, int, int, error) {
+	var voltageInfo C.cndevVoltageInfo_t
+	r := C.cndevGetVoltageInfo(&voltageInfo, c.cndevHandleMap[idx])
+	return int(voltageInfo.ipuCoreVoltage), int(voltageInfo.socVoltage), int(voltageInfo.hbmVddVoltage), errorString(r)
 }
 
 func (c *cndev) GetSupportedEventTypes(idx uint) error {
@@ -805,8 +1225,7 @@ func waitEvents(handle C.cndevEventHandle, ch chan XIDInfoWithTimestamp) {
 					MLUInstanceID:     int32(eventData.mluInstanceId),
 				},
 			},
-
-			Timestamp: fmt.Sprintf("%d", eventData.timestamp),
+			Timestamp: int64(eventData.timestamp),
 		}
 
 		select {
@@ -841,4 +1260,13 @@ func (c *cndev) generateDeviceHandleMap() error {
 		c.cndevHandleMap[i] = handle
 	}
 	return nil
+}
+
+func panicHandler(err *error) {
+	if r := recover(); r != nil {
+		log.Warnf("Recovered from panic: %v", r)
+		if err != nil {
+			*err = fmt.Errorf("memory access failed with: %v", r)
+		}
+	}
 }

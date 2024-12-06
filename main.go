@@ -142,17 +142,28 @@ func main() {
 		}
 	})
 
+	http.HandleFunc("/logLevel", func(w http.ResponseWriter, r *http.Request) {
+		level := r.URL.Query().Get("level")
+		logLevel, err := log.ParseLevel(level)
+		if err != nil {
+			fmt.Fprintf(w, "Invalid log level: %s", level)
+			return
+		}
+		log.SetLevel(logLevel)
+		log.Printf("Log level set to %s", level)
+	})
+
 	server := &http.Server{
 		Addr: fmt.Sprintf("0.0.0.0:%d", options.Port),
 	}
 
-	log.Printf("start serving at %s", server.Addr)
+	log.Printf("Start serving at %s", server.Addr)
 	log.Fatal(server.ListenAndServe())
 }
 
 func startPushMode(options Options, metricConfig map[string]metrics.CollectorMetrics, mluInfo map[string]collector.MLUStat) {
 	if options.PushIntervalMS < 100 {
-		log.Fatal("minimum of push-interval-ms is 100")
+		log.Fatal("Minimum of push-interval-ms is 100")
 	}
 
 	pushc := collector.NewCollectors(
@@ -190,30 +201,21 @@ func startPushMode(options Options, metricConfig map[string]metrics.CollectorMet
 
 func startCallbackMode(options Options, metricConfig map[string]metrics.CollectorMetrics, mluInfo map[string]collector.MLUStat) {
 	cb, err := collector.NewCallback(
+		options.PushGatewayURL,
 		metricConfig,
 		mluInfo,
 		options.XIDErrorMetricName,
+		options.MetricsPrefix,
 		options.Hostname,
 		options.LogFileForXIDMetricFailed,
 		options.XIDErrorRetryTimes,
+		options.PushJobName,
 	)
 	if err != nil {
 		log.Debugln("XID Callback not enabled")
 		return
 	}
-	if cb == nil {
-		return
+	if cb != nil {
+		go cb.Start()
 	}
-
-	metrics.RegisterWatcher(cb.UpdateMetrics)
-
-	pushr := prometheus.NewRegistry()
-	pushr.MustRegister(cb)
-	pusher := push.New(options.PushGatewayURL, options.PushJobName).Format(expfmt.FmtText).Collector(pushr)
-
-	if options.ClusterName != "" {
-		pusher = pusher.Grouping("cluster", options.ClusterName)
-	}
-
-	go cb.Start(pusher.Push)
 }

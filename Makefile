@@ -27,7 +27,7 @@ generate:
 	mockgen -package mock -destination pkg/mock/host.go -mock_names=Host=Host github.com/Cambricon/mlu-exporter/pkg/host Host
 
 lint:
-	golangci-lint run -v
+	golangci-lint run --timeout 5m -v
 
 build:
 	go build -trimpath -ldflags="-s -w" -ldflags="-X 'main.version=$(VERSION)'" -o mlu-exporter .
@@ -36,7 +36,7 @@ test:
 	go test -v ./...
 
 addlicense:
-	# install with `go get github.com/google/addlicense`
+	# install with `go install github.com/google/addlicense@latest`
 	addlicense -c 'Cambricon, Inc.' -l apache -v .
 
 clean:

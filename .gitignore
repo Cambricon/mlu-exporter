@@ -1,5 +1,6 @@
 libcndev.so
 mlu-exporter
+!mlu-exporter/
 image
 .vscode
 *.tar*

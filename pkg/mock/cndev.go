@@ -94,6 +94,25 @@ func (mr *CndevMockRecorder) GetAllSMluInfo(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSMluInfo", reflect.TypeOf((*Cndev)(nil).GetAllSMluInfo), arg0)
 }
 
+// GetDeviceAddressSwaps mocks base method.
+func (m *Cndev) GetDeviceAddressSwaps(arg0 uint) (uint32, uint32, uint32, uint32, uint32, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceAddressSwaps", arg0)
+	ret0, _ := ret[0].(uint32)
+	ret1, _ := ret[1].(uint32)
+	ret2, _ := ret[2].(uint32)
+	ret3, _ := ret[3].(uint32)
+	ret4, _ := ret[4].(uint32)
+	ret5, _ := ret[5].(error)
+	return ret0, ret1, ret2, ret3, ret4, ret5
+}
+
+// GetDeviceAddressSwaps indicates an expected call of GetDeviceAddressSwaps.
+func (mr *CndevMockRecorder) GetDeviceAddressSwaps(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceAddressSwaps", reflect.TypeOf((*Cndev)(nil).GetDeviceAddressSwaps), arg0)
+}
+
 // GetDeviceArmOsMemory mocks base method.
 func (m *Cndev) GetDeviceArmOsMemory(arg0 uint) (int64, int64, error) {
 	m.ctrl.T.Helper()
@@ -110,14 +129,36 @@ func (mr *CndevMockRecorder) GetDeviceArmOsMemory(arg0 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceArmOsMemory", reflect.TypeOf((*Cndev)(nil).GetDeviceArmOsMemory), arg0)
 }
 
+// GetDeviceBAR4MemoryInfo mocks base method.
+func (m *Cndev) GetDeviceBAR4MemoryInfo(arg0 uint) (uint64, uint64, uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceBAR4MemoryInfo", arg0)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(uint64)
+	ret2, _ := ret[2].(uint64)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// GetDeviceBAR4MemoryInfo indicates an expected call of GetDeviceBAR4MemoryInfo.
+func (mr *CndevMockRecorder) GetDeviceBAR4MemoryInfo(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceBAR4MemoryInfo", reflect.TypeOf((*Cndev)(nil).GetDeviceBAR4MemoryInfo), arg0)
+}
+
 // GetDeviceCPUUtil mocks base method.
-func (m *Cndev) GetDeviceCPUUtil(arg0 uint) (uint16, []byte, error) {
+func (m *Cndev) GetDeviceCPUUtil(arg0 uint) (uint16, []byte, []byte, []byte, []byte, []byte, []byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDeviceCPUUtil", arg0)
 	ret0, _ := ret[0].(uint16)
 	ret1, _ := ret[1].([]byte)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret2, _ := ret[2].([]byte)
+	ret3, _ := ret[3].([]byte)
+	ret4, _ := ret[4].([]byte)
+	ret5, _ := ret[5].([]byte)
+	ret6, _ := ret[6].([]byte)
+	ret7, _ := ret[7].(error)
+	return ret0, ret1, ret2, ret3, ret4, ret5, ret6, ret7
 }
 
 // GetDeviceCPUUtil indicates an expected call of GetDeviceCPUUtil.
@@ -157,6 +198,39 @@ func (mr *CndevMockRecorder) GetDeviceClusterCount(arg0 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceClusterCount", reflect.TypeOf((*Cndev)(nil).GetDeviceClusterCount), arg0)
 }
 
+// GetDeviceCndevVersion mocks base method.
+func (m *Cndev) GetDeviceCndevVersion() (uint, uint, uint, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceCndevVersion")
+	ret0, _ := ret[0].(uint)
+	ret1, _ := ret[1].(uint)
+	ret2, _ := ret[2].(uint)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// GetDeviceCndevVersion indicates an expected call of GetDeviceCndevVersion.
+func (mr *CndevMockRecorder) GetDeviceCndevVersion() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceCndevVersion", reflect.TypeOf((*Cndev)(nil).GetDeviceCndevVersion))
+}
+
+// GetDeviceComputeCapability mocks base method.
+func (m *Cndev) GetDeviceComputeCapability(arg0 uint) (uint, uint, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceComputeCapability", arg0)
+	ret0, _ := ret[0].(uint)
+	ret1, _ := ret[1].(uint)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetDeviceComputeCapability indicates an expected call of GetDeviceComputeCapability.
+func (mr *CndevMockRecorder) GetDeviceComputeCapability(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceComputeCapability", reflect.TypeOf((*Cndev)(nil).GetDeviceComputeCapability), arg0)
+}
+
 // GetDeviceCoreNum mocks base method.
 func (m *Cndev) GetDeviceCoreNum(arg0 uint) (uint, error) {
 	m.ctrl.T.Helper()
@@ -185,6 +259,23 @@ func (m *Cndev) GetDeviceCount() (uint, error) {
 func (mr *CndevMockRecorder) GetDeviceCount() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceCount", reflect.TypeOf((*Cndev)(nil).GetDeviceCount))
+}
+
+// GetDeviceCurrentInfo mocks base method.
+func (m *Cndev) GetDeviceCurrentInfo(arg0 uint) (int, int, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceCurrentInfo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(int)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// GetDeviceCurrentInfo indicates an expected call of GetDeviceCurrentInfo.
+func (mr *CndevMockRecorder) GetDeviceCurrentInfo(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceCurrentInfo", reflect.TypeOf((*Cndev)(nil).GetDeviceCurrentInfo), arg0)
 }
 
 // GetDeviceCurrentPCIeInfo mocks base method.
@@ -239,6 +330,22 @@ func (m *Cndev) GetDeviceECCInfo(arg0 uint) (uint64, uint64, uint64, uint64, uin
 func (mr *CndevMockRecorder) GetDeviceECCInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceECCInfo", reflect.TypeOf((*Cndev)(nil).GetDeviceECCInfo), arg0)
+}
+
+// GetDeviceEccMode mocks base method.
+func (m *Cndev) GetDeviceEccMode(arg0 uint) (int, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceEccMode", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetDeviceEccMode indicates an expected call of GetDeviceEccMode.
+func (mr *CndevMockRecorder) GetDeviceEccMode(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceEccMode", reflect.TypeOf((*Cndev)(nil).GetDeviceEccMode), arg0)
 }
 
 // GetDeviceFanSpeed mocks base method.
@@ -375,6 +482,36 @@ func (mr *CndevMockRecorder) GetDeviceMLULinkCounter(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceMLULinkCounter", reflect.TypeOf((*Cndev)(nil).GetDeviceMLULinkCounter), arg0, arg1)
 }
 
+// GetDeviceMLULinkErrorCounter mocks base method.
+func (m *Cndev) GetDeviceMLULinkErrorCounter(arg0, arg1 uint) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceMLULinkErrorCounter", arg0, arg1)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceMLULinkErrorCounter indicates an expected call of GetDeviceMLULinkErrorCounter.
+func (mr *CndevMockRecorder) GetDeviceMLULinkErrorCounter(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceMLULinkErrorCounter", reflect.TypeOf((*Cndev)(nil).GetDeviceMLULinkErrorCounter), arg0, arg1)
+}
+
+// GetDeviceMLULinkEventCounter mocks base method.
+func (m *Cndev) GetDeviceMLULinkEventCounter(arg0, arg1 uint) (uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceMLULinkEventCounter", arg0, arg1)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceMLULinkEventCounter indicates an expected call of GetDeviceMLULinkEventCounter.
+func (mr *CndevMockRecorder) GetDeviceMLULinkEventCounter(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceMLULinkEventCounter", reflect.TypeOf((*Cndev)(nil).GetDeviceMLULinkEventCounter), arg0, arg1)
+}
+
 // GetDeviceMLULinkPortMode mocks base method.
 func (m *Cndev) GetDeviceMLULinkPortMode(arg0, arg1 uint) (int, error) {
 	m.ctrl.T.Helper()
@@ -404,6 +541,30 @@ func (mr *CndevMockRecorder) GetDeviceMLULinkPortNumber(arg0 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceMLULinkPortNumber", reflect.TypeOf((*Cndev)(nil).GetDeviceMLULinkPortNumber), arg0)
 }
 
+// GetDeviceMLULinkRemoteInfo mocks base method.
+func (m *Cndev) GetDeviceMLULinkRemoteInfo(arg0, arg1 uint) (uint64, uint64, uint32, uint32, int32, uint64, string, string, string, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceMLULinkRemoteInfo", arg0, arg1)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(uint64)
+	ret2, _ := ret[2].(uint32)
+	ret3, _ := ret[3].(uint32)
+	ret4, _ := ret[4].(int32)
+	ret5, _ := ret[5].(uint64)
+	ret6, _ := ret[6].(string)
+	ret7, _ := ret[7].(string)
+	ret8, _ := ret[8].(string)
+	ret9, _ := ret[9].(string)
+	ret10, _ := ret[10].(error)
+	return ret0, ret1, ret2, ret3, ret4, ret5, ret6, ret7, ret8, ret9, ret10
+}
+
+// GetDeviceMLULinkRemoteInfo indicates an expected call of GetDeviceMLULinkRemoteInfo.
+func (mr *CndevMockRecorder) GetDeviceMLULinkRemoteInfo(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceMLULinkRemoteInfo", reflect.TypeOf((*Cndev)(nil).GetDeviceMLULinkRemoteInfo), arg0, arg1)
+}
+
 // GetDeviceMLULinkSpeedInfo mocks base method.
 func (m *Cndev) GetDeviceMLULinkSpeedInfo(arg0, arg1 uint) (float32, int, error) {
 	m.ctrl.T.Helper()
@@ -421,13 +582,14 @@ func (mr *CndevMockRecorder) GetDeviceMLULinkSpeedInfo(arg0, arg1 interface{}) *
 }
 
 // GetDeviceMLULinkStatus mocks base method.
-func (m *Cndev) GetDeviceMLULinkStatus(arg0, arg1 uint) (int, int, error) {
+func (m *Cndev) GetDeviceMLULinkStatus(arg0, arg1 uint) (int, int, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDeviceMLULinkStatus", arg0, arg1)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(int)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret2, _ := ret[2].(int)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
 }
 
 // GetDeviceMLULinkStatus indicates an expected call of GetDeviceMLULinkStatus.
@@ -453,17 +615,30 @@ func (mr *CndevMockRecorder) GetDeviceMLULinkVersion(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceMLULinkVersion", reflect.TypeOf((*Cndev)(nil).GetDeviceMLULinkVersion), arg0, arg1)
 }
 
+// GetDeviceMaxPCIeInfo mocks base method.
+func (m *Cndev) GetDeviceMaxPCIeInfo(arg0 uint) (int, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceMaxPCIeInfo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetDeviceMaxPCIeInfo indicates an expected call of GetDeviceMaxPCIeInfo.
+func (mr *CndevMockRecorder) GetDeviceMaxPCIeInfo(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceMaxPCIeInfo", reflect.TypeOf((*Cndev)(nil).GetDeviceMaxPCIeInfo), arg0)
+}
+
 // GetDeviceMemEccCounter mocks base method.
-func (m *Cndev) GetDeviceMemEccCounter(arg0 uint) (uint32, uint32, uint32, uint32, uint32, error) {
+func (m *Cndev) GetDeviceMemEccCounter(arg0 uint) ([]uint32, []uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDeviceMemEccCounter", arg0)
-	ret0, _ := ret[0].(uint32)
-	ret1, _ := ret[1].(uint32)
-	ret2, _ := ret[2].(uint32)
-	ret3, _ := ret[3].(uint32)
-	ret4, _ := ret[4].(uint32)
-	ret5, _ := ret[5].(error)
-	return ret0, ret1, ret2, ret3, ret4, ret5
+	ret0, _ := ret[0].([]uint32)
+	ret1, _ := ret[1].([]uint64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetDeviceMemEccCounter indicates an expected call of GetDeviceMemEccCounter.
@@ -505,6 +680,36 @@ func (mr *CndevMockRecorder) GetDeviceMemoryDieCount(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceMemoryDieCount", reflect.TypeOf((*Cndev)(nil).GetDeviceMemoryDieCount), arg0)
 }
 
+// GetDeviceMimProfileInfo mocks base method.
+func (m *Cndev) GetDeviceMimProfileInfo(arg0 uint) ([]cndev.MimProfileInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceMimProfileInfo", arg0)
+	ret0, _ := ret[0].([]cndev.MimProfileInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceMimProfileInfo indicates an expected call of GetDeviceMimProfileInfo.
+func (mr *CndevMockRecorder) GetDeviceMimProfileInfo(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceMimProfileInfo", reflect.TypeOf((*Cndev)(nil).GetDeviceMimProfileInfo), arg0)
+}
+
+// GetDeviceMimProfileMaxInstanceCount mocks base method.
+func (m *Cndev) GetDeviceMimProfileMaxInstanceCount(arg0, arg1 uint) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceMimProfileMaxInstanceCount", arg0, arg1)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceMimProfileMaxInstanceCount indicates an expected call of GetDeviceMimProfileMaxInstanceCount.
+func (mr *CndevMockRecorder) GetDeviceMimProfileMaxInstanceCount(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceMimProfileMaxInstanceCount", reflect.TypeOf((*Cndev)(nil).GetDeviceMimProfileMaxInstanceCount), arg0, arg1)
+}
+
 // GetDeviceModel mocks base method.
 func (m *Cndev) GetDeviceModel(arg0 uint) string {
 	m.ctrl.T.Helper()
@@ -532,6 +737,71 @@ func (m *Cndev) GetDeviceNUMANodeID(arg0 uint) (int, error) {
 func (mr *CndevMockRecorder) GetDeviceNUMANodeID(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceNUMANodeID", reflect.TypeOf((*Cndev)(nil).GetDeviceNUMANodeID), arg0)
+}
+
+// GetDeviceOpticalInfo mocks base method.
+func (m *Cndev) GetDeviceOpticalInfo(arg0, arg1 uint) (byte, float32, float32, []float32, []float32, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceOpticalInfo", arg0, arg1)
+	ret0, _ := ret[0].(byte)
+	ret1, _ := ret[1].(float32)
+	ret2, _ := ret[2].(float32)
+	ret3, _ := ret[3].([]float32)
+	ret4, _ := ret[4].([]float32)
+	ret5, _ := ret[5].(error)
+	return ret0, ret1, ret2, ret3, ret4, ret5
+}
+
+// GetDeviceOpticalInfo indicates an expected call of GetDeviceOpticalInfo.
+func (mr *CndevMockRecorder) GetDeviceOpticalInfo(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceOpticalInfo", reflect.TypeOf((*Cndev)(nil).GetDeviceOpticalInfo), arg0, arg1)
+}
+
+// GetDeviceOverTemperatureInfo mocks base method.
+func (m *Cndev) GetDeviceOverTemperatureInfo(arg0 uint) (uint32, uint32, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceOverTemperatureInfo", arg0)
+	ret0, _ := ret[0].(uint32)
+	ret1, _ := ret[1].(uint32)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetDeviceOverTemperatureInfo indicates an expected call of GetDeviceOverTemperatureInfo.
+func (mr *CndevMockRecorder) GetDeviceOverTemperatureInfo(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceOverTemperatureInfo", reflect.TypeOf((*Cndev)(nil).GetDeviceOverTemperatureInfo), arg0)
+}
+
+// GetDeviceOverTemperatureShutdownThreshold mocks base method.
+func (m *Cndev) GetDeviceOverTemperatureShutdownThreshold(arg0 uint) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceOverTemperatureShutdownThreshold", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceOverTemperatureShutdownThreshold indicates an expected call of GetDeviceOverTemperatureShutdownThreshold.
+func (mr *CndevMockRecorder) GetDeviceOverTemperatureShutdownThreshold(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceOverTemperatureShutdownThreshold", reflect.TypeOf((*Cndev)(nil).GetDeviceOverTemperatureShutdownThreshold), arg0)
+}
+
+// GetDeviceOverTemperatureSlowdownThreshold mocks base method.
+func (m *Cndev) GetDeviceOverTemperatureSlowdownThreshold(arg0 uint) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceOverTemperatureSlowdownThreshold", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceOverTemperatureSlowdownThreshold indicates an expected call of GetDeviceOverTemperatureSlowdownThreshold.
+func (mr *CndevMockRecorder) GetDeviceOverTemperatureSlowdownThreshold(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceOverTemperatureSlowdownThreshold", reflect.TypeOf((*Cndev)(nil).GetDeviceOverTemperatureSlowdownThreshold), arg0)
 }
 
 // GetDevicePCIeInfo mocks base method.
@@ -603,6 +873,21 @@ func (mr *CndevMockRecorder) GetDeviceParityError(arg0 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceParityError", reflect.TypeOf((*Cndev)(nil).GetDeviceParityError), arg0)
 }
 
+// GetDevicePerformanceThrottleReason mocks base method.
+func (m *Cndev) GetDevicePerformanceThrottleReason(arg0 uint) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDevicePerformanceThrottleReason", arg0)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDevicePerformanceThrottleReason indicates an expected call of GetDevicePerformanceThrottleReason.
+func (mr *CndevMockRecorder) GetDevicePerformanceThrottleReason(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDevicePerformanceThrottleReason", reflect.TypeOf((*Cndev)(nil).GetDevicePerformanceThrottleReason), arg0)
+}
+
 // GetDevicePower mocks base method.
 func (m *Cndev) GetDevicePower(arg0 uint) (int, error) {
 	m.ctrl.T.Helper()
@@ -616,6 +901,52 @@ func (m *Cndev) GetDevicePower(arg0 uint) (int, error) {
 func (mr *CndevMockRecorder) GetDevicePower(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDevicePower", reflect.TypeOf((*Cndev)(nil).GetDevicePower), arg0)
+}
+
+// GetDevicePowerManagementDefaultLimitation mocks base method.
+func (m *Cndev) GetDevicePowerManagementDefaultLimitation(arg0 uint) (uint16, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDevicePowerManagementDefaultLimitation", arg0)
+	ret0, _ := ret[0].(uint16)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDevicePowerManagementDefaultLimitation indicates an expected call of GetDevicePowerManagementDefaultLimitation.
+func (mr *CndevMockRecorder) GetDevicePowerManagementDefaultLimitation(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDevicePowerManagementDefaultLimitation", reflect.TypeOf((*Cndev)(nil).GetDevicePowerManagementDefaultLimitation), arg0)
+}
+
+// GetDevicePowerManagementLimitRange mocks base method.
+func (m *Cndev) GetDevicePowerManagementLimitRange(arg0 uint) (uint16, uint16, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDevicePowerManagementLimitRange", arg0)
+	ret0, _ := ret[0].(uint16)
+	ret1, _ := ret[1].(uint16)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetDevicePowerManagementLimitRange indicates an expected call of GetDevicePowerManagementLimitRange.
+func (mr *CndevMockRecorder) GetDevicePowerManagementLimitRange(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDevicePowerManagementLimitRange", reflect.TypeOf((*Cndev)(nil).GetDevicePowerManagementLimitRange), arg0)
+}
+
+// GetDevicePowerManagementLimitation mocks base method.
+func (m *Cndev) GetDevicePowerManagementLimitation(arg0 uint) (uint16, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDevicePowerManagementLimitation", arg0)
+	ret0, _ := ret[0].(uint16)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDevicePowerManagementLimitation indicates an expected call of GetDevicePowerManagementLimitation.
+func (mr *CndevMockRecorder) GetDevicePowerManagementLimitation(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDevicePowerManagementLimitation", reflect.TypeOf((*Cndev)(nil).GetDevicePowerManagementLimitation), arg0)
 }
 
 // GetDeviceProcessUtil mocks base method.
@@ -639,15 +970,16 @@ func (mr *CndevMockRecorder) GetDeviceProcessUtil(arg0 interface{}) *gomock.Call
 }
 
 // GetDeviceRemappedRows mocks base method.
-func (m *Cndev) GetDeviceRemappedRows(arg0 uint) (uint32, uint32, uint32, uint32, error) {
+func (m *Cndev) GetDeviceRemappedRows(arg0 uint) (uint32, uint32, uint32, uint32, uint32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDeviceRemappedRows", arg0)
 	ret0, _ := ret[0].(uint32)
 	ret1, _ := ret[1].(uint32)
 	ret2, _ := ret[2].(uint32)
 	ret3, _ := ret[3].(uint32)
-	ret4, _ := ret[4].(error)
-	return ret0, ret1, ret2, ret3, ret4
+	ret4, _ := ret[4].(uint32)
+	ret5, _ := ret[5].(error)
+	return ret0, ret1, ret2, ret3, ret4, ret5
 }
 
 // GetDeviceRemappedRows indicates an expected call of GetDeviceRemappedRows.
@@ -657,10 +989,10 @@ func (mr *CndevMockRecorder) GetDeviceRemappedRows(arg0 interface{}) *gomock.Cal
 }
 
 // GetDeviceRetiredPageInfo mocks base method.
-func (m *Cndev) GetDeviceRetiredPageInfo(arg0 uint) (int, uint32, error) {
+func (m *Cndev) GetDeviceRetiredPageInfo(arg0 uint) (uint32, uint32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDeviceRetiredPageInfo", arg0)
-	ret0, _ := ret[0].(int)
+	ret0, _ := ret[0].(uint32)
 	ret1, _ := ret[1].(uint32)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -670,6 +1002,53 @@ func (m *Cndev) GetDeviceRetiredPageInfo(arg0 uint) (int, uint32, error) {
 func (mr *CndevMockRecorder) GetDeviceRetiredPageInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceRetiredPageInfo", reflect.TypeOf((*Cndev)(nil).GetDeviceRetiredPageInfo), arg0)
+}
+
+// GetDeviceRetiredPagesOperation mocks base method.
+func (m *Cndev) GetDeviceRetiredPagesOperation(arg0 uint) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceRetiredPagesOperation", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceRetiredPagesOperation indicates an expected call of GetDeviceRetiredPagesOperation.
+func (mr *CndevMockRecorder) GetDeviceRetiredPagesOperation(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceRetiredPagesOperation", reflect.TypeOf((*Cndev)(nil).GetDeviceRetiredPagesOperation), arg0)
+}
+
+// GetDeviceSMluProfileIDInfo mocks base method.
+func (m *Cndev) GetDeviceSMluProfileIDInfo(arg0 uint) ([]int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceSMluProfileIDInfo", arg0)
+	ret0, _ := ret[0].([]int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceSMluProfileIDInfo indicates an expected call of GetDeviceSMluProfileIDInfo.
+func (mr *CndevMockRecorder) GetDeviceSMluProfileIDInfo(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceSMluProfileIDInfo", reflect.TypeOf((*Cndev)(nil).GetDeviceSMluProfileIDInfo), arg0)
+}
+
+// GetDeviceSMluProfileInfo mocks base method.
+func (m *Cndev) GetDeviceSMluProfileInfo(arg0, arg1 uint) (cndev.SmluProfileInfo, uint32, uint32, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceSMluProfileInfo", arg0, arg1)
+	ret0, _ := ret[0].(cndev.SmluProfileInfo)
+	ret1, _ := ret[1].(uint32)
+	ret2, _ := ret[2].(uint32)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// GetDeviceSMluProfileInfo indicates an expected call of GetDeviceSMluProfileInfo.
+func (mr *CndevMockRecorder) GetDeviceSMluProfileInfo(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceSMluProfileInfo", reflect.TypeOf((*Cndev)(nil).GetDeviceSMluProfileInfo), arg0, arg1)
 }
 
 // GetDeviceSN mocks base method.
@@ -788,18 +1167,36 @@ func (mr *CndevMockRecorder) GetDeviceVfState(arg0 interface{}) *gomock.Call {
 }
 
 // GetDeviceVideoCodecUtil mocks base method.
-func (m *Cndev) GetDeviceVideoCodecUtil(arg0 uint) ([]int, error) {
+func (m *Cndev) GetDeviceVideoCodecUtil(arg0 uint) ([]int, []int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDeviceVideoCodecUtil", arg0)
 	ret0, _ := ret[0].([]int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].([]int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetDeviceVideoCodecUtil indicates an expected call of GetDeviceVideoCodecUtil.
 func (mr *CndevMockRecorder) GetDeviceVideoCodecUtil(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceVideoCodecUtil", reflect.TypeOf((*Cndev)(nil).GetDeviceVideoCodecUtil), arg0)
+}
+
+// GetDeviceVoltageInfo mocks base method.
+func (m *Cndev) GetDeviceVoltageInfo(arg0 uint) (int, int, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceVoltageInfo", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(int)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// GetDeviceVoltageInfo indicates an expected call of GetDeviceVoltageInfo.
+func (mr *CndevMockRecorder) GetDeviceVoltageInfo(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceVoltageInfo", reflect.TypeOf((*Cndev)(nil).GetDeviceVoltageInfo), arg0)
 }
 
 // GetSupportedEventTypes mocks base method.

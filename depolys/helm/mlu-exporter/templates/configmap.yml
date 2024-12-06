@@ -2,9 +2,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
-    app: mlu-monitoring
-  name: cambricon-mlu-exporter
-  namespace: kube-system
+    {{- include "mlu-exporter.labels" . | nindent 4 }}
+  name: cambricon-{{ include "mlu-exporter.name" . }}
+  namespace: {{ include "mlu-exporter.namespace" . }}
 data:
   metrics.yaml: |
     cndev:

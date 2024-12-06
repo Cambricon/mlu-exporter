@@ -1,0 +1,84 @@
+nameOverride: "mlu-exporter"
+fullnameOverride: "cambricon-mlu-monitor"
+namespaceOverride: "kube-system"
+selectorLabelsOverride: {}
+
+allowDefaultNamespace: false
+
+imagePullSecrets: []
+image:
+  repository: cambricon-mlu-exporter
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+updateStrategy:
+  type: RollingUpdate
+
+podAnnotations: {}
+podSecurityContext: {}
+securityContext: {}
+
+resources: {}
+nodeSelector: {}
+tolerations: {}
+
+# Mark this pod as a critical add-on; when enabled, the critical add-on
+# scheduler reserves resources for critical add-on pods so that they can
+# be rescheduled after a failure.
+# See https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/
+priorityClassName: "system-node-critical"
+
+runtimeClassName: null
+
+mluExporter:
+  enabled: true
+  needServiceMonitoring: false
+  needHostPIDAndIPC: true # need driver new than 5.10.26 to set true
+
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 30108
+  initialDelaySeconds: 60
+  failureThreshold: 6
+  periodSeconds: 30
+
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: 30108
+  initialDelaySeconds: 60
+  failureThreshold: 3
+  periodSeconds: 30
+
+args:
+- --collector=cndev # enabled collectors, choice:"cndev"', "podresources", "host", default:"cndev"
+- --collector=podresources
+- --log-level=info # set log level: trace/debug/info/warn/error/fatal/panic", default:"info"
+- --metrics-config=/etc/mlu-exporter/metrics.yaml # configuration file of MLU exporter metrics, default:"/etc/mlu-exporter/metrics.yaml"
+- --metrics-path=/metrics # metrics path of the exporter service, default:"/metrics"
+- --metrics-prefix=mlu # prefix of all metric names, default:"mlu", env:"ENV_METRICS_PREFIX"
+- --port=30108 # exporter service port, default:"30108", env:"ENV_SERVE_PORT"
+# - --virtual-mode # virtual mode for devices, choice: "env-share", default:""
+# - --push-gateway-url=http://vmagent-vmagent.monitoring:8429/api/v1/import/prometheus # If set, metrics will push to this server via prometheus push gateway protocol
+# - --push-interval-ms=200 # numbers of metrics push interval in milliseconds, minimum 100
+# - --cluster-name=zh-hqa-cluster01-2400 # cluster name, add cluster label for metrics push
+# - --xid-error-metric-name=xid_error # metric name, push to push gateway immediately when xid event occurs
+# - --xid-error-retry-times=10 # retry times for push xid error metric failed, default: 10
+# - --log-file-for-xid-metric-failed=/tmp/xid.log # when report xid metric failed, will write log to this file
+
+volumeMounts:
+- mountPath: /var/lib/kubelet/pod-resources/
+  name: pod-resources
+- mountPath: /etc/mlu-exporter
+  name: mlu-exporter
+
+volumes:
+- name: pod-resources
+  hostPath:
+    path: /var/lib/kubelet/pod-resources/
+- name: mlu-exporter
+  configMap:
+    defaultMode: 420
+    name: cambricon-mlu-exporter

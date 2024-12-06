@@ -67,7 +67,7 @@ docker run -d \
 --privileged=true \
 --pid=host \
 -e ENV_NODE_NAME={nodeName} \
-cambricon-mlu-exporter:v2.0.14
+cambricon-mlu-exporter:v2.0.15
 ```
 
 Then use the following command to get the metrics.
@@ -84,7 +84,7 @@ docker run -d \
 -v examples/metrics.yaml:/etc/mlu-exporter/metrics.yaml \
 --privileged=true \
 --pid=host \
-cambricon-mlu-exporter:v2.0.14 \
+cambricon-mlu-exporter:v2.0.15 \
 mlu-exporter \
 --metrics-config=/etc/mlu-exporter/metrics.yaml \
 --metrics-path=/metrics \
@@ -157,7 +157,31 @@ if you want to create a Prometheus [additional scrape configs]
 kubectl create secret generic additional-scrape-configs --from-file=examples/cambricon-mlu-exporter-additional.yaml
 ```
 
+##### Install with helm
+
+This step is optional, you can also install mlu exporter via helm
+
+1. Download and install helm firstly, refer <https://helm.sh/docs/intro/install/>
+
+2. Clone this repo, `cd deploys/helm` and run `helm install mlu-exporter-release-x.x.x mlu-exporter/`
+
 Then checkout your Prometheus to get the MLU metrics.
+
+##### Change log level
+
+Support to change log level and validate without restarting
+
+change to debug
+
+```shell
+curl -i http://{{mlu-exporter-pod-ip}}:30108/logLevel?level=debug
+```
+
+change to info
+
+```shell
+curl -i http://{{mlu-exporter-pod-ip}}:30108/logLevel?level=info
+```
 
 ##### Group Metrics
 

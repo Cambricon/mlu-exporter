@@ -89,7 +89,10 @@ func (c *podResourcesCollector) collect(ch chan<- prometheus.Metric) {
 	}
 	c.devicePodInfo = info
 	for name, m := range c.metrics {
-		fn := c.fnMap[name]
+		fn, ok := c.fnMap[name]
+		if !ok {
+			continue
+		}
 		f, ok := fn.(func(chan<- prometheus.Metric, metrics.Metric))
 		if !ok {
 			log.Warnf("type assertion for fn %s failed, skip", name)
@@ -149,8 +152,8 @@ func (c *podResourcesCollector) collectMLUContainer(ch chan<- prometheus.Metric,
 				uid := strings.TrimLeft(s[1], uuidPrefix)
 				st := c.sharedInfo[uuid]
 				for _, inf := range st.mimInfos {
-					if inf.UUID == uid {
-						vf = strconv.Itoa(inf.InstanceID)
+					if inf.InstanceInfo.UUID == uid {
+						vf = strconv.Itoa(inf.InstanceInfo.InstanceID)
 						break
 					}
 				}
@@ -161,8 +164,8 @@ func (c *podResourcesCollector) collectMLUContainer(ch chan<- prometheus.Metric,
 				uid := strings.TrimLeft(s[1], uuidPrefix)
 				st := c.sharedInfo[uuid]
 				for _, inf := range st.smluInfos {
-					if inf.UUID == uid {
-						vf = strconv.Itoa(inf.InstanceID)
+					if inf.InstanceInfo.UUID == uid {
+						vf = strconv.Itoa(inf.InstanceInfo.InstanceID)
 						break
 					}
 				}

@@ -61,7 +61,10 @@ func (c *hostCollector) updateMetrics(m metrics.CollectorMetrics) {
 
 func (c *hostCollector) collect(ch chan<- prometheus.Metric) {
 	for name, m := range c.metrics {
-		fn := c.fnMap[name]
+		fn, ok := c.fnMap[name]
+		if !ok {
+			continue
+		}
 		f, ok := fn.(func(chan<- prometheus.Metric, metrics.Metric))
 		if !ok {
 			log.Warnf("type assertion for fn %s failed, skip", name)

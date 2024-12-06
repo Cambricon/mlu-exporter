@@ -64,17 +64,39 @@ func TestCollect(t *testing.T) {
 				mimEnabled: true,
 				mimInfos: []cndev.MimInfo{
 					{
-						Name:           "2m.16g",
-						UUID:           "test-uuid1",
-						InstanceID:     1,
+						InstanceInfo: cndev.MimInstanceInfo{
+							InstanceName: "instance-1",
+							InstanceID:   1,
+							UUID:         "test-uuid1",
+						},
+						ProfileInfo: cndev.MimProfileInfo{
+							GDMACount:    1,
+							JPUCount:     1,
+							MemorySize:   20,
+							MLUCoreCount: 3,
+							ProfileID:    1,
+							ProfileName:  "2m.16g",
+							VPUCount:     2,
+						},
 						PlacementStart: 0,
 						PlacementSize:  2,
 					},
 					{
-						Name:           "2m.16g",
-						UUID:           "test-uuid2",
-						InstanceID:     2,
-						PlacementStart: 2,
+						InstanceInfo: cndev.MimInstanceInfo{
+							InstanceName: "instance-2",
+							InstanceID:   2,
+							UUID:         "test-uuid1",
+						},
+						ProfileInfo: cndev.MimProfileInfo{
+							GDMACount:    1,
+							JPUCount:     1,
+							MemorySize:   20,
+							MLUCoreCount: 3,
+							ProfileID:    1,
+							ProfileName:  "2m.16g",
+							VPUCount:     2,
+						},
+						PlacementStart: 0,
 						PlacementSize:  2,
 					},
 				},
@@ -91,20 +113,34 @@ func TestCollect(t *testing.T) {
 				smluEnabled: true,
 				smluInfos: []cndev.SmluInfo{
 					{
-						Name:       "12.000m.78.784gb",
-						UUID:       "test-uuid-1",
-						InstanceID: 1,
-						IpuUtil:    10,
-						MemUsed:    3400000,
-						MemTotal:   100000000,
+						InstanceInfo: cndev.SmluInstanceInfo{
+							InstanceID:   1,
+							InstanceName: "instance-1",
+							UUID:         "test-uuid-1",
+						},
+						ProfileInfo: cndev.SmluProfileInfo{
+							IpuTotal:    20,
+							MemTotal:    100000000,
+							ProfileID:   1,
+							ProfileName: "12.000m.78.784gb",
+						},
+						IpuUtil: 10,
+						MemUsed: 3400000,
 					},
 					{
-						Name:       "6.000m.39.392gb",
-						UUID:       "test-uuid-2",
-						InstanceID: 2,
-						IpuUtil:    12,
-						MemUsed:    34000000,
-						MemTotal:   1000000000,
+						InstanceInfo: cndev.SmluInstanceInfo{
+							InstanceID:   2,
+							InstanceName: "instance-2",
+							UUID:         "test-uuid-2",
+						},
+						ProfileInfo: cndev.SmluProfileInfo{
+							IpuTotal:    20,
+							MemTotal:    100000000,
+							ProfileID:   1,
+							ProfileName: "12.000m.78.784gb",
+						},
+						IpuUtil: 10,
+						MemUsed: 3400000,
 					},
 				},
 				link:       2,
@@ -121,18 +157,44 @@ func TestCollect(t *testing.T) {
 				linkActive: map[int]bool{0: true, 1: true},
 			},
 			uuid4: {
-				slot:        3,
-				model:       "MLU590",
-				uuid:        uuid4,
-				sn:          "sn4",
-				mcu:         "v1.1.1",
-				driver:      "v2.2.2",
-				link:        2,
-				linkActive:  map[int]bool{0: true, 1: true},
-				crcDisabled: true,
+				slot:                   3,
+				model:                  "MLU590",
+				uuid:                   uuid4,
+				sn:                     "sn4",
+				mcu:                    "v1.1.1",
+				driver:                 "v2.2.2",
+				link:                   2,
+				linkActive:             map[int]bool{0: true, 1: true},
+				cndevInterfaceDisabled: map[string]bool{"crcDisabled": true},
 			},
 		}
 
+		mimProfileInfos = []cndev.MimProfileInfo{
+			{
+				GDMACount:    1,
+				JPUCount:     1,
+				MemorySize:   20,
+				MLUCoreCount: 3,
+				ProfileID:    1,
+				ProfileName:  "2m.16g",
+				VPUCount:     2,
+			},
+		}
+		mimProfileMaxInstanceCount = []int{1, 0, 0, 0}
+		sMluProfileIDInfo          = [][]int{
+			{1},
+			{1},
+			{1},
+			{1},
+		}
+		sMluProfileInfo = cndev.SmluProfileInfo{
+			IpuTotal:    20,
+			MemTotal:    100000000,
+			ProfileID:   1,
+			ProfileName: "12.000m.78.784gb",
+		}
+		sMluProfileTotal  = []uint32{0, 2, 0, 0}
+		sMluProfileRemain = []uint32{0, 1, 0, 0}
 		// fake container info
 		devicePodInfo = map[string]podresources.PodInfo{
 			"MLU-uuid1": {
@@ -148,6 +210,8 @@ func TestCollect(t *testing.T) {
 		}
 
 		// fake metrics
+		cndevVersion      = []uint{3, 12, 1}
+		computeCapability = []uint{3, 12}
 
 		// util
 		boardUtil = []int{11, 12, 13, 21}
@@ -191,6 +255,20 @@ func TestCollect(t *testing.T) {
 			{10, 10},
 			{11, 11},
 		}
+		overTemperatureInfo = [][]uint32{
+			{2, 23},
+			{2, 26},
+			{0, 10},
+			{1, 11},
+		}
+		overTemperatureThreshold = [][]int{
+			{120, 110},
+			{120, 110},
+			{110, 100},
+			{120, 100},
+		}
+
+		throttleReason = []bool{true, false, false, true}
 
 		// health
 		health = []int{1, 0, 1, 0}
@@ -199,7 +277,27 @@ func TestCollect(t *testing.T) {
 		parityError = []int{3, 0, 0, 0}
 
 		// power
-		power = []int{30, 31, 32, 33}
+		power             = []int{30, 31, 32, 33}
+		powerDefaultLimit = []uint16{300, 310, 320, 330}
+		powerCurrentLimit = []uint16{300, 310, 320, 330}
+		powerLimitRange   = [][]uint16{
+			{350, 470},
+			{330, 450},
+			{350, 470},
+			{360, 480},
+		}
+		current = [][]int{
+			{31000, 42000, 13000},
+			{32000, 43000, 14000},
+			{35000, 45000, 16000},
+			{37000, 47000, 15000},
+		}
+		voltage = [][]int{
+			{310, 420, 130},
+			{320, 430, 140},
+			{350, 450, 160},
+			{370, 470, 150},
+		}
 
 		// pcie
 		pcieSlotID          = []int{0, 1, 2, 3}
@@ -214,9 +312,21 @@ func TestCollect(t *testing.T) {
 		pcieSpeed           = 4
 		pcieWidth           = 4
 
-		pcieRead   = []int64{100, 200, 300, 400}
-		pcieReplay = []uint32{100, 200, 300, 400}
-		pcieWrite  = []int64{100, 200, 300, 400}
+		pcieRead       = []int64{100, 200, 300, 400}
+		pcieReplay     = []uint32{100, 200, 300, 400}
+		pcieWrite      = []int64{100, 200, 300, 400}
+		bar4MemoryInfo = [][]uint64{
+			{310, 420, 130},
+			{320, 430, 140},
+			{350, 450, 160},
+			{370, 470, 150},
+		}
+		maxPCIeInfo = [][]int{
+			{3, 16},
+			{4, 16},
+			{5, 8},
+			{5, 16},
+		}
 
 		// process
 		pid = [][]uint32{
@@ -244,6 +354,12 @@ func TestCollect(t *testing.T) {
 			{0, 50, 50, 0},
 			{25, 25, 25, 25},
 		}
+		coreCPUUser = chipCPUCoreUtil
+		coreCPUNice = chipCPUCoreUtil
+		coreCPUSys  = chipCPUCoreUtil
+		coreCPUSi   = chipCPUCoreUtil
+		coreCPUHi   = chipCPUCoreUtil
+
 		armOsMemUsed  = []int64{1024, 4096, 512, 2048}
 		armOsMemTotal = int64(10240)
 		tinyCoreUtil  = [][]int{
@@ -267,17 +383,19 @@ func TestCollect(t *testing.T) {
 			{0, 1, 0, 1, 0, 2},
 			{0, 4, 0, 1, 0, 1},
 		}
-		imageCodecUtil = videoCodecUtil
+		imageCodecUtil   = videoCodecUtil
+		videoDecoderUtil = videoCodecUtil
 
 		// retired page
-		cause      = []int{0, 1, 0, 1}
 		pageCounts = []uint32{100, 10, 0, 0}
+		retirement = []int{1, 0, 1, 1}
 
 		// remapped rows
 		correctRows   = []uint32{2, 1, 1, 2}
 		failedRows    = []uint32{1, 1, 1, 1}
 		pendingRows   = []uint32{2, 1, 2, 1}
 		uncorrectRows = []uint32{1, 1, 1, 1}
+		retirePending = []uint32{1, 1, 0, 1}
 
 		// ecc & crc
 		eccAddressForbiddenError = []uint64{100, 100, 100, 100}
@@ -290,12 +408,30 @@ func TestCollect(t *testing.T) {
 		eccUncorrectedError      = eccAddressForbiddenError
 		d2dCRCError              = []uint64{128, 128, 128, 128}
 		d2dCRCErrorOverflow      = d2dCRCError
-		dramEccDbeCount          = []uint32{100, 100, 100, 100}
-		dramEccSbeCount          = dramEccDbeCount
-		sramEccDbeCount          = dramEccDbeCount
-		sramEccParityCount       = dramEccDbeCount
-		sramEccSbeCount          = dramEccDbeCount
-
+		eccVolatile              = [][]uint32{
+			{0, 2, 0, 1, 0},
+			{0, 1, 0, 3, 0},
+			{0, 1, 0, 1, 0},
+			{0, 4, 0, 1, 0},
+		}
+		eccAggregate = [][]uint64{
+			{0, 2, 0, 1, 0, 1},
+			{0, 1, 0, 3, 0, 1},
+			{0, 1, 0, 1, 0, 0},
+			{0, 4, 0, 1, 0, 0},
+		}
+		addressSwap = [][]uint32{
+			{0, 2},
+			{0, 1},
+			{0, 1},
+			{0, 4},
+		}
+		eccMode = [][]int{
+			{0, 1},
+			{0, 1},
+			{0, 1},
+			{1, 0},
+		}
 		// heartbeat count
 		heartbeatCount = []uint32{10, 10, 10, 10}
 
@@ -315,6 +451,12 @@ func TestCollect(t *testing.T) {
 			{30000, 5000},
 			{50000, 30000},
 		}
+		mluLinkEventCounter = [][]uint64{
+			{0, 1},
+			{1, 0},
+			{1, 3},
+			{2, 1},
+		}
 		mluLinkPortMode = [][]int{
 			{1, 1},
 			{1, 1},
@@ -327,6 +469,51 @@ func TestCollect(t *testing.T) {
 			{32, 31},
 			{42, 43},
 		}
+		mluLinkRemoteMcSn = [][]uint64{
+			{000001, 000002},
+			{000011, 000012},
+			{000021, 000022},
+			{000031, 000032},
+		}
+		mluLinkRemoteSlotID = [][]uint32{
+			{0, 1},
+			{1, 0},
+			{1, 3},
+			{2, 1},
+		}
+		mluLinkRemoteConnectType = [][]int32{
+			{0, 0},
+			{0, 1},
+			{1, 0},
+			{0, 0},
+		}
+		mluLinkRemoteIP = [][]string{
+			{"1.1.1.1", "2.2.2.2"},
+			{"1.1.1.2", "2.2.2.3"},
+			{"1.1.1.3", "2.2.2.4"},
+			{"1.1.1.4", "2.2.2.5"},
+		}
+		mluLinkOpticalPresent = [][]uint8{
+			{1, 0},
+			{1, 1},
+			{0, 2},
+			{0, 0},
+		}
+		mluLinkOpticalTxpwr = [][][]float32{
+			{{0.5, 0.7}, {1.5, 1.7}},
+			{{0.5, 1.7}, {1.5, 0.7}},
+			{{0.5, 2.7}, {1.5, 0.7}},
+			{{0.5, 3.7}, {1.5, 0.7}},
+		}
+		mluLinkOpticalTemp                = mluLinkSpeedValue
+		mluLinkOpticalVolt                = mluLinkSpeedValue
+		mluLinkOpticalRxpwr               = mluLinkOpticalTxpwr
+		mluLinkRemoteBaSn                 = mluLinkRemoteMcSn
+		mluLinkRemotePortID               = mluLinkRemoteSlotID
+		mluLinkRemoteNcsUUID64            = mluLinkRemoteMcSn
+		mluLinkRemoteMac                  = mluLinkRemoteIP
+		mluLinkRemoteUUID                 = mluLinkRemoteIP
+		mluLinkRemotePortName             = mluLinkRemoteIP
 		mluLinkPortNumber                 = 2
 		mluLinkCapabilityInterlakenSerdes = mluLinkCapabilityP2PTransfer
 		mluLinkCounterCntrCnpPackage      = mluLinkCounterCntrReadByte
@@ -341,9 +528,11 @@ func TestCollect(t *testing.T) {
 		mluLinkCounterErrFatal            = mluLinkCounterCntrReadByte
 		mluLinkCounterErrReplay           = mluLinkCounterCntrReadByte
 		mluLinkCounterErrUncorrected      = mluLinkCounterCntrReadByte
+		mluLinkErrorCounter               = mluLinkEventCounter
 		mluLinkSpeedFormat                = mluLinkPortMode
 		mluLinkStatusIsActive             = mluLinkPortMode
 		mluLinkStatusSerdesState          = mluLinkPortMode
+		mluLinkStatusCableState           = mluLinkPortMode
 		mluLinkMajor                      = mluLinkCapabilityP2PTransfer
 		mluLinkMinor                      = mluLinkCapabilityP2PTransfer
 		mluLinkBuild                      = mluLinkCapabilityP2PTransfer
@@ -374,19 +563,21 @@ func TestCollect(t *testing.T) {
 		mcndev.EXPECT().GetDevicePCIeThroughput(stat.slot).Return(pcieRead[stat.slot], pcieWrite[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceCurrentPCIeInfo(stat.slot).Return(pcieSpeed, pcieWidth, nil).AnyTimes()
 		mcndev.EXPECT().GetDevicePCIeReplayCount(stat.slot).Return(pcieReplay[stat.slot], nil).AnyTimes()
-		mcndev.EXPECT().GetDeviceCPUUtil(stat.slot).Return(chipCPUUtil[stat.slot], chipCPUCoreUtil[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceCPUUtil(stat.slot).Return(chipCPUUtil[stat.slot], chipCPUCoreUtil[stat.slot], coreCPUUser[stat.slot], coreCPUNice[stat.slot], coreCPUSys[stat.slot], coreCPUSi[stat.slot], coreCPUHi[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceArmOsMemory(stat.slot).Return(armOsMemUsed[stat.slot], armOsMemTotal, nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceTinyCoreUtil(stat.slot).Return(tinyCoreUtil[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceNUMANodeID(stat.slot).Return(numaNodeID[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceDDRInfo(stat.slot).Return(ddrDataWidth[stat.slot], ddrBandWidth[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceFrequency(stat.slot).Return(frequency[stat.slot], ddrFrequency[stat.slot], nil).AnyTimes()
-		mcndev.EXPECT().GetDeviceRetiredPageInfo(stat.slot).Return(cause[stat.slot], pageCounts[stat.slot], nil).AnyTimes()
-		mcndev.EXPECT().GetDeviceRemappedRows(stat.slot).Return(correctRows[stat.slot], failedRows[stat.slot], pendingRows[stat.slot], uncorrectRows[stat.slot], nil).AnyTimes()
-		mcndev.EXPECT().GetDeviceVideoCodecUtil(stat.slot).Return(videoCodecUtil[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceRetiredPageInfo(stat.slot).Return(pageCounts[stat.slot], pageCounts[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceRetiredPagesOperation(stat.slot).Return(retirement[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceRemappedRows(stat.slot).Return(correctRows[stat.slot], uncorrectRows[stat.slot], pendingRows[stat.slot], failedRows[stat.slot], retirePending[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceVideoCodecUtil(stat.slot).Return(videoCodecUtil[stat.slot], videoDecoderUtil[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceImageCodecUtil(stat.slot).Return(imageCodecUtil[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceECCInfo(stat.slot).Return(eccAddressForbiddenError[stat.slot], eccCorrectedError[stat.slot], eccMultipleError[stat.slot], eccMultipleMultipleError[stat.slot], eccMultipleOneError[stat.slot], eccOneBitError[stat.slot], eccTotalError[stat.slot], eccUncorrectedError[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceEccMode(stat.slot).Return(eccMode[stat.slot][0], eccMode[stat.slot][1], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceCRCInfo(stat.slot).Return(d2dCRCError[stat.slot], d2dCRCErrorOverflow[stat.slot], nil).AnyTimes()
-		mcndev.EXPECT().GetDeviceMemEccCounter(stat.slot).Return(sramEccSbeCount[stat.slot], sramEccDbeCount[stat.slot], sramEccParityCount[stat.slot], dramEccSbeCount[stat.slot], dramEccDbeCount[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceMemEccCounter(stat.slot).Return(eccVolatile[stat.slot], eccAggregate[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceHeartbeatCount(stat.slot).Return(heartbeatCount[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceCount().Return(deviceCount[stat.slot], nil).AnyTimes()
 		for link := 0; link < mluLinkPortNumber; link++ {
@@ -394,16 +585,42 @@ func TestCollect(t *testing.T) {
 			mcndev.EXPECT().GetDeviceMLULinkCounter(stat.slot, uint(link)).Return(mluLinkCounterCntrReadByte[stat.slot][link], mluLinkCounterCntrReadPackage[stat.slot][link], mluLinkCounterCntrWriteByte[stat.slot][link], mluLinkCounterCntrWritePackage[stat.slot][link],
 				mluLinkCounterErrCorrected[stat.slot][link], mluLinkCounterErrCRC24[stat.slot][link], mluLinkCounterErrCRC32[stat.slot][link], mluLinkCounterErrEccDouble[stat.slot][link], mluLinkCounterErrFatal[stat.slot][link], mluLinkCounterErrReplay[stat.slot][link],
 				mluLinkCounterErrUncorrected[stat.slot][link], mluLinkCounterCntrCnpPackage[stat.slot][link], mluLinkCounterCntrPfcPackage[stat.slot][link], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceMLULinkErrorCounter(stat.slot, uint(link)).Return(mluLinkErrorCounter[stat.slot][link], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceMLULinkEventCounter(stat.slot, uint(link)).Return(mluLinkEventCounter[stat.slot][link], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceOpticalInfo(stat.slot, uint(link)).Return(mluLinkOpticalPresent[stat.slot][link], mluLinkOpticalTemp[stat.slot][link], mluLinkOpticalVolt[stat.slot][link], mluLinkOpticalTxpwr[stat.slot][link], mluLinkOpticalRxpwr[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkPortMode(stat.slot, uint(link)).Return(mluLinkPortMode[stat.slot][link], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceMLULinkRemoteInfo(stat.slot, uint(link)).Return(mluLinkRemoteMcSn[stat.slot][link], mluLinkRemoteBaSn[stat.slot][link], mluLinkRemoteSlotID[stat.slot][link], mluLinkRemotePortID[stat.slot][link], mluLinkRemoteConnectType[stat.slot][link],
+				mluLinkRemoteNcsUUID64[stat.slot][link], mluLinkRemoteIP[stat.slot][link], mluLinkRemoteMac[stat.slot][link], mluLinkRemoteUUID[stat.slot][link], mluLinkRemotePortName[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkSpeedInfo(stat.slot, uint(link)).Return(mluLinkSpeedValue[stat.slot][link], mluLinkSpeedFormat[stat.slot][link], nil).AnyTimes()
-			mcndev.EXPECT().GetDeviceMLULinkStatus(stat.slot, uint(link)).Return(mluLinkStatusIsActive[stat.slot][link], mluLinkStatusSerdesState[stat.slot][link], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceMLULinkStatus(stat.slot, uint(link)).Return(mluLinkStatusIsActive[stat.slot][link], mluLinkStatusSerdesState[stat.slot][link], mluLinkStatusCableState[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkVersion(stat.slot, uint(link)).Return(mluLinkMajor[stat.slot][link], mluLinkMinor[stat.slot][link], mluLinkBuild[stat.slot][link], nil).AnyTimes()
 		}
+		mcndev.EXPECT().GetDeviceMLULinkPortNumber(stat.slot).Return(mluLinkPortNumber).AnyTimes()
 		mcndev.EXPECT().GetDeviceProcessUtil(stat.slot).Return(pid[stat.slot], processIpuUtil[stat.slot], processJpuUtil[stat.slot], processMemUtil[stat.slot], processVpuDecodeUtil[stat.slot], processVpuEncodeUtil[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceParityError(stat.slot).Return(parityError[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceAddressSwaps(stat.slot).Return(addressSwap[stat.slot][0], addressSwap[stat.slot][1], addressSwap[stat.slot][1], addressSwap[stat.slot][1], addressSwap[stat.slot][1], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceCurrentInfo(stat.slot).Return(current[stat.slot][0], current[stat.slot][1], current[stat.slot][2], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceVoltageInfo(stat.slot).Return(voltage[stat.slot][0], current[stat.slot][1], current[stat.slot][2], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceOverTemperatureInfo(stat.slot).Return(overTemperatureInfo[stat.slot][0], overTemperatureInfo[stat.slot][1], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceOverTemperatureShutdownThreshold(stat.slot).Return(overTemperatureThreshold[stat.slot][0], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceOverTemperatureSlowdownThreshold(stat.slot).Return(overTemperatureThreshold[stat.slot][1], nil).AnyTimes()
+		mcndev.EXPECT().GetDevicePerformanceThrottleReason(stat.slot).Return(throttleReason[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDevicePowerManagementDefaultLimitation(stat.slot).Return(powerDefaultLimit[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDevicePowerManagementLimitation(stat.slot).Return(powerCurrentLimit[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDevicePowerManagementLimitRange(stat.slot).Return(powerLimitRange[stat.slot][0], powerLimitRange[stat.slot][1], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceBAR4MemoryInfo(stat.slot).Return(bar4MemoryInfo[stat.slot][0], bar4MemoryInfo[stat.slot][1], bar4MemoryInfo[stat.slot][2], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceMaxPCIeInfo(stat.slot).Return(maxPCIeInfo[stat.slot][0], maxPCIeInfo[stat.slot][1], nil).AnyTimes()
+		mcndev.EXPECT().GetAllMLUInstanceInfo(stat.slot).Return(stat.mimInfos, nil).AnyTimes()
+		mcndev.EXPECT().GetAllSMluInfo(stat.slot).Return(stat.smluInfos, nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceMimProfileInfo(stat.slot).Return(mimProfileInfos, nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceMimProfileMaxInstanceCount(stat.slot, uint(mimProfileInfos[0].ProfileID)).Return(mimProfileMaxInstanceCount[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceSMluProfileIDInfo(stat.slot).Return(sMluProfileIDInfo[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceSMluProfileInfo(stat.slot, uint(sMluProfileIDInfo[stat.slot][0])).Return(sMluProfileInfo, sMluProfileTotal[stat.slot], sMluProfileRemain[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceComputeCapability(stat.slot).Return(computeCapability[0], computeCapability[1], nil).AnyTimes()
 
 		slots = append(slots, int(stat.slot))
 	}
+	mcndev.EXPECT().GetDeviceCndevVersion().Return(cndevVersion[0], cndevVersion[1], cndevVersion[2], nil).AnyTimes()
 	sort.Ints(slots)
 	mcndev.EXPECT().RegisterEventsHandleAndWait(slots, gomock.Any()).Return(nil).Times(2)
 

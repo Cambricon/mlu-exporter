@@ -1,0 +1,22 @@
+{{- if .Values.mluExporter.needServiceMonitoring }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    {{- include "mlu-exporter.labels" . | nindent 4 }}
+  name: {{ include "mlu-exporter.fullname" . }}
+  namespace: monitoring
+spec:
+  endpoints:
+  - honorLabels: true
+    interval: 15s
+    port: http-metrics
+  jobLabel: component
+  namespaceSelector:
+    matchNames:
+    - {{ include "mlu-exporter.namespace" . }}
+  selector:
+    matchLabels:
+      {{- include "mlu-exporter.selectorLabels" . | nindent 4 }}
+{{- end }}
