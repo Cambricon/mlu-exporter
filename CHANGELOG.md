@@ -1,11 +1,18 @@
 # Changelog
 
+## v2.0.16
+
+- Enhance debug output
+- Add memory free metrics
+- Optimize optical info metrics
+- Bump `cndev` to version 3.14.2
+
 ## v2.0.15
 
 - Add power and temperature related metrics
 - Add pcie and util related metrics
 - Add mlulink and ecc related metrics
-- add mim and smlu info metrics
+- Add mim and smlu info metrics
 - Support to deploy with helm
 - Bump `cndev` to version 3.13.0
 

@@ -101,13 +101,18 @@ func main() {
 		log.SetLevel(log.PanicLevel)
 	}
 
+	log.Info("Start loading cndev")
 	cndevcli := cndev.NewCndevClient()
 	if err := cndevcli.Init(false); err != nil {
 		log.Fatal(errors.Wrap(err, "Init cndev client"))
 	}
+	log.Info("Loaded cndev ok")
 	defer cndevcli.Release()
+	log.Debug("Start collectMLUInfo")
 	mluInfo := collector.CollectMLUInfo(cndevcli)
+	log.Debug("Start collectMLUInfo")
 	metricConfig := metrics.GetMetrics(options.MetricsConfig, options.MetricsPrefix)
+	log.Debug("Start WatchMetrics")
 	go metrics.WatchMetrics(options.MetricsConfig, options.MetricsPrefix)
 
 	if options.PushGatewayURL != "" {
@@ -124,6 +129,7 @@ func main() {
 		mluInfo,
 		false,
 	)
+	log.Debug("Start RegisterWatcher")
 	metrics.RegisterWatcher(c.UpdateMetrics)
 	r := prometheus.NewRegistry()
 	r.MustRegister(c)

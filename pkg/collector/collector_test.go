@@ -463,6 +463,12 @@ func TestCollect(t *testing.T) {
 			{1, 1},
 			{1, 1},
 		}
+		mluLinkPortPPI = [][]string{
+			{"1:0", "1:1"},
+			{"1:0", "1:1"},
+			{"N/A", "1:1"},
+			{"1:0", "N/A"},
+		}
 		mluLinkSpeedValue = [][]float32{
 			{12, 13},
 			{22, 23},
@@ -589,6 +595,7 @@ func TestCollect(t *testing.T) {
 			mcndev.EXPECT().GetDeviceMLULinkEventCounter(stat.slot, uint(link)).Return(mluLinkEventCounter[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceOpticalInfo(stat.slot, uint(link)).Return(mluLinkOpticalPresent[stat.slot][link], mluLinkOpticalTemp[stat.slot][link], mluLinkOpticalVolt[stat.slot][link], mluLinkOpticalTxpwr[stat.slot][link], mluLinkOpticalRxpwr[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkPortMode(stat.slot, uint(link)).Return(mluLinkPortMode[stat.slot][link], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceMLULinkPPI(stat.slot, uint(link)).Return(mluLinkPortPPI[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkRemoteInfo(stat.slot, uint(link)).Return(mluLinkRemoteMcSn[stat.slot][link], mluLinkRemoteBaSn[stat.slot][link], mluLinkRemoteSlotID[stat.slot][link], mluLinkRemotePortID[stat.slot][link], mluLinkRemoteConnectType[stat.slot][link],
 				mluLinkRemoteNcsUUID64[stat.slot][link], mluLinkRemoteIP[stat.slot][link], mluLinkRemoteMac[stat.slot][link], mluLinkRemoteUUID[stat.slot][link], mluLinkRemotePortName[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkSpeedInfo(stat.slot, uint(link)).Return(mluLinkSpeedValue[stat.slot][link], mluLinkSpeedFormat[stat.slot][link], nil).AnyTimes()

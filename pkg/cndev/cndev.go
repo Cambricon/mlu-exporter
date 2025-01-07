@@ -126,6 +126,7 @@ type Cndev interface {
 	GetDeviceMLULinkEventCounter(idx, link uint) (uint64, error)
 	GetDeviceMLULinkPortMode(idx, link uint) (int, error)
 	GetDeviceMLULinkPortNumber(idx uint) int
+	GetDeviceMLULinkPPI(idx, link uint) (string, error)
 	GetDeviceMLULinkRemoteInfo(idx, link uint) (uint64, uint64, uint32, uint32, int32, uint64, string, string, string, string, error)
 	GetDeviceMLULinkSpeedInfo(idx, link uint) (float32, int, error)
 	GetDeviceMLULinkStatus(idx, link uint) (int, int, int, error)
@@ -206,9 +207,7 @@ func (c *cndev) DeviceSmluModeEnabled(idx uint) (bool, error) {
 	return mode.smluMode == C.CNDEV_FEATURE_ENABLED, errorString(r)
 }
 
-func (c *cndev) GetAllMLUInstanceInfo(idx uint) (_ []MimInfo, err error) {
-	defer panicHandler(&err)
-
+func (c *cndev) GetAllMLUInstanceInfo(idx uint) ([]MimInfo, error) {
 	miCount := C.int(1 << 4)
 	var miInfos []MimInfo
 	var miInfo C.cndevMluInstanceInfo_t
@@ -278,9 +277,7 @@ func (c *cndev) GetAllMLUInstanceInfo(idx uint) (_ []MimInfo, err error) {
 	return miInfos, nil
 }
 
-func (c *cndev) GetAllSMluInfo(idx uint) (_ []SmluInfo, err error) {
-	defer panicHandler(&err)
-
+func (c *cndev) GetAllSMluInfo(idx uint) ([]SmluInfo, error) {
 	smluCount := C.int(1 << 7)
 	var smluInfos []SmluInfo
 	var smluInfo C.cndevSMluInfo_t
@@ -354,9 +351,7 @@ func (c *cndev) GetDeviceAddressSwaps(idx uint) (uint32, uint32, uint32, uint32,
 	return uint32(addressSwap.correctCounts), uint32(addressSwap.uncorrectCounts), uint32(addressSwap.histogram[C.CNDEV_AVAILABILITY_XLABLE_NONE]), uint32(addressSwap.histogram[C.CNDEV_AVAILABILITY_XLABLE_PARTIAL]), uint32(addressSwap.histogram[C.CNDEV_AVAILABILITY_XLABLE_MAX]), errorString(r)
 }
 
-func (c *cndev) GetDeviceArmOsMemory(idx uint) (_ int64, _ int64, err error) {
-	defer panicHandler(&err)
-
+func (c *cndev) GetDeviceArmOsMemory(idx uint) (int64, int64, error) {
 	type armOsMem struct {
 		version     int
 		memoryTotal int64
@@ -676,6 +671,12 @@ func (c *cndev) GetDeviceMLULinkPortNumber(idx uint) int {
 	return int(C.cndevGetMLULinkPortNumber(c.cndevHandleMap[idx]))
 }
 
+func (c *cndev) GetDeviceMLULinkPPI(idx, link uint) (string, error) {
+	var cardMLULinkPPI C.cndevMLULinkPPI_t
+	r := C.cndevGetMLULinkPPI(&cardMLULinkPPI, c.cndevHandleMap[idx], C.int(link))
+	return C.GoString((*C.char)(unsafe.Pointer(&cardMLULinkPPI.ppi))), errorString(r)
+}
+
 func (c *cndev) GetDeviceMLULinkSpeedInfo(idx, link uint) (float32, int, error) {
 	var cardMLULinkSpeedInfo C.cndevMLULinkSpeed_t
 	cardMLULinkSpeedInfo.version = C.CNDEV_VERSION_5
@@ -753,9 +754,7 @@ func (c *cndev) GetDeviceOpticalInfo(idx, link uint) (uint8, float32, float32, [
 	return uint8(opticalInfo.present), float32(opticalInfo.temp), float32(opticalInfo.volt), txpwr, rxpwr, errorString(r)
 }
 
-func (c *cndev) GetDeviceOverTemperatureShutdownThreshold(idx uint) (_ int, err error) {
-	defer panicHandler(&err)
-
+func (c *cndev) GetDeviceOverTemperatureShutdownThreshold(idx uint) (int, error) {
 	type fieldVaule struct {
 		fieldID     int32
 		ret         int32
@@ -784,9 +783,7 @@ func (c *cndev) GetDeviceOverTemperatureShutdownThreshold(idx uint) (_ int, err 
 	return int(shutdown), nil
 }
 
-func (c *cndev) GetDeviceOverTemperatureSlowdownThreshold(idx uint) (_ int, err error) {
-	defer panicHandler(&err)
-
+func (c *cndev) GetDeviceOverTemperatureSlowdownThreshold(idx uint) (int, error) {
 	type fieldVaule struct {
 		fieldID     int32
 		ret         int32
@@ -884,9 +881,7 @@ func (c *cndev) GetDevicePerformanceThrottleReason(idx uint) (bool, error) {
 	return performanceThrottleReason.thermalSlowdown == C.CNDEV_FEATURE_ENABLED, errorString(r)
 }
 
-func (c *cndev) GetDeviceProcessUtil(idx uint) (_ []uint32, _ []uint32, _ []uint32, _ []uint32, _ []uint32, _ []uint32, err error) {
-	defer panicHandler(&err)
-
+func (c *cndev) GetDeviceProcessUtil(idx uint) ([]uint32, []uint32, []uint32, []uint32, []uint32, []uint32, error) {
 	processCount := 1 << 4
 	var util C.cndevProcessUtilization_t
 	utils := (*C.cndevProcessUtilization_t)(C.malloc(C.size_t(processCount) * C.size_t(unsafe.Sizeof(util))))
@@ -1260,13 +1255,4 @@ func (c *cndev) generateDeviceHandleMap() error {
 		c.cndevHandleMap[i] = handle
 	}
 	return nil
-}
-
-func panicHandler(err *error) {
-	if r := recover(); r != nil {
-		log.Warnf("Recovered from panic: %v", r)
-		if err != nil {
-			*err = fmt.Errorf("memory access failed with: %v", r)
-		}
-	}
 }

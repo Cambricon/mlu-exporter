@@ -512,6 +512,21 @@ func (mr *CndevMockRecorder) GetDeviceMLULinkEventCounter(arg0, arg1 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceMLULinkEventCounter", reflect.TypeOf((*Cndev)(nil).GetDeviceMLULinkEventCounter), arg0, arg1)
 }
 
+// GetDeviceMLULinkPPI mocks base method.
+func (m *Cndev) GetDeviceMLULinkPPI(arg0, arg1 uint) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceMLULinkPPI", arg0, arg1)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceMLULinkPPI indicates an expected call of GetDeviceMLULinkPPI.
+func (mr *CndevMockRecorder) GetDeviceMLULinkPPI(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceMLULinkPPI", reflect.TypeOf((*Cndev)(nil).GetDeviceMLULinkPPI), arg0, arg1)
+}
+
 // GetDeviceMLULinkPortMode mocks base method.
 func (m *Cndev) GetDeviceMLULinkPortMode(arg0, arg1 uint) (int, error) {
 	m.ctrl.T.Helper()

@@ -1743,8 +1743,8 @@ func (c *cndevCollector) collectOpticalIsPresent(ch chan<- prometheus.Metric, m 
 
 func (c *cndevCollector) collectOpticalRxpwr(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
-		for i := 0; i < stat.link; i++ {
-			if stat.opticalPresent[i] != uint8(1) {
+		for i, present := range stat.opticalPresent {
+			if present != uint8(1) {
 				continue
 			}
 			_, _, _, _, rxpwrs, err := c.client.GetDeviceOpticalInfo(stat.slot, uint(i))
@@ -1763,8 +1763,8 @@ func (c *cndevCollector) collectOpticalRxpwr(ch chan<- prometheus.Metric, m metr
 
 func (c *cndevCollector) collectOpticalTemp(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
-		for i := 0; i < stat.link; i++ {
-			if stat.opticalPresent[i] != uint8(1) {
+		for i, present := range stat.opticalPresent {
+			if present != uint8(1) {
 				continue
 			}
 			_, temp, _, _, _, err := c.client.GetDeviceOpticalInfo(stat.slot, uint(i))
@@ -1784,8 +1784,8 @@ func (c *cndevCollector) collectOpticalTemp(ch chan<- prometheus.Metric, m metri
 
 func (c *cndevCollector) collectOpticalTxpwr(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
-		for i := 0; i < stat.link; i++ {
-			if stat.opticalPresent[i] != uint8(1) {
+		for i, present := range stat.opticalPresent {
+			if present != uint8(1) {
 				continue
 			}
 			_, _, _, txpwrs, _, err := c.client.GetDeviceOpticalInfo(stat.slot, uint(i))
@@ -1804,8 +1804,8 @@ func (c *cndevCollector) collectOpticalTxpwr(ch chan<- prometheus.Metric, m metr
 
 func (c *cndevCollector) collectOpticalVolt(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
-		for i := 0; i < stat.link; i++ {
-			if stat.opticalPresent[i] != uint8(1) {
+		for i, present := range stat.opticalPresent {
+			if present != uint8(1) {
 				continue
 			}
 			_, _, volt, _, _, err := c.client.GetDeviceOpticalInfo(stat.slot, uint(i))
