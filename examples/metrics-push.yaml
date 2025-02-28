@@ -132,7 +132,7 @@ cndev:
       uuid: uuid
     name: aggr_sram_ecc_threshold_exceed
   arm_os_memory_total:
-    help: The total arm os memory of Cambricon MLU, unit is 'B'
+    help: The total device os memory of Cambricon MLU, unit is 'B'
     labels:
       driver: driver
       mcu: mcu
@@ -144,7 +144,7 @@ cndev:
       uuid: uuid
     name: arm_os_memory_total
   arm_os_memory_used:
-    help: The used arm os memory of Cambricon MLU, unit is 'B'
+    help: The used device os memory of Cambricon MLU, unit is 'B'
     labels:
       driver: driver
       mcu: mcu
@@ -1270,8 +1270,32 @@ cndev:
       type: type
       uuid: uuid
     name: parity_error
+  pcie_current_speed:
+    help: The pcie current speed of Cambricon MLU, unit is 'Gen'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: pcie_current_speed
+  pcie_current_width:
+    help: The pcie current channel number of Cambricon MLU
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: pcie_current_width
   pcie_max_speed:
-    help: The pcie max speed of Cambricon MLU
+    help: The pcie max speed of Cambricon MLU, unit is 'Gen'
     labels:
       driver: driver
       mcu: mcu
@@ -1283,7 +1307,7 @@ cndev:
       uuid: uuid
     name: pcie_max_speed
   pcie_max_width:
-    help: The pcie max width of Cambricon MLU
+    help: The pcie max channel number of Cambricon MLU
     labels:
       driver: driver
       mcu: mcu
@@ -1315,7 +1339,7 @@ cndev:
       uuid: uuid
     name: pcie_info
   pcie_read_throughput:
-    help: The pcie read throughput counts of Cambricon MLU, unit is 'B'
+    help: The pcie read throughput of in the past 20ms Cambricon MLU, unit is 'B'
     labels:
       driver: driver
       mcu: mcu
@@ -1339,7 +1363,7 @@ cndev:
       uuid: uuid
     name: pcie_replay_count
   pcie_write_throughput:
-    help: The pcie write throughput counts of Cambricon MLU, unit is 'B'
+    help: The pcie write throughput in the past 20ms of Cambricon MLU, unit is 'B'
     labels:
       driver: driver
       mcu: mcu
@@ -1476,6 +1500,22 @@ cndev:
       type: type
       uuid: uuid
     name: process_vpu_encode_utilization
+  rdma_device_info:
+    help: The north nic info of Cambricon MLU
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+      rdma_device_name: rdma_device_name
+      rdma_device_pcie_address: rdma_device_pcie_address
+      rdma_device_nic_name: rdma_device_nic_name
+      rdma_device_ip_addess: rdma_device_ip_addess
+    name: rdma_device_info
   remapped_correct_rows:
     help: The remapped correct rows counts of Cambricon MLU
     labels:
@@ -1688,6 +1728,18 @@ cndev:
       type: type
       uuid: uuid
     name: temperature
+  tensor_util:
+    help: "the tensor util of Cambircon MLU, unit is '%'"
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: "tensor_util"
   thermal_slow_down:
     help: The thermal slowdown of Cambricon MLU, '0' means 'disable', '1' means 'enable'
     labels:
@@ -1857,7 +1909,8 @@ cndev:
       type: type
       uuid: uuid
     name: virtual_mode
-  xid_error: # only from callback to push metrics, no pull or push
+  xid_error:
+    # only from callback to push metrics, no pull or push
     help: The xid error of Cambricon MLU
     labels:
       driver: driver
@@ -1869,6 +1922,7 @@ cndev:
       type: type
       uuid: uuid
       xid: xid
+      xid_base_10: xid_base_10
       xid_timestamp: xid_timestamp
       xid_compute_instance_id: xid_compute_instance_id
       xid_mlu_instance_id: xid_mlu_instance_id
@@ -1885,6 +1939,7 @@ cndev:
       type: type
       uuid: uuid
       xid: xid
+      xid_base_10: xid_base_10
       xid_compute_instance_id: xid_compute_instance_id
       xid_mlu_instance_id: xid_mlu_instance_id
     name: xid_error_count
@@ -1899,6 +1954,7 @@ cndev:
       sn: sn
       type: type
       uuid: uuid
+      xid: xid
       xid_compute_instance_id: xid_compute_instance_id
       xid_mlu_instance_id: xid_mlu_instance_id
     name: last_xid_error

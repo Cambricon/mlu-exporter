@@ -13,8 +13,8 @@
 # limitations under the License.
 
 ARG BUILDPLATFORM=linux/amd64
-ARG BASE_IMAGE=ubuntu:20.04
-FROM --platform=$BUILDPLATFORM golang:1.19 as build
+ARG BASE_IMAGE=ubuntu:22.04
+FROM --platform=$BUILDPLATFORM golang:1.23 AS build
 ARG APT_PROXY
 ARG GOPROXY
 ARG TARGETPLATFORM

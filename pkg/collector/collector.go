@@ -44,19 +44,32 @@ type Collectors struct {
 	mutex      sync.Mutex
 }
 
+type rdmaDevice struct {
+	name        string
+	pcieAddress string
+	domain      uint
+	bus         uint
+	device      uint
+	function    uint
+	nicName     string
+	ipAddress   string
+}
+
 type BaseInfo struct {
-	client kubernetes.Interface
-	host   string
-	mode   string
-	num    uint
+	client     kubernetes.Interface
+	host       string
+	mode       string
+	num        uint
+	rdmaDevice []rdmaDevice
 }
 
 func NewCollectors(enabled []string, metricConfig map[string]metrics.CollectorMetrics, num uint, host string, mode string, shareInfo map[string]MLUStat, filterPush bool) *Collectors {
 	m := filter(metricConfig, filterPush)
 	cs := make(map[string]Collector)
 	bi := BaseInfo{
-		host: host,
-		mode: mode,
+		host:       host,
+		mode:       mode,
+		rdmaDevice: getRDMAPCIeInfo(),
 	}
 	if mode == "env-share" {
 		bi.num = num

@@ -25,10 +25,10 @@ import (
 	"github.com/Cambricon/mlu-exporter/pkg/metrics"
 	"github.com/Cambricon/mlu-exporter/pkg/mock"
 	"github.com/Cambricon/mlu-exporter/pkg/podresources"
-	"github.com/golang/mock/gomock"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
 var golden = flag.Bool("golden", false, "")
@@ -360,9 +360,9 @@ func TestCollect(t *testing.T) {
 		coreCPUSi   = chipCPUCoreUtil
 		coreCPUHi   = chipCPUCoreUtil
 
-		armOsMemUsed  = []int64{1024, 4096, 512, 2048}
-		armOsMemTotal = int64(10240)
-		tinyCoreUtil  = [][]int{
+		deviceOsMemUsed  = []int64{1024, 4096, 512, 2048}
+		deviceOsMemTotal = int64(10240)
+		tinyCoreUtil     = [][]int{
 			{10, 21},
 			{12, 21},
 			{15, 11},
@@ -542,6 +542,31 @@ func TestCollect(t *testing.T) {
 		mluLinkMajor                      = mluLinkCapabilityP2PTransfer
 		mluLinkMinor                      = mluLinkCapabilityP2PTransfer
 		mluLinkBuild                      = mluLinkCapabilityP2PTransfer
+		rdmaDevice                        = []rdmaDevice{
+			{
+				name:        "mlx5_1",
+				pcieAddress: "0000:69:00.0",
+				domain:      0,
+				bus:         105,
+				device:      0,
+				function:    0,
+				nicName:     "roce1",
+				ipAddress:   "192.168.1.1",
+			},
+			{
+				name:        "mlx5_2",
+				pcieAddress: "0000:70:00.0",
+				domain:      0,
+				bus:         106,
+				device:      0,
+				function:    0,
+				nicName:     "roce2",
+				ipAddress:   "192.168.2.1",
+			},
+		}
+
+		// tensor util
+		tensorUtil = []int{80, 81, 82, 102}
 	)
 
 	ctrl := gomock.NewController(t)
@@ -570,7 +595,7 @@ func TestCollect(t *testing.T) {
 		mcndev.EXPECT().GetDeviceCurrentPCIeInfo(stat.slot).Return(pcieSpeed, pcieWidth, nil).AnyTimes()
 		mcndev.EXPECT().GetDevicePCIeReplayCount(stat.slot).Return(pcieReplay[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceCPUUtil(stat.slot).Return(chipCPUUtil[stat.slot], chipCPUCoreUtil[stat.slot], coreCPUUser[stat.slot], coreCPUNice[stat.slot], coreCPUSys[stat.slot], coreCPUSi[stat.slot], coreCPUHi[stat.slot], nil).AnyTimes()
-		mcndev.EXPECT().GetDeviceArmOsMemory(stat.slot).Return(armOsMemUsed[stat.slot], armOsMemTotal, nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceOsMemory(stat.slot).Return(deviceOsMemUsed[stat.slot], deviceOsMemTotal, nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceTinyCoreUtil(stat.slot).Return(tinyCoreUtil[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceNUMANodeID(stat.slot).Return(numaNodeID[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceDDRInfo(stat.slot).Return(ddrDataWidth[stat.slot], ddrBandWidth[stat.slot], nil).AnyTimes()
@@ -586,6 +611,7 @@ func TestCollect(t *testing.T) {
 		mcndev.EXPECT().GetDeviceMemEccCounter(stat.slot).Return(eccVolatile[stat.slot], eccAggregate[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceHeartbeatCount(stat.slot).Return(heartbeatCount[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceCount().Return(deviceCount[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceTensorUtil(stat.slot).Return(tensorUtil[stat.slot], nil).AnyTimes()
 		for link := 0; link < mluLinkPortNumber; link++ {
 			mcndev.EXPECT().GetDeviceMLULinkCapability(stat.slot, uint(link)).Return(mluLinkCapabilityP2PTransfer[stat.slot][link], mluLinkCapabilityInterlakenSerdes[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkCounter(stat.slot, uint(link)).Return(mluLinkCounterCntrReadByte[stat.slot][link], mluLinkCounterCntrReadPackage[stat.slot][link], mluLinkCounterCntrWriteByte[stat.slot][link], mluLinkCounterCntrWritePackage[stat.slot][link],
@@ -627,6 +653,8 @@ func TestCollect(t *testing.T) {
 
 		slots = append(slots, int(stat.slot))
 	}
+
+	mcndev.EXPECT().GetTopologyRelationship(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(2, nil).AnyTimes()
 	mcndev.EXPECT().GetDeviceCndevVersion().Return(cndevVersion[0], cndevVersion[1], cndevVersion[2], nil).AnyTimes()
 	sort.Ints(slots)
 	mcndev.EXPECT().RegisterEventsHandleAndWait(slots, gomock.Any()).Return(nil).Times(2)
@@ -642,7 +670,7 @@ func TestCollect(t *testing.T) {
 
 	metricConfig := metrics.GetMetrics("../../examples/metrics.yaml", "")
 	// collect metrics
-	expectedMetrics := collectMetrics(node, mst, host, mcndev, pres, metricConfig)
+	expectedMetrics := collectMetrics(node, rdmaDevice, mst, host, mcndev, pres, metricConfig)
 	goldFile := "testdata/collect_metrics.json"
 	out, err := json.MarshalIndent(expectedMetrics, "", "  ")
 	assert.NoError(t, err)
@@ -656,7 +684,7 @@ func TestCollect(t *testing.T) {
 
 	// collect push metrics
 	metricConfig = metrics.GetMetrics("../../examples/metrics-push.yaml", "")
-	expectedMetrics = collectMetrics(node, mst, host, mcndev, pres, metricConfig)
+	expectedMetrics = collectMetrics(node, rdmaDevice, mst, host, mcndev, pres, metricConfig)
 	goldFile = "testdata/collect_push_metrics.json"
 	out, err = json.MarshalIndent(expectedMetrics, "", "  ")
 	assert.NoError(t, err)
@@ -669,23 +697,30 @@ func TestCollect(t *testing.T) {
 	}
 }
 
-func collectMetrics(node string, mst map[string]MLUStat, host *mock.Host, cndv *mock.Cndev, pres *mock.PodResources, m map[string]metrics.CollectorMetrics) []testMetrics {
+func collectMetrics(node string, rdmaDevice []rdmaDevice, mst map[string]MLUStat, host *mock.Host, cndv *mock.Cndev, pres *mock.PodResources, m map[string]metrics.CollectorMetrics) []testMetrics {
 	bi := BaseInfo{
-		host: node,
+		host:       node,
+		rdmaDevice: rdmaDevice,
 	}
 	cndevCollector := NewCndevCollector(m[Cndev], bi).(*cndevCollector)
 	cndevCollector.client = cndv
-	cndevCollector.lastXID = map[cndev.DeviceInfo]int64{
+	cndevCollector.lastXID = map[cndev.DeviceInfo]cndev.XIDInfo{
 		{
 			Device:            0,
 			ComputeInstanceID: 0,
 			MLUInstanceID:     0,
-		}: 3155969,
+		}: {
+			XIDBase10: 3155969,
+			XID:       "0x30d641",
+		},
 		{
 			Device:            1,
 			ComputeInstanceID: 0,
 			MLUInstanceID:     0,
-		}: 3155969,
+		}: {
+			XIDBase10: 3155969,
+			XID:       "0x30d641",
+		},
 	}
 	cndevCollector.mluXIDCounter = map[cndev.XIDInfo]int{
 		{
@@ -694,7 +729,8 @@ func collectMetrics(node string, mst map[string]MLUStat, host *mock.Host, cndv *
 				ComputeInstanceID: 0,
 				MLUInstanceID:     0,
 			},
-			XID: 3155969,
+			XID:       "0x30d641",
+			XIDBase10: 3155969,
 		}: 5,
 		{
 			DeviceInfo: cndev.DeviceInfo{
@@ -702,7 +738,8 @@ func collectMetrics(node string, mst map[string]MLUStat, host *mock.Host, cndv *
 				ComputeInstanceID: 0,
 				MLUInstanceID:     0,
 			},
-			XID: 3155969,
+			XID:       "0x30d641",
+			XIDBase10: 3155969,
 		}: 10,
 	}
 	podResourcesCollector := NewPodResourcesCollector(m[PodResources], bi).(*podResourcesCollector)

@@ -14,7 +14,7 @@
 
 package cndev
 
-// #cgo LDFLAGS: -ldl -Wl,--unresolved-symbols=ignore-in-object-files
+// #cgo LDFLAGS: -ldl -Wl,--export-dynamic -Wl,--unresolved-symbols=ignore-in-object-files
 // #include "include/cndev.h"
 import "C"
 
@@ -78,7 +78,8 @@ type DeviceInfo struct {
 }
 
 type XIDInfo struct {
-	XID int64
+	XIDBase10 int64
+	XID       string
 	DeviceInfo
 }
 
@@ -96,7 +97,6 @@ type Cndev interface {
 	GetAllMLUInstanceInfo(idx uint) ([]MimInfo, error)
 	GetAllSMluInfo(idx uint) ([]SmluInfo, error)
 	GetDeviceAddressSwaps(idx uint) (uint32, uint32, uint32, uint32, uint32, error)
-	GetDeviceArmOsMemory(idx uint) (int64, int64, error)
 	GetDeviceBAR4MemoryInfo(idx uint) (uint64, uint64, uint64, error)
 	GetDeviceClusterCount(idx uint) (int, error)
 	GetDeviceCndevVersion() (uint, uint, uint, error)
@@ -135,6 +135,7 @@ type Cndev interface {
 	GetDeviceModel(idx uint) string
 	GetDeviceNUMANodeID(idx uint) (int, error)
 	GetDeviceOpticalInfo(idx, link uint) (uint8, float32, float32, []float32, []float32, error)
+	GetDeviceOsMemory(idx uint) (int64, int64, error)
 	GetDeviceOverTemperatureInfo(idx uint) (uint32, uint32, error)
 	GetDeviceOverTemperatureShutdownThreshold(idx uint) (int, error)
 	GetDeviceOverTemperatureSlowdownThreshold(idx uint) (int, error)
@@ -155,6 +156,7 @@ type Cndev interface {
 	GetDeviceSMluProfileInfo(idx, profile uint) (SmluProfileInfo, uint32, uint32, error)
 	GetDeviceSN(idx uint) (string, error)
 	GetDeviceTemperature(idx uint) (int, int, int, []int, []int, error)
+	GetDeviceTensorUtil(idx uint) (int, error)
 	GetDeviceTinyCoreUtil(idx uint) ([]int, error)
 	GetDeviceUtil(idx uint) (int, []int, error)
 	GetDeviceFrequency(idx uint) (int, int, error)
@@ -164,6 +166,7 @@ type Cndev interface {
 	GetDeviceVideoCodecUtil(idx uint) ([]int, []int, error)
 	GetDeviceVoltageInfo(idx uint) (int, int, int, error)
 	RegisterEventsHandleAndWait(slots []int, ch chan XIDInfoWithTimestamp) error
+	GetTopologyRelationship(domain1, bus1, device1, function1, domain2, bus2, device2, function2 uint) (int, error)
 	GetSupportedEventTypes(idx uint) error
 }
 
@@ -351,23 +354,10 @@ func (c *cndev) GetDeviceAddressSwaps(idx uint) (uint32, uint32, uint32, uint32,
 	return uint32(addressSwap.correctCounts), uint32(addressSwap.uncorrectCounts), uint32(addressSwap.histogram[C.CNDEV_AVAILABILITY_XLABLE_NONE]), uint32(addressSwap.histogram[C.CNDEV_AVAILABILITY_XLABLE_PARTIAL]), uint32(addressSwap.histogram[C.CNDEV_AVAILABILITY_XLABLE_MAX]), errorString(r)
 }
 
-func (c *cndev) GetDeviceArmOsMemory(idx uint) (int64, int64, error) {
-	type armOsMem struct {
-		version     int
-		memoryTotal int64
-		memoryUsed  int64
-	}
-	var armOsMemInfo armOsMem
-	memInfo := (*C.cndevArmOsMemoryInfo_t)(C.malloc(C.size_t(unsafe.Sizeof(armOsMemInfo))))
-	if memInfo == nil {
-		return 0, 0, fmt.Errorf("malloc failed for cndevGetArmOsMemoryUsage")
-	}
-	defer C.free(unsafe.Pointer(memInfo))
-	memInfo.version = C.CNDEV_VERSION_6
-	r := C.cndevGetArmOsMemoryUsage(memInfo, c.cndevHandleMap[idx])
-	armOsMemoryTotal := *(*int64)(unsafe.Pointer(uintptr(unsafe.Pointer(memInfo)) + unsafe.Sizeof(armOsMemInfo.version)))
-	armOsMemoryUsed := *(*int64)(unsafe.Pointer(uintptr(unsafe.Pointer(memInfo)) + unsafe.Sizeof(armOsMemInfo.version) + unsafe.Sizeof(armOsMemInfo.memoryTotal)))
-	return int64(armOsMemoryUsed), int64(armOsMemoryTotal), errorString(r)
+func (c *cndev) GetDeviceOsMemory(idx uint) (int64, int64, error) {
+	var deviceOsMemInfo C.cndevDeviceOsMemoryInfo_t
+	r := C.cndevGetDeviceOsMemoryUsageV2(&deviceOsMemInfo, c.cndevHandleMap[idx])
+	return int64(deviceOsMemInfo.deviceSystemMemoryUsed), int64(deviceOsMemInfo.deviceSystemMemoryTotal), errorString(r)
 }
 
 func (c *cndev) GetDeviceBAR4MemoryInfo(idx uint) (uint64, uint64, uint64, error) {
@@ -582,21 +572,18 @@ func (c *cndev) GetDeviceMemEccCounter(idx uint) ([]uint32, []uint64, error) {
 }
 
 func (c *cndev) GetDeviceMemory(idx uint) (int64, int64, int64, int64, error) {
-	var cardMemInfo C.cndevMemoryInfo_t
-	cardMemInfo.version = C.CNDEV_VERSION_5
+	var cardMemInfo C.cndevMemoryInfoV2_t
 	index := C.int(idx)
 	if id, ok := c.cndevHandleMap[idx]; ok {
 		index = id
 	}
-	r := C.cndevGetMemoryUsage(&cardMemInfo, index)
+	r := C.cndevGetMemoryUsageV2(&cardMemInfo, index)
 	return int64(cardMemInfo.physicalMemoryUsed), int64(cardMemInfo.physicalMemoryTotal), int64(cardMemInfo.virtualMemoryUsed), int64(cardMemInfo.virtualMemoryTotal), errorString(r)
 }
 
 func (c *cndev) GetDeviceMemoryDieCount(idx uint) (int, error) {
-	var cardMemoryDieNum C.cndevCardMemoryDieCount_t
-	cardMemoryDieNum.version = C.CNDEV_VERSION_5
-	r := C.cndevGetMemoryDieCount(&cardMemoryDieNum, c.cndevHandleMap[idx])
-	return int(cardMemoryDieNum.count), errorString(r)
+	//this api is deprecated, keep to comply with old version
+	return 0, nil
 }
 
 func (c *cndev) GetDeviceMimProfileInfo(idx uint) ([]MimProfileInfo, error) {
@@ -700,10 +687,9 @@ func (c *cndev) GetDeviceMLULinkRemoteInfo(idx, link uint) (uint64, uint64, uint
 }
 
 func (c *cndev) GetDeviceMLULinkStatus(idx, link uint) (int, int, int, error) {
-	var cardMLULinkStatus C.cndevMLULinkStatus_t
-	cardMLULinkStatus.version = C.CNDEV_VERSION_5
-	r := C.cndevGetMLULinkStatus(&cardMLULinkStatus, c.cndevHandleMap[idx], C.int(link))
-	return int(cardMLULinkStatus.isActive), int(cardMLULinkStatus.serdesState), int(cardMLULinkStatus.cableState), errorString(r)
+	var cardMLULinkStatus C.cndevMLULinkStatusV2_t
+	r := C.cndevGetMLULinkStatusV2(&cardMLULinkStatus, c.cndevHandleMap[idx], C.int(link))
+	return int(cardMLULinkStatus.macState), int(cardMLULinkStatus.serdesState), int(cardMLULinkStatus.presenceState), errorString(r)
 }
 
 func (c *cndev) GetDeviceMLULinkVersion(idx, link uint) (uint, uint, uint, error) {
@@ -820,10 +806,9 @@ func (c *cndev) GetDeviceParityError(idx uint) (int, error) {
 }
 
 func (c *cndev) GetDevicePCIeInfo(idx uint) (int, uint, uint, uint16, uint16, uint, uint, uint, uint, error) {
-	var pcieInfo C.cndevPCIeInfo_t
-	pcieInfo.version = C.CNDEV_VERSION_5
-	r := C.cndevGetPCIeInfo(&pcieInfo, c.cndevHandleMap[idx])
-	return int(pcieInfo.slotID), uint(pcieInfo.subsystemId), uint(pcieInfo.deviceId), uint16(pcieInfo.vendor),
+	var pcieInfo C.cndevPCIeInfoV2_t
+	r := C.cndevGetPCIeInfoV2(&pcieInfo, c.cndevHandleMap[idx])
+	return int(pcieInfo.slotId), uint(pcieInfo.subsystemId), uint(pcieInfo.deviceId), uint16(pcieInfo.vendor),
 		uint16(pcieInfo.subsystemVendor), uint(pcieInfo.domain), uint(pcieInfo.bus), uint(pcieInfo.device),
 		uint(pcieInfo.function), errorString(r)
 }
@@ -836,21 +821,19 @@ func (c *cndev) GetDevicePCIeReplayCount(idx uint) (uint32, error) {
 }
 
 func (c *cndev) GetDevicePCIeThroughput(idx uint) (int64, int64, error) {
-	var pcieThroughput C.cndevPCIethroughput_t
-	pcieThroughput.version = C.CNDEV_VERSION_5
-	r := C.cndevGetPCIethroughput(&pcieThroughput, c.cndevHandleMap[idx])
+	var pcieThroughput C.cndevPCIethroughputV2_t
+	r := C.cndevGetPCIethroughputV2(&pcieThroughput, c.cndevHandleMap[idx])
 	return int64(pcieThroughput.pcieRead), int64(pcieThroughput.pcieWrite), errorString(r)
 }
 
 func (c *cndev) GetDevicePower(idx uint) (int, error) {
-	var cardPower C.cndevPowerInfo_t
-	cardPower.version = C.CNDEV_VERSION_5
+	var devicePower C.cndevDevicePowerInfo_t
 	index := C.int(idx)
 	if id, ok := c.cndevHandleMap[idx]; ok {
 		index = id
 	}
-	r := C.cndevGetPowerInfo(&cardPower, index)
-	return int(cardPower.usage), errorString(r)
+	r := C.cndevGetDevicePowerInfo(&devicePower, index)
+	return int(devicePower.usage), errorString(r)
 }
 
 func (c *cndev) GetDevicePowerManagementDefaultLimitation(idx uint) (uint16, error) {
@@ -1089,6 +1072,36 @@ func (c *cndev) GetDeviceTemperature(idx uint) (int, int, int, []int, []int, err
 	return int(cardTemperature.board), int(cardTemperature.memory), int(cardTemperature.chip), clusterTemperature, memDieTemperature, nil
 }
 
+func (c *cndev) GetDeviceTensorUtil(idx uint) (int, error) {
+	type fieldVaule struct {
+		fieldID     int32
+		ret         int32
+		value       int
+		valueType   int
+		latencyUsec int64
+		timestamp   int64
+		scopeID     uint
+	}
+	var fieldVauleInfo fieldVaule
+	value := (*C.cndevFieldVaule_t)(C.malloc(C.size_t(unsafe.Sizeof(fieldVauleInfo))))
+	if value == nil {
+		return 0, fmt.Errorf("malloc failed for cndevDeviceGetFieldValues")
+	}
+	defer C.free(unsafe.Pointer(value))
+
+	value.fieldId = C.cndevFieldTensorAverageUtilization
+
+	r := C.cndevDeviceGetFieldValues(c.cndevHandleMap[idx], C.int(1), value)
+	if err := errorString(r); err != nil {
+		return 0, err
+	}
+	if err := errorString(value.ret); err != nil {
+		return 0, err
+	}
+	tensorUtil := *(*int)(unsafe.Pointer(uintptr(unsafe.Pointer(value)) + unsafe.Sizeof(fieldVauleInfo.fieldID) + unsafe.Sizeof(fieldVauleInfo.ret)))
+	return int(tensorUtil), nil
+}
+
 func (c *cndev) GetDeviceTinyCoreUtil(idx uint) ([]int, error) {
 	var cardTinyCoreUtil C.cndevTinyCoreUtilization_t
 	cardTinyCoreUtil.version = C.CNDEV_VERSION_5
@@ -1172,6 +1185,27 @@ func (c *cndev) GetDeviceVoltageInfo(idx uint) (int, int, int, error) {
 	return int(voltageInfo.ipuCoreVoltage), int(voltageInfo.socVoltage), int(voltageInfo.hbmVddVoltage), errorString(r)
 }
 
+func (c *cndev) GetTopologyRelationship(domain, bus, device, function, rdmaDomain, rdmaBus, rdmaDevice, rdmaFunction uint) (int, error) {
+	var treeNode, rdmaTreeNode *C.cndevTopologyNode_t
+	version := C.CNDEV_VERSION_6
+	r := C.cndevGetNodeByBDF(C.int(version), &treeNode, C.uint(domain), C.uint(bus), C.uint(device), C.uint(function))
+	if err := errorString(r); err != nil {
+		return 0, err
+	}
+	r = C.cndevGetNodeByBDF(C.int(version), &rdmaTreeNode, C.uint(rdmaDomain), C.uint(rdmaBus), C.uint(rdmaDevice), C.uint(rdmaFunction))
+	if err := errorString(r); err != nil {
+		return 0, err
+	}
+
+	var topoRelationship C.cndevTopologyRelationship_t
+	topoRelationship.version = C.CNDEV_VERSION_6
+	r = C.cndevTopologyGetRelationshipByNode(&topoRelationship, treeNode, rdmaTreeNode)
+	if err := errorString(r); err != nil {
+		return 0, err
+	}
+	return int(topoRelationship.relation), nil
+}
+
 func (c *cndev) GetSupportedEventTypes(idx uint) error {
 	types := C.ulonglong(C.cndevEventTypeAll)
 	r := C.cndevGetSupportedEventTypes(&types, c.cndevHandleMap[idx])
@@ -1213,7 +1247,8 @@ func waitEvents(handle C.cndevEventHandle, ch chan XIDInfoWithTimestamp) {
 
 		info := XIDInfoWithTimestamp{
 			XIDInfo: XIDInfo{
-				XID: int64(eventData.eventData),
+				XID:       fmt.Sprintf("%x", eventData.eventData),
+				XIDBase10: int64(eventData.eventData),
 				DeviceInfo: DeviceInfo{
 					Device:            uint(eventData.device),
 					ComputeInstanceID: int32(eventData.computeInstanceId),

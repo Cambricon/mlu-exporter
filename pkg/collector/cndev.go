@@ -40,7 +40,7 @@ type cndevCollector struct {
 	metrics       metrics.CollectorMetrics
 	sharedInfo    map[string]MLUStat
 	mluXIDCounter map[cndev.XIDInfo]int
-	lastXID       map[cndev.DeviceInfo]int64
+	lastXID       map[cndev.DeviceInfo]cndev.XIDInfo
 }
 
 func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
@@ -49,7 +49,7 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 		client:        cndev.NewCndevClient(),
 		metrics:       m,
 		mluXIDCounter: map[cndev.XIDInfo]int{},
-		lastXID:       map[cndev.DeviceInfo]int64{},
+		lastXID:       map[cndev.DeviceInfo]cndev.XIDInfo{},
 	}
 
 	c.fnMap = map[string]interface{}{
@@ -64,8 +64,6 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 		AggregateSramEccParityCount:       c.collectAggregateSramEccParityCount,
 		AggregateSramEccSbeCount:          c.collectAggregateSramEccSbeCount,
 		AggregateSramEccThresholdExceed:   c.collectAggregateSramEccThresholdExceed,
-		ArmOsMemTotal:                     c.collectArmOsMemTotal,
-		ArmOsMemUsed:                      c.collectArmOsMemUsed,
 		BAR4MemoryTotal:                   c.collectBAR4MemoryTotal,
 		BAR4MemoryUsed:                    c.collectBAR4MemoryUsed,
 		BAR4MemoryFree:                    c.collectBAR4MemoryFree,
@@ -85,6 +83,8 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 		DDRDataWidth:                      c.collectDDRDataWidth,
 		DDRBandWidth:                      c.collectDDRBandWidth,
 		DDRFrequency:                      c.collectDDRFrequency,
+		DeviceOsMemTotal:                  c.collectDeviceOsMemTotal,
+		DeviceOsMemUsed:                   c.collectDeviceOsMemUsed,
 		DoubleBitRetiredPageCount:         c.collectDoubleBitRetiredPageCount,
 		DramEccDbeCount:                   c.collectDramEccDbeCount,
 		DramEccSbeCount:                   c.collectDramEccSbeCount,
@@ -104,8 +104,6 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 		HeartbeatCount:                    c.collectHeartbeatCount,
 		ImageCodecUtil:                    c.collectImageCodecUtil,
 		MachineMLUNums:                    c.collectMachineMLUNums,
-		MaxPCIeSpeed:                      c.collecteMaxPCIeSpeed,
-		MaxPCIeWidth:                      c.collecteMaxPCIeWidth,
 		MemCurrent:                        c.collectMemCurrent,
 		MemFree:                           c.collectMemFree,
 		MemTemperature:                    c.collectMemTemperature,
@@ -116,6 +114,7 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 		MimInstanceInfo:                   c.collectMimInstanceInfo,
 		MimProfileInfo:                    c.collectMimProfileInfo,
 		MimProfileTotalCapacity:           c.collectMimProfileTotalCapacity,
+		MLURDMADeviceInfo:                 c.collectMLURDMADeviceInfo,
 		MLULinkCapabilityP2PTransfer:      c.collectMLULinkCapabilityP2PTransfer,
 		MLULinkCapabilityInterlakenSerdes: c.collectMLULinkCapabilityInterlakenSerdes,
 		MLULinkConnectType:                c.collectMLULinkConnectType,
@@ -154,7 +153,11 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 		OverTempUnderClockCounter:         c.collectOverTempUnderClockCounter,
 		OverTempUnderClockThreshold:       c.collectOverTempUnderClockThreshold,
 		ParityError:                       c.collectParityError,
+		PCIeCurrentSpeed:                  c.collectPCIeCurrentSpeed,
+		PCIeCurrentWidth:                  c.collectPCIeCurrentWidth,
 		PCIeInfo:                          c.collectPCIeInfo,
+		PCIeMaxSpeed:                      c.collectePCIeMaxSpeed,
+		PCIeMaxWidth:                      c.collectePCIeMaxWidth,
 		PCIeReadThroughput:                c.collectPCIeReadThroughput,
 		PCIeReplayCount:                   c.collectPCIeReplayCount,
 		PCIeWriteThroughput:               c.collectPCIeWriteThroughput,
@@ -184,6 +187,7 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 		SramEccParityCount:                c.collectSramEccParityCount,
 		SramEccSbeCount:                   c.collectSramEccSbeCount,
 		Temperature:                       c.collectTemperature,
+		TensorUtil:                        c.collectTensorUtil,
 		ThermalSlowdown:                   c.collectThermalSlowdown,
 		TinyCoreUtil:                      c.collectTinyCoreUtil,
 		Util:                              c.collectUtil,
@@ -395,30 +399,6 @@ func (c *cndevCollector) collectAggregateSramEccThresholdExceed(ch chan<- promet
 		}
 		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(aggregate[5]), labelValues...)
-	}
-}
-
-func (c *cndevCollector) collectArmOsMemTotal(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		_, total, err := c.client.GetDeviceArmOsMemory(stat.slot)
-		if err != nil {
-			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceArmOsMemory", stat.slot))
-			continue
-		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(total*1024), labelValues...)
-	}
-}
-
-func (c *cndevCollector) collectArmOsMemUsed(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		used, _, err := c.client.GetDeviceArmOsMemory(stat.slot)
-		if err != nil {
-			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceArmOsMemory", stat.slot))
-			continue
-		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(used*1024), labelValues...)
 	}
 }
 
@@ -723,6 +703,30 @@ func (c *cndevCollector) collectDDRFrequency(ch chan<- prometheus.Metric, m metr
 	}
 }
 
+func (c *cndevCollector) collectDeviceOsMemTotal(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo {
+		_, total, err := c.client.GetDeviceOsMemory(stat.slot)
+		if err != nil {
+			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceArmOsMemory", stat.slot))
+			continue
+		}
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(total*1024), labelValues...)
+	}
+}
+
+func (c *cndevCollector) collectDeviceOsMemUsed(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo {
+		used, _, err := c.client.GetDeviceOsMemory(stat.slot)
+		if err != nil {
+			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceArmOsMemory", stat.slot))
+			continue
+		}
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(used*1024), labelValues...)
+	}
+}
+
 func (c *cndevCollector) collectDoubleBitRetiredPageCount(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.cndevInterfaceDisabled["retiredPageDisabled"] {
@@ -1021,36 +1025,6 @@ func (c *cndevCollector) collectMemCurrent(ch chan<- prometheus.Metric, m metric
 	}
 }
 
-func (c *cndevCollector) collecteMaxPCIeSpeed(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["maxPCIeInfoDisabled"] {
-			continue
-		}
-		speed, _, err := c.client.GetDeviceMaxPCIeInfo(stat.slot)
-		if err != nil {
-			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMaxPCIeInfo", stat.slot))
-			continue
-		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(speed), labelValues...)
-	}
-}
-
-func (c *cndevCollector) collecteMaxPCIeWidth(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["maxPCIeInfoDisabled"] {
-			continue
-		}
-		_, width, err := c.client.GetDeviceMaxPCIeInfo(stat.slot)
-		if err != nil {
-			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMaxPCIeInfo", stat.slot))
-			continue
-		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(width), labelValues...)
-	}
-}
-
 func (c *cndevCollector) collectMemFree(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		used, total, _, _, err := c.client.GetDeviceMemory(stat.slot)
@@ -1250,6 +1224,31 @@ func (c *cndevCollector) collectMimProfileTotalCapacity(ch chan<- prometheus.Met
 				}
 				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, mimProfileInfo: info})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(count), labelValues...)
+			}
+		}
+	}
+}
+
+func (c *cndevCollector) collectMLURDMADeviceInfo(ch chan<- prometheus.Metric, m metrics.Metric) {
+	if len(c.baseInfo.rdmaDevice) == 0 {
+		return
+	}
+	for _, stat := range c.sharedInfo {
+		_, _, _, _, _, domain, bus, device, function, err := c.client.GetDevicePCIeInfo(stat.slot)
+		if err != nil {
+			log.Errorln(errors.Wrapf(err, "Slot %d GetDevicePCIeInfo", stat.slot))
+			continue
+		}
+		for _, rdmaDevice := range c.baseInfo.rdmaDevice {
+			relation, err := c.client.GetTopologyRelationship(domain, bus, device, function, rdmaDevice.domain, rdmaDevice.bus, rdmaDevice.device, rdmaDevice.function)
+			if err != nil {
+				log.Errorln(errors.Wrapf(err, "Slot %d RDMADevice %s GetTopologyRelationship", stat.slot, rdmaDevice.name))
+				continue
+			}
+			// 2 indicates all devices that only need to traverse a single PCIe switch.
+			if relation == 2 {
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, rdmaDevice: rdmaDevice})
+				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, 1, labelValues...)
 			}
 		}
 	}
@@ -1650,6 +1649,9 @@ func (c *cndevCollector) collectMLULinkSpeedValue(ch chan<- prometheus.Metric, m
 func (c *cndevCollector) collectMLULinkStatusCableState(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
+			if !stat.linkActive[i] {
+				continue
+			}
 			_, _, cable, err := c.client.GetDeviceMLULinkStatus(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkStatus", stat.slot, i))
@@ -1677,6 +1679,9 @@ func (c *cndevCollector) collectMLULinkStatusIsActive(ch chan<- prometheus.Metri
 func (c *cndevCollector) collectMLULinkStatusSerdesState(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		for i := 0; i < stat.link; i++ {
+			if !stat.linkActive[i] {
+				continue
+			}
 			_, serdes, _, err := c.client.GetDeviceMLULinkStatus(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkStatus", stat.slot, i))
@@ -1895,6 +1900,30 @@ func (c *cndevCollector) collectParityError(ch chan<- prometheus.Metric, m metri
 	}
 }
 
+func (c *cndevCollector) collectPCIeCurrentSpeed(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo {
+		speed, _, err := c.client.GetDeviceCurrentPCIeInfo(stat.slot)
+		if err != nil {
+			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceCurrentPCIeInfo", stat.slot))
+			continue
+		}
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(speed), labelValues...)
+	}
+}
+
+func (c *cndevCollector) collectPCIeCurrentWidth(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo {
+		_, width, err := c.client.GetDeviceCurrentPCIeInfo(stat.slot)
+		if err != nil {
+			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceCurrentPCIeInfo", stat.slot))
+			continue
+		}
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(width), labelValues...)
+	}
+}
+
 func (c *cndevCollector) collectPCIeInfo(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		slotID, subsystemID, deviceID, vendor, subsystemVendor, domain, bus, device, function, err := c.client.GetDevicePCIeInfo(stat.slot)
@@ -1919,6 +1948,36 @@ func (c *cndevCollector) collectPCIeInfo(ch chan<- prometheus.Metric, m metrics.
 		}
 		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, pcieInfo: pcieInfo})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, 1, labelValues...)
+	}
+}
+
+func (c *cndevCollector) collectePCIeMaxSpeed(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo {
+		if stat.cndevInterfaceDisabled["maxPCIeInfoDisabled"] {
+			continue
+		}
+		speed, _, err := c.client.GetDeviceMaxPCIeInfo(stat.slot)
+		if err != nil {
+			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMaxPCIeInfo", stat.slot))
+			continue
+		}
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(speed), labelValues...)
+	}
+}
+
+func (c *cndevCollector) collectePCIeMaxWidth(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo {
+		if stat.cndevInterfaceDisabled["maxPCIeInfoDisabled"] {
+			continue
+		}
+		_, width, err := c.client.GetDeviceMaxPCIeInfo(stat.slot)
+		if err != nil {
+			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMaxPCIeInfo", stat.slot))
+			continue
+		}
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(width), labelValues...)
 	}
 }
 
@@ -2440,6 +2499,25 @@ func (c *cndevCollector) collectTemperature(ch chan<- prometheus.Metric, m metri
 	}
 }
 
+func (c *cndevCollector) collectTensorUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo {
+		if stat.cndevInterfaceDisabled["tensorUtilDisabled"] {
+			continue
+		}
+		util, err := c.client.GetDeviceTensorUtil(stat.slot)
+		if err != nil {
+			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceTensorUtil", stat.slot))
+			continue
+		}
+		if util < 0 || util > 100 {
+			log.Debugf("Slot %d tensor util %d is abnormal", stat.slot, util)
+			continue
+		}
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
+	}
+}
+
 func (c *cndevCollector) collectThermalSlowdown(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.cndevInterfaceDisabled["performanceThrottleDisabled"] {
@@ -2731,10 +2809,11 @@ func (c *cndevCollector) collectLastXIDError(ch chan<- prometheus.Metric, m metr
 			xidInfo: cndev.XIDInfoWithTimestamp{
 				XIDInfo: cndev.XIDInfo{
 					DeviceInfo: info,
+					XID:        xid.XID,
 				},
 			},
 		})
-		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(xid), labelValues...)
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(xid.XIDBase10), labelValues...)
 	}
 }
 
@@ -2777,7 +2856,7 @@ func (c *cndevCollector) waitXIDEvents() error {
 
 	for event := range ch {
 		c.mluXIDCounter[event.XIDInfo]++
-		c.lastXID[event.DeviceInfo] = event.XID
+		c.lastXID[event.DeviceInfo] = event.XIDInfo
 	}
 
 	return nil

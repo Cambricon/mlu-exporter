@@ -67,7 +67,7 @@ docker run -d \
 --privileged=true \
 --pid=host \
 -e ENV_NODE_NAME={nodeName} \
-cambricon-mlu-exporter:v2.0.16
+cambricon-mlu-exporter:v2.0.17
 ```
 
 Then use the following command to get the metrics.
@@ -84,7 +84,7 @@ docker run -d \
 -v examples/metrics.yaml:/etc/mlu-exporter/metrics.yaml \
 --privileged=true \
 --pid=host \
-cambricon-mlu-exporter:v2.0.16 \
+cambricon-mlu-exporter:v2.0.17 \
 mlu-exporter \
 --metrics-config=/etc/mlu-exporter/metrics.yaml \
 --metrics-path=/metrics \
@@ -212,7 +212,7 @@ For MLU370, mlu_temperature does not support cluster temperature, all cluster te
 If you want to push metrics to Prometheus Pushgateway or VictoriaMetrics, you can run exporter with setting `push-gateway-url` flag,
 and config `push: true` on metrics witch need pushing in metrics configuration.
 
-See examples/metrics-push.yaml for pushing some metrics, .
+See examples/metrics-push.yaml for pushing some metrics.
 
 ```yaml
 utilization:

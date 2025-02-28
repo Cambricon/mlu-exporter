@@ -16,6 +16,11 @@ package collector
 
 import (
 	"fmt"
+	"io/fs"
+	"net"
+	"os"
+	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -55,6 +60,7 @@ type labelInfo struct {
 	core              int
 	cpuCore           string
 	host              string
+	rdmaDevice        rdmaDevice
 	lane              int
 	link              int
 	linkVersion       string
@@ -224,6 +230,22 @@ func getLabelValues(labels []string, info labelInfo) []string {
 			values = append(values, info.podInfo.Container)
 		case VF:
 			values = append(values, info.vf)
+		case RDMADeviceName:
+			values = append(values, info.rdmaDevice.name)
+		case RDMADevicePCIeAddress:
+			values = append(values, info.rdmaDevice.pcieAddress)
+		case RDMADevicePCIeDomain:
+			values = append(values, fmt.Sprintf("%d", info.rdmaDevice.domain))
+		case RDMADevicePCIeBus:
+			values = append(values, fmt.Sprintf("%d", info.rdmaDevice.bus))
+		case RDMADevicePCIeDevice:
+			values = append(values, fmt.Sprintf("%d", info.rdmaDevice.device))
+		case RDMADevicePCIeFunction:
+			values = append(values, fmt.Sprintf("%d", info.rdmaDevice.function))
+		case RDMADeviceNicName:
+			values = append(values, info.rdmaDevice.nicName)
+		case RDMADeviceIPAddress:
+			values = append(values, info.rdmaDevice.ipAddress)
 		case Lane:
 			values = append(values, fmt.Sprintf("%d", info.lane))
 		case Link:
@@ -265,7 +287,9 @@ func getLabelValues(labels []string, info labelInfo) []string {
 		case SmluUUID:
 			values = append(values, info.smluInstanceInfo.UUID)
 		case XID:
-			values = append(values, fmt.Sprintf("%d", info.xidInfo.XID))
+			values = append(values, info.xidInfo.XID)
+		case XIDBase10:
+			values = append(values, fmt.Sprintf("%d", info.xidInfo.XIDBase10))
 		case XIDTimestamp:
 			values = append(values, fmt.Sprintf("%d", info.xidInfo.Timestamp))
 		case XIDComputeInstanceID:
@@ -518,6 +542,11 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceComputeCapability", i))
 			dis["computeCapabilityDisabled"] = true
 		}
+		log.Debugf("Start slot %d GetDeviceTensorUtil", i)
+		if _, err = cli.GetDeviceTensorUtil(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceTensorUtil", i))
+			dis["tensorUtilDisabled"] = true
+		}
 
 		info[uuid] = MLUStat{
 			cndevInterfaceDisabled: dis,
@@ -544,4 +573,145 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 
 func calcVersion(major uint, minor uint, build uint) string {
 	return fmt.Sprintf("v%d.%d.%d", major, minor, build)
+}
+
+func getRDMAPCIeAddress(deviceName string) string {
+	ueventPath := fmt.Sprintf("/sys/class/infiniband/%s/device/uevent", deviceName)
+	data, err := os.ReadFile(ueventPath)
+	if err != nil {
+		log.Errorf("Error reading uevent file for %s: %v", deviceName, err)
+		return ""
+	}
+	// eg: PCI_SLOT_NAME=0000:21:00.0
+	for _, line := range strings.Split(string(data), "\n") {
+		if strings.HasPrefix(line, "PCI_SLOT_NAME=") {
+			return strings.TrimPrefix(line, "PCI_SLOT_NAME=")
+		}
+	}
+	return ""
+}
+
+func parseRDMAPCIeAddress(pcieAddress string) (uint, uint, uint, uint, error) {
+	// PCIe address format: 0000:XX:YY.Z
+	parts := strings.Split(pcieAddress, ":")
+	if len(parts) != 3 {
+		return 0, 0, 0, 0, fmt.Errorf("invalid PCIe address format")
+	}
+	domain, err := strconv.ParseInt(parts[0], 16, 0)
+	if err != nil {
+		return 0, 0, 0, 0, fmt.Errorf("invalid domain part")
+	}
+	bus, err := strconv.ParseInt(parts[1], 16, 0)
+	if err != nil {
+		return 0, 0, 0, 0, fmt.Errorf("invalid bus part")
+	}
+	subParts := strings.Split(parts[2], ".")
+	if len(subParts) != 2 {
+		return 0, 0, 0, 0, fmt.Errorf("invalid PCIe address format")
+	}
+	device, err := strconv.ParseInt(subParts[0], 16, 0)
+	if err != nil {
+		return 0, 0, 0, 0, err
+	}
+	function, err := strconv.ParseInt(subParts[1], 16, 0)
+	if err != nil {
+		return 0, 0, 0, 0, fmt.Errorf("invalid function part")
+	}
+	return uint(domain), uint(bus), uint(device), uint(function), nil
+}
+
+func getRDMAPCIeInfo() []rdmaDevice {
+	files, err := os.ReadDir("/sys/class/infiniband/")
+	if err != nil {
+		log.Warnf("Error reading /sys/class/infiniband/: %v", err)
+		return nil
+	}
+	var devices []rdmaDevice
+	for _, file := range files {
+		if file.Type()&fs.ModeSymlink != 0 {
+			path := filepath.Join("/sys/class/infiniband", file.Name(), "device/net")
+			f, err := os.ReadDir(path)
+			var nicName string
+			if err == nil && len(f) > 0 {
+				nicName = f[0].Name()
+			} else {
+				log.Warnf("Error reading /sys/class/infiniband/%s/device/net: %v", file.Name(), err)
+				continue
+			}
+
+			pcieAddress := getRDMAPCIeAddress(file.Name())
+			if pcieAddress == "" {
+				log.Warnf("No RDMA PCIe address found for device %s", file.Name())
+				continue
+			}
+
+			domain, bus, device, function, err := parseRDMAPCIeAddress(pcieAddress)
+			if err != nil {
+				log.Warnf("Error parsing RDMA PCIe address for %s: %v", file.Name(), err)
+				continue
+			}
+
+			ipAddress := getIPAddressByNICName(nicName)
+
+			devices = append(devices, rdmaDevice{
+				name:        file.Name(),
+				pcieAddress: pcieAddress,
+				domain:      domain,
+				bus:         bus,
+				device:      device,
+				function:    function,
+				nicName:     nicName,
+				ipAddress:   ipAddress,
+			})
+		}
+	}
+
+	if len(devices) == 0 {
+		return nil
+	}
+
+	sort.Slice(devices, func(i, j int) bool {
+		if devices[i].domain != devices[j].domain {
+			return devices[i].domain < devices[j].domain
+		}
+		if devices[i].bus != devices[j].bus {
+			return devices[i].bus < devices[j].bus
+		}
+		if devices[i].device != devices[j].device {
+			return devices[i].device < devices[j].device
+		}
+		return devices[i].function < devices[j].function
+	})
+
+	return devices
+}
+
+func getIPAddressByNICName(nicName string) string {
+	var ipAddress string
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		log.Warnf("Error getting network interfaces: %v", err)
+		return ipAddress
+	}
+
+	for _, iface := range interfaces {
+		if iface.Name == nicName {
+			addrs, err := iface.Addrs()
+			if err != nil {
+				log.Warnf("Error getting IP addresses for interface %s: %v", nicName, err)
+				return ipAddress
+			}
+			for _, addr := range addrs {
+				switch v := addr.(type) {
+				case *net.IPNet:
+					if v.IP.To4() != nil {
+						ipAddress = v.IP.String()
+						break
+					}
+				}
+			}
+			break
+		}
+	}
+	return ipAddress
 }

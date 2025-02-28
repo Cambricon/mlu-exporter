@@ -71,6 +71,8 @@ args:
 volumeMounts:
 - mountPath: /var/lib/kubelet/pod-resources/
   name: pod-resources
+- mountPath: /dev
+  name: dev
 - mountPath: /etc/mlu-exporter
   name: mlu-exporter
 
@@ -78,6 +80,9 @@ volumes:
 - name: pod-resources
   hostPath:
     path: /var/lib/kubelet/pod-resources/
+- name: dev
+  hostPath:
+    path: /dev
 - name: mlu-exporter
   configMap:
     defaultMode: 420

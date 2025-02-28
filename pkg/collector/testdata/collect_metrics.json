@@ -1874,7 +1874,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"arm_os_memory_total\", help: \"The total arm os memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"arm_os_memory_total\", help: \"The total device os memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -1916,7 +1916,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"arm_os_memory_total\", help: \"The total arm os memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"arm_os_memory_total\", help: \"The total device os memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -1958,7 +1958,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"arm_os_memory_total\", help: \"The total arm os memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"arm_os_memory_total\", help: \"The total device os memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -2000,7 +2000,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"arm_os_memory_total\", help: \"The total arm os memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"arm_os_memory_total\", help: \"The total device os memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -2042,7 +2042,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"arm_os_memory_used\", help: \"The used arm os memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"arm_os_memory_used\", help: \"The used device os memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -2084,7 +2084,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"arm_os_memory_used\", help: \"The used arm os memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"arm_os_memory_used\", help: \"The used device os memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -2126,7 +2126,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"arm_os_memory_used\", help: \"The used arm os memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"arm_os_memory_used\", help: \"The used device os memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -2168,7 +2168,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"arm_os_memory_used\", help: \"The used arm os memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"arm_os_memory_used\", help: \"The used device os memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -16350,7 +16350,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"last_xid_error\", help: \"The last xid error of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid xid_compute_instance_id xid_mlu_instance_id]}",
+    "Desc": "Desc{fqName: \"last_xid_error\", help: \"The last xid error of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid xid xid_compute_instance_id xid_mlu_instance_id]}",
     "Metric": {
       "label": [
         {
@@ -16386,6 +16386,10 @@
           "value": "uuid1"
         },
         {
+          "name": "xid",
+          "value": "0x30d641"
+        },
+        {
           "name": "xid_compute_instance_id",
           "value": "0"
         },
@@ -16400,7 +16404,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"last_xid_error\", help: \"The last xid error of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid xid_compute_instance_id xid_mlu_instance_id]}",
+    "Desc": "Desc{fqName: \"last_xid_error\", help: \"The last xid error of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid xid xid_compute_instance_id xid_mlu_instance_id]}",
     "Metric": {
       "label": [
         {
@@ -16434,6 +16438,10 @@
         {
           "name": "uuid",
           "value": "uuid2"
+        },
+        {
+          "name": "xid",
+          "value": "0x30d641"
         },
         {
           "name": "xid_compute_instance_id",
@@ -30296,6 +30304,342 @@
     }
   },
   {
+    "Desc": "Desc{fqName: \"pcie_current_speed\", help: \"The pcie current speed of Cambricon MLU, unit is 'Gen'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 4
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"pcie_current_speed\", help: \"The pcie current speed of Cambricon MLU, unit is 'Gen'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 4
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"pcie_current_speed\", help: \"The pcie current speed of Cambricon MLU, unit is 'Gen'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 4
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"pcie_current_speed\", help: \"The pcie current speed of Cambricon MLU, unit is 'Gen'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 4
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"pcie_current_width\", help: \"The pcie current channel number of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 4
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"pcie_current_width\", help: \"The pcie current channel number of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 4
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"pcie_current_width\", help: \"The pcie current channel number of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 4
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"pcie_current_width\", help: \"The pcie current channel number of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 4
+      }
+    }
+  },
+  {
     "Desc": "Desc{fqName: \"pcie_info\", help: \"The pcie information of MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node pcie_device_id pcie_id pcie_slot pcie_speed pcie_subsystem pcie_subsystem_vendor pcie_vendor pcie_width sn type uuid]}",
     "Metric": {
       "label": [
@@ -30592,7 +30936,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_max_speed\", help: \"The pcie max speed of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_max_speed\", help: \"The pcie max speed of Cambricon MLU, unit is 'Gen'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -30634,7 +30978,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_max_speed\", help: \"The pcie max speed of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_max_speed\", help: \"The pcie max speed of Cambricon MLU, unit is 'Gen'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -30676,7 +31020,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_max_speed\", help: \"The pcie max speed of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_max_speed\", help: \"The pcie max speed of Cambricon MLU, unit is 'Gen'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -30718,7 +31062,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_max_speed\", help: \"The pcie max speed of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_max_speed\", help: \"The pcie max speed of Cambricon MLU, unit is 'Gen'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -30760,7 +31104,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_max_width\", help: \"The pcie max width of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_max_width\", help: \"The pcie max channel number of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -30802,7 +31146,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_max_width\", help: \"The pcie max width of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_max_width\", help: \"The pcie max channel number of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -30844,7 +31188,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_max_width\", help: \"The pcie max width of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_max_width\", help: \"The pcie max channel number of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -30886,7 +31230,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_max_width\", help: \"The pcie max width of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_max_width\", help: \"The pcie max channel number of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -30928,7 +31272,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_read_throughput\", help: \"The pcie read throughput counts of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_read_throughput\", help: \"The pcie read throughput in the past 20ms of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -30970,7 +31314,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_read_throughput\", help: \"The pcie read throughput counts of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_read_throughput\", help: \"The pcie read throughput in the past 20ms of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -31012,7 +31356,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_read_throughput\", help: \"The pcie read throughput counts of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_read_throughput\", help: \"The pcie read throughput in the past 20ms of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -31054,7 +31398,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_read_throughput\", help: \"The pcie read throughput counts of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_read_throughput\", help: \"The pcie read throughput in the past 20ms of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -31264,7 +31608,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_write_throughput\", help: \"The pcie write throughput counts of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_write_throughput\", help: \"The pcie write throughput in the past 20ms of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -31306,7 +31650,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_write_throughput\", help: \"The pcie write throughput counts of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_write_throughput\", help: \"The pcie write throughput in the past 20ms of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -31348,7 +31692,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_write_throughput\", help: \"The pcie write throughput counts of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_write_throughput\", help: \"The pcie write throughput in the past 20ms of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -31390,7 +31734,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_write_throughput\", help: \"The pcie write throughput counts of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_write_throughput\", help: \"The pcie write throughput in the past 20ms of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34588,6 +34932,470 @@
     }
   },
   {
+    "Desc": "Desc{fqName: \"rdma_device_info\", help: \"The north nic info of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node rdma_device_ip_addess rdma_device_name rdma_device_nic_name rdma_device_pcie_address sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "rdma_device_ip_addess",
+          "value": "192.168.1.1"
+        },
+        {
+          "name": "rdma_device_name",
+          "value": "mlx5_1"
+        },
+        {
+          "name": "rdma_device_nic_name",
+          "value": "roce1"
+        },
+        {
+          "name": "rdma_device_pcie_address",
+          "value": "0000:69:00.0"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"rdma_device_info\", help: \"The north nic info of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node rdma_device_ip_addess rdma_device_name rdma_device_nic_name rdma_device_pcie_address sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "rdma_device_ip_addess",
+          "value": "192.168.2.1"
+        },
+        {
+          "name": "rdma_device_name",
+          "value": "mlx5_2"
+        },
+        {
+          "name": "rdma_device_nic_name",
+          "value": "roce2"
+        },
+        {
+          "name": "rdma_device_pcie_address",
+          "value": "0000:70:00.0"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"rdma_device_info\", help: \"The north nic info of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node rdma_device_ip_addess rdma_device_name rdma_device_nic_name rdma_device_pcie_address sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "rdma_device_ip_addess",
+          "value": "192.168.1.1"
+        },
+        {
+          "name": "rdma_device_name",
+          "value": "mlx5_1"
+        },
+        {
+          "name": "rdma_device_nic_name",
+          "value": "roce1"
+        },
+        {
+          "name": "rdma_device_pcie_address",
+          "value": "0000:69:00.0"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"rdma_device_info\", help: \"The north nic info of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node rdma_device_ip_addess rdma_device_name rdma_device_nic_name rdma_device_pcie_address sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "rdma_device_ip_addess",
+          "value": "192.168.2.1"
+        },
+        {
+          "name": "rdma_device_name",
+          "value": "mlx5_2"
+        },
+        {
+          "name": "rdma_device_nic_name",
+          "value": "roce2"
+        },
+        {
+          "name": "rdma_device_pcie_address",
+          "value": "0000:70:00.0"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"rdma_device_info\", help: \"The north nic info of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node rdma_device_ip_addess rdma_device_name rdma_device_nic_name rdma_device_pcie_address sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "rdma_device_ip_addess",
+          "value": "192.168.1.1"
+        },
+        {
+          "name": "rdma_device_name",
+          "value": "mlx5_1"
+        },
+        {
+          "name": "rdma_device_nic_name",
+          "value": "roce1"
+        },
+        {
+          "name": "rdma_device_pcie_address",
+          "value": "0000:69:00.0"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"rdma_device_info\", help: \"The north nic info of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node rdma_device_ip_addess rdma_device_name rdma_device_nic_name rdma_device_pcie_address sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "rdma_device_ip_addess",
+          "value": "192.168.2.1"
+        },
+        {
+          "name": "rdma_device_name",
+          "value": "mlx5_2"
+        },
+        {
+          "name": "rdma_device_nic_name",
+          "value": "roce2"
+        },
+        {
+          "name": "rdma_device_pcie_address",
+          "value": "0000:70:00.0"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"rdma_device_info\", help: \"The north nic info of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node rdma_device_ip_addess rdma_device_name rdma_device_nic_name rdma_device_pcie_address sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "rdma_device_ip_addess",
+          "value": "192.168.1.1"
+        },
+        {
+          "name": "rdma_device_name",
+          "value": "mlx5_1"
+        },
+        {
+          "name": "rdma_device_nic_name",
+          "value": "roce1"
+        },
+        {
+          "name": "rdma_device_pcie_address",
+          "value": "0000:69:00.0"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"rdma_device_info\", help: \"The north nic info of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node rdma_device_ip_addess rdma_device_name rdma_device_nic_name rdma_device_pcie_address sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "rdma_device_ip_addess",
+          "value": "192.168.2.1"
+        },
+        {
+          "name": "rdma_device_name",
+          "value": "mlx5_2"
+        },
+        {
+          "name": "rdma_device_nic_name",
+          "value": "roce2"
+        },
+        {
+          "name": "rdma_device_pcie_address",
+          "value": "0000:70:00.0"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
     "Desc": "Desc{fqName: \"remapped_correct_rows\", help: \"The remapped correct rows counts of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
@@ -37072,6 +37880,132 @@
       ],
       "gauge": {
         "value": -100
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"tensor_util\", help: \"the tensor util of Cambircon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 80
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"tensor_util\", help: \"the tensor util of Cambircon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 81
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"tensor_util\", help: \"the tensor util of Cambircon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 82
       }
     }
   },
@@ -42440,7 +43374,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"xid_error_count\", help: \"The xid error count of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid xid xid_compute_instance_id xid_mlu_instance_id]}",
+    "Desc": "Desc{fqName: \"xid_error_count\", help: \"The xid error count of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid xid xid_base_10 xid_compute_instance_id xid_mlu_instance_id]}",
     "Metric": {
       "label": [
         {
@@ -42477,6 +43411,10 @@
         },
         {
           "name": "xid",
+          "value": "0x30d641"
+        },
+        {
+          "name": "xid_base_10",
           "value": "3155969"
         },
         {
@@ -42494,7 +43432,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"xid_error_count\", help: \"The xid error count of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid xid xid_compute_instance_id xid_mlu_instance_id]}",
+    "Desc": "Desc{fqName: \"xid_error_count\", help: \"The xid error count of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid xid xid_base_10 xid_compute_instance_id xid_mlu_instance_id]}",
     "Metric": {
       "label": [
         {
@@ -42531,6 +43469,10 @@
         },
         {
           "name": "xid",
+          "value": "0x30d641"
+        },
+        {
+          "name": "xid_base_10",
           "value": "3155969"
         },
         {

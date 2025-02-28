@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: cambricon-mlu-monitor
-        image: cambricon-mlu-exporter:v2.0.16
+        image: cambricon-mlu-exporter:v2.0.17
         imagePullPolicy: IfNotPresent
         command:
         - /usr/bin/mlu-exporter
@@ -73,6 +73,8 @@ spec:
         volumeMounts:
         - mountPath: /var/lib/kubelet/pod-resources/
           name: pod-resources
+        - mountPath: /dev
+          name: dev
         - mountPath: /etc/mlu-exporter
           name: mlu-exporter
       # hostPID: true # need driver new than 5.10.26
@@ -82,6 +84,9 @@ spec:
       - name: pod-resources
         hostPath:
           path: /var/lib/kubelet/pod-resources/
+      - name: dev
+        hostPath:
+          path: /dev
       - name: mlu-exporter
         configMap:
           defaultMode: 420

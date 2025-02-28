@@ -1,17 +1,17 @@
 module github.com/Cambricon/mlu-exporter
 
-go 1.20
+go 1.23
 
 require (
 	github.com/fsnotify/fsnotify v1.4.7
-	github.com/golang/mock v1.4.4
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.14.0
 	github.com/prometheus/client_model v0.3.0
 	github.com/prometheus/common v0.37.0
 	github.com/sirupsen/logrus v1.9.0
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.9.0
+	go.uber.org/mock v0.5.0
 	google.golang.org/grpc v1.51.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.27.3

@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.0.17
+
+- Bump golang version to 1.23
+- Bump cndev to 4.0.2
+- Add current pcie speed and width metrics
+- Add mlu north nic info metrics
+- Update some of the new cndev interfaces
+- Add tensor util metrics
+
 ## v2.0.16
 
 - Enhance debug output
