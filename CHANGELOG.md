@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.0.18
+
+- Bump `cndev` to version 6.5.14
+- Add compute mode metrics
+- Add driver state metrics
+- Add frequency status metrics
+- Add tensor util metrics
+- Optimize the MLU driver startup check logic
+
 ## v2.0.17
 
 - Bump golang version to 1.23

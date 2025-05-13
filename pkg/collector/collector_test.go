@@ -212,6 +212,7 @@ func TestCollect(t *testing.T) {
 		// fake metrics
 		cndevVersion      = []uint{3, 12, 1}
 		computeCapability = []uint{3, 12}
+		computeMode       = []uint{0, 2, 2, 0}
 
 		// util
 		boardUtil = []int{11, 12, 13, 21}
@@ -373,8 +374,9 @@ func TestCollect(t *testing.T) {
 		ddrDataWidth = []int{1, 2, 3, 4}
 
 		// frequency
-		ddrFrequency = []int{100, 50, 150, 200}
-		frequency    = []int{1000, 500, 1500, 2000}
+		ddrFrequency    = []int{100, 50, 150, 200}
+		frequency       = []int{1000, 500, 1500, 2000}
+		frequencyStatus = []int{0, 0, 1, 1}
 
 		// codec
 		videoCodecUtil = [][]int{
@@ -579,7 +581,7 @@ func TestCollect(t *testing.T) {
 	slots := []int{}
 	for _, stat := range mst {
 		mcndev.EXPECT().GetDeviceTemperature(stat.slot).Return(temperature[stat.slot], memTemperature[stat.slot], chipTemperature[stat.slot], clusterTemperatures[stat.slot], memDieTemperatures[stat.slot], nil).AnyTimes()
-		mcndev.EXPECT().GetDeviceHealth(stat.slot).Return(health[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceHealth(stat.slot).Return(health[stat.slot], true, true, nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceVfState(stat.slot).Return(vfState[stat.slot], nil).AnyTimes()
 		for vf := 0; vf < len(virtualFunctionMemUsed[stat.slot]); vf++ {
 			mcndev.EXPECT().GetDeviceMemory(uint((vf+1)<<8|int(stat.slot))).Return(virtualFunctionMemUsed[stat.slot][vf], virtualFunctionMemTotal, virtualMemUsed[stat.slot], virtualMemTotal, nil).AnyTimes()
@@ -600,6 +602,7 @@ func TestCollect(t *testing.T) {
 		mcndev.EXPECT().GetDeviceNUMANodeID(stat.slot).Return(numaNodeID[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceDDRInfo(stat.slot).Return(ddrDataWidth[stat.slot], ddrBandWidth[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceFrequency(stat.slot).Return(frequency[stat.slot], ddrFrequency[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceFrequencyStatus(stat.slot).Return(frequencyStatus[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceRetiredPageInfo(stat.slot).Return(pageCounts[stat.slot], pageCounts[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceRetiredPagesOperation(stat.slot).Return(retirement[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceRemappedRows(stat.slot).Return(correctRows[stat.slot], uncorrectRows[stat.slot], pendingRows[stat.slot], failedRows[stat.slot], retirePending[stat.slot], nil).AnyTimes()
@@ -650,6 +653,7 @@ func TestCollect(t *testing.T) {
 		mcndev.EXPECT().GetDeviceSMluProfileIDInfo(stat.slot).Return(sMluProfileIDInfo[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceSMluProfileInfo(stat.slot, uint(sMluProfileIDInfo[stat.slot][0])).Return(sMluProfileInfo, sMluProfileTotal[stat.slot], sMluProfileRemain[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceComputeCapability(stat.slot).Return(computeCapability[0], computeCapability[1], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceComputeMode(stat.slot).Return(computeMode[stat.slot], nil).AnyTimes()
 
 		slots = append(slots, int(stat.slot))
 	}

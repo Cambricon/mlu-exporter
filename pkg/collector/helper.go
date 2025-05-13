@@ -23,6 +23,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Cambricon/mlu-exporter/pkg/cndev"
 	"github.com/Cambricon/mlu-exporter/pkg/podresources"
@@ -318,7 +319,7 @@ func getLabelValues(labels []string, info labelInfo) []string {
 			values = append(values, "") // configured label not applicable, add this to prevent panic
 		}
 	}
-	log.Debugf("getLabelValues: %+v", values)
+	log.Debugf("GetLabelValues: %+v", values)
 	return values
 }
 
@@ -340,14 +341,15 @@ type MLUStat struct {
 }
 
 func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
-	log.Debug("Start GetDeviceCount")
-	num, err := cli.GetDeviceCount()
-	if err != nil {
-		log.Error(errors.Wrap(err, "GetDeviceCount"))
+	log.Debug("Start GetDeviceCount in CollectMLUInfo")
+	count, err := cli.GetDeviceCount()
+	if err != nil || count == 0 {
+		log.Panic(errors.Wrap(err, "GetDeviceCount"))
 	}
-	log.Debugf("devie num %d", num)
+	log.Debugf("Device counts %d", count)
+
 	info := make(map[string]MLUStat)
-	for i := uint(0); i < num; i++ {
+	for i := uint(0); i < count; i++ {
 		dis := make(map[string]bool)
 		log.Debugf("Start slot %d GetDeviceModel", i)
 		model := cli.GetDeviceModel(i)
@@ -482,6 +484,10 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDeviceVoltageInfo", i))
 			dis["voltageInfoDisabled"] = true
 		}
+		if _, err = cli.GetDeviceFrequencyStatus(i); err != nil {
+			log.Debug(errors.Wrapf(err, "Slot %d GetDeviceFrequencyStatus", i))
+			dis["frequencyStatusDisabled"] = true
+		}
 		log.Debugf("Start slot %d GetDevicePerformanceThrottleReason", i)
 		if _, err = cli.GetDevicePerformanceThrottleReason(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDevicePerformanceThrottleReason", i))
@@ -547,6 +553,11 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceTensorUtil", i))
 			dis["tensorUtilDisabled"] = true
 		}
+		log.Debugf("Start slot %d GetDeviceComputeMode", i)
+		if _, err = cli.GetDeviceComputeMode(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceComputeMode", i))
+			dis["computeModeDisabled"] = true
+		}
 
 		info[uuid] = MLUStat{
 			cndevInterfaceDisabled: dis,
@@ -567,7 +578,7 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 			log.Warnf("Some cndev interfaces are not supported: %v", dis)
 		}
 	}
-	log.Debugf("collectSharedInfo: %+v", info)
+	log.Debugf("CollectSharedInfo: %+v", info)
 	return info
 }
 
@@ -714,4 +725,116 @@ func getIPAddressByNICName(nicName string) string {
 		}
 	}
 	return ipAddress
+}
+
+func fetchMLUCounts() (uint, error) {
+	targetVendorID := uint16(0xcabc) // cambricon mlu vendor ID is 0xcabc
+	targetClassBase := uint8(0x12)   // cambricon mlu class code base is 0x12
+	pciDevicesPath := "/sys/bus/pci/devices"
+
+	readHexFile := func(path string) (uint64, error) {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return 0, err
+		}
+		s := strings.TrimSpace(string(data))
+		s = strings.TrimPrefix(s, "0x")
+		val, err := strconv.ParseUint(s, 16, 32)
+		if err != nil {
+			return 0, err
+		}
+		return val, nil
+	}
+
+	entries, err := os.ReadDir(pciDevicesPath)
+	if err != nil {
+		log.Errorf("Can't read pci dir: %v", err)
+		return 0, err
+	}
+
+	var count uint
+	for _, entry := range entries {
+		devicePath := filepath.Join(pciDevicesPath, entry.Name())
+		vendorID, err := readHexFile(filepath.Join(devicePath, "vendor"))
+		if err != nil {
+			log.Warnf("Can't read vendor file: %v", err)
+			continue
+		}
+		if uint16(vendorID) != targetVendorID {
+			log.Debugf("VendorID not match 0x%x", vendorID)
+			continue
+		}
+		classCode, err := readHexFile(filepath.Join(devicePath, "class"))
+		if err != nil {
+			log.Warnf("Can't read class file: %v", err)
+			continue
+		}
+		classBase := uint8((classCode >> 16) & 0xFF)
+		if classBase == targetClassBase {
+			log.Debugf("Find mlu device: %s with vendorID 0x%x,classCode: 0x%x, classBase: 0x%x", devicePath, vendorID, classCode, classBase)
+			count++
+		}
+	}
+
+	log.Debugf("Find %d mlu devices", count)
+	return count, nil
+}
+
+func isDriverRunning(counts uint, cli cndev.Cndev) bool {
+	for i := range counts {
+		_, good, running, err := cli.GetDeviceHealth(i)
+		if err != nil {
+			log.Warn(errors.Wrapf(err, "GetDeviceHealth %d", i))
+			return false
+		}
+		if !good {
+			log.Warnf("MLU device %d health maybe in problem, ignoring at init", i)
+		}
+		if !running {
+			log.Warnf("MLU device %d driver is not running", i)
+			return false
+		}
+	}
+	return true
+}
+
+func EnsureMLUAllOk(cli cndev.Cndev) {
+	log.Infof("Start to ensure mlu driver status is ok")
+	i := 1
+	for {
+		if i < 60000 {
+			i = i << 1
+		}
+		time.Sleep(time.Duration(min(i, 60000)) * time.Millisecond)
+		if err := cli.Init(false); err != nil {
+			log.Error(errors.Wrap(err, "Init cndev client"))
+			continue
+		}
+		log.Debug("Start GetDeviceCount")
+		counts, err := cli.GetDeviceCount()
+		if err != nil {
+			log.Error(errors.Wrap(err, "GetDeviceCount"))
+			continue
+		}
+		log.Debugf("Devie counts: %d", counts)
+
+		realCounts, err := fetchMLUCounts()
+		if err != nil {
+			log.Error(errors.Wrap(err, "fetchMLUCounts"))
+			continue
+		}
+		log.Debugf("RealCounts is :%d ", realCounts)
+
+		if counts != realCounts {
+			log.Warnf("MLU device count not match, counts: %d, realCounts: %d", counts, realCounts)
+			continue
+		}
+		log.Infof("MLU device count match, count is %d", counts)
+
+		if !isDriverRunning(counts, cli) {
+			continue
+		}
+		log.Info("Driver of MLU devices are all running")
+		return
+	}
 }

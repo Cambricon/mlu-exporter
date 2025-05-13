@@ -8034,6 +8034,174 @@
     }
   },
   {
+    "Desc": "Desc{fqName: \"compute_mode\", help: \"The compute mode of Cambricon MLU, '0' means 'default mode', '1' means 'exclusive mode', '2' means 'prohibited mode'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"compute_mode\", help: \"The compute mode of Cambricon MLU, '0' means 'default mode', '1' means 'exclusive mode', '2' means 'prohibited mode'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 2
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"compute_mode\", help: \"The compute mode of Cambricon MLU, '0' means 'default mode', '1' means 'exclusive mode', '2' means 'prohibited mode'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 2
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"compute_mode\", help: \"The compute mode of Cambricon MLU, '0' means 'default mode', '1' means 'exclusive mode', '2' means 'prohibited mode'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
     "Desc": "Desc{fqName: \"container\", help: \"The k8s container info of Cambricon MLUs allocated\", constLabels: {}, variableLabels: [container driver mcu mlu model namespace node pod sn type uuid vf]}",
     "Metric": {
       "label": [
@@ -12838,6 +13006,174 @@
     }
   },
   {
+    "Desc": "Desc{fqName: \"driver_state\", help: \"The driver state of Cambricon MLU, 1 means 'running', 0 means 'not running'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"driver_state\", help: \"The driver state of Cambricon MLU, 1 means 'running', 0 means 'not running'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"driver_state\", help: \"The driver state of Cambricon MLU, 1 means 'running', 0 means 'not running'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"driver_state\", help: \"The driver state of Cambricon MLU, 1 means 'running', 0 means 'not running'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
     "Desc": "Desc{fqName: \"ecc_address_forbidden_error_total\", help: \"The ECC address forbidden error counts of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
@@ -14850,6 +15186,174 @@
       ],
       "gauge": {
         "value": 2000
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"frequency_status\", help: \"The lock frequency status of Cambricon MLU, 1 means locked, 0 means unlocked\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"frequency_status\", help: \"The lock frequency status of Cambricon MLU, 1 means locked, 0 means unlocked\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"frequency_status\", help: \"The lock frequency status of Cambricon MLU, 1 means locked, 0 means unlocked\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"frequency_status\", help: \"The lock frequency status of Cambricon MLU, 1 means locked, 0 means unlocked\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 1
       }
     }
   },
@@ -33092,7 +33596,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_ipu_utilization\", help: \"The process ipu utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_ipu_utilization\", help: \"The process ipu utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33138,7 +33642,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_ipu_utilization\", help: \"The process ipu utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_ipu_utilization\", help: \"The process ipu utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33184,7 +33688,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_ipu_utilization\", help: \"The process ipu utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_ipu_utilization\", help: \"The process ipu utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33230,7 +33734,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_ipu_utilization\", help: \"The process ipu utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_ipu_utilization\", help: \"The process ipu utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33276,7 +33780,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_ipu_utilization\", help: \"The process ipu utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_ipu_utilization\", help: \"The process ipu utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33322,7 +33826,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_ipu_utilization\", help: \"The process ipu utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_ipu_utilization\", help: \"The process ipu utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33368,7 +33872,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_ipu_utilization\", help: \"The process ipu utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_ipu_utilization\", help: \"The process ipu utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33414,7 +33918,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_ipu_utilization\", help: \"The process ipu utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_ipu_utilization\", help: \"The process ipu utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33460,7 +33964,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_jpu_utilization\", help: \"The process jpu utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_jpu_utilization\", help: \"The process jpu utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33506,7 +34010,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_jpu_utilization\", help: \"The process jpu utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_jpu_utilization\", help: \"The process jpu utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33552,7 +34056,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_jpu_utilization\", help: \"The process jpu utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_jpu_utilization\", help: \"The process jpu utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33598,7 +34102,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_jpu_utilization\", help: \"The process jpu utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_jpu_utilization\", help: \"The process jpu utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33644,7 +34148,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_jpu_utilization\", help: \"The process jpu utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_jpu_utilization\", help: \"The process jpu utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33690,7 +34194,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_jpu_utilization\", help: \"The process jpu utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_jpu_utilization\", help: \"The process jpu utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33736,7 +34240,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_jpu_utilization\", help: \"The process jpu utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_jpu_utilization\", help: \"The process jpu utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33782,7 +34286,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_jpu_utilization\", help: \"The process jpu utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_jpu_utilization\", help: \"The process jpu utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33828,7 +34332,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_memory_utilization\", help: \"The process memory utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_memory_utilization\", help: \"The process memory utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33874,7 +34378,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_memory_utilization\", help: \"The process memory utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_memory_utilization\", help: \"The process memory utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33920,7 +34424,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_memory_utilization\", help: \"The process memory utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_memory_utilization\", help: \"The process memory utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33966,7 +34470,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_memory_utilization\", help: \"The process memory utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_memory_utilization\", help: \"The process memory utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34012,7 +34516,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_memory_utilization\", help: \"The process memory utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_memory_utilization\", help: \"The process memory utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34058,7 +34562,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_memory_utilization\", help: \"The process memory utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_memory_utilization\", help: \"The process memory utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34104,7 +34608,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_memory_utilization\", help: \"The process memory utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_memory_utilization\", help: \"The process memory utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34150,7 +34654,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_memory_utilization\", help: \"The process memory utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_memory_utilization\", help: \"The process memory utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34196,7 +34700,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_vpu_decode_utilization\", help: \"The process vpu decode utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_vpu_decode_utilization\", help: \"The process vpu decode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34242,7 +34746,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_vpu_decode_utilization\", help: \"The process vpu decode utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_vpu_decode_utilization\", help: \"The process vpu decode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34288,7 +34792,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_vpu_decode_utilization\", help: \"The process vpu decode utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_vpu_decode_utilization\", help: \"The process vpu decode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34334,7 +34838,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_vpu_decode_utilization\", help: \"The process vpu decode utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_vpu_decode_utilization\", help: \"The process vpu decode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34380,7 +34884,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_vpu_decode_utilization\", help: \"The process vpu decode utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_vpu_decode_utilization\", help: \"The process vpu decode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34426,7 +34930,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_vpu_decode_utilization\", help: \"The process vpu decode utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_vpu_decode_utilization\", help: \"The process vpu decode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34472,7 +34976,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_vpu_decode_utilization\", help: \"The process vpu decode utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_vpu_decode_utilization\", help: \"The process vpu decode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34518,7 +35022,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_vpu_decode_utilization\", help: \"The process vpu decode utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_vpu_decode_utilization\", help: \"The process vpu decode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34564,7 +35068,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_vpu_encode_utilization\", help: \"The process vpu encode utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_vpu_encode_utilization\", help: \"The process vpu encode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34610,7 +35114,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_vpu_encode_utilization\", help: \"The process vpu encode utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_vpu_encode_utilization\", help: \"The process vpu encode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34656,7 +35160,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_vpu_encode_utilization\", help: \"The process vpu encode utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_vpu_encode_utilization\", help: \"The process vpu encode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34702,7 +35206,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_vpu_encode_utilization\", help: \"The process vpu encode utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_vpu_encode_utilization\", help: \"The process vpu encode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34748,7 +35252,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_vpu_encode_utilization\", help: \"The process vpu encode utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_vpu_encode_utilization\", help: \"The process vpu encode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34794,7 +35298,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_vpu_encode_utilization\", help: \"The process vpu encode utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_vpu_encode_utilization\", help: \"The process vpu encode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34840,7 +35344,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_vpu_encode_utilization\", help: \"The process vpu encode utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_vpu_encode_utilization\", help: \"The process vpu encode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -34886,7 +35390,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"process_vpu_encode_utilization\", help: \"The process vpu encode utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Desc": "Desc{fqName: \"process_vpu_encode_utilization\", help: \"The process vpu encode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
         {

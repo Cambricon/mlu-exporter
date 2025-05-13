@@ -19,7 +19,6 @@ package cndev
 import "C"
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"unsafe"
@@ -101,6 +100,7 @@ type Cndev interface {
 	GetDeviceClusterCount(idx uint) (int, error)
 	GetDeviceCndevVersion() (uint, uint, uint, error)
 	GetDeviceComputeCapability(idx uint) (uint, uint, error)
+	GetDeviceComputeMode(idx uint) (uint, error)
 	GetDeviceCoreNum(idx uint) (uint, error)
 	GetDeviceCount() (uint, error)
 	GetDeviceCPUUtil(idx uint) (uint16, []uint8, []uint8, []uint8, []uint8, []uint8, []uint8, error)
@@ -111,7 +111,7 @@ type Cndev interface {
 	GetDeviceECCInfo(idx uint) (uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, error)
 	GetDeviceEccMode(idx uint) (int, int, error)
 	GetDeviceFanSpeed(idx uint) (int, error)
-	GetDeviceHealth(idx uint) (int, error)
+	GetDeviceHealth(idx uint) (int, bool, bool, error)
 	GetDeviceHeartbeatCount(idx uint) (uint32, error)
 	GetDeviceImageCodecUtil(idx uint) ([]int, error)
 	GetDeviceMaxPCIeInfo(idx uint) (int, int, error)
@@ -165,6 +165,7 @@ type Cndev interface {
 	GetDeviceVfState(idx uint) (int, error)
 	GetDeviceVideoCodecUtil(idx uint) ([]int, []int, error)
 	GetDeviceVoltageInfo(idx uint) (int, int, int, error)
+	GetDeviceFrequencyStatus(idx uint) (int, error)
 	RegisterEventsHandleAndWait(slots []int, ch chan XIDInfoWithTimestamp) error
 	GetTopologyRelationship(domain1, bus1, device1, function1, domain2, bus2, device2, function2 uint) (int, error)
 	GetSupportedEventTypes(idx uint) error
@@ -182,11 +183,8 @@ func NewCndevClient() Cndev {
 
 func (c *cndev) Init(healthCheck bool) error {
 	r := dl.cndevInit()
-	if r == C.CNDEV_ERROR_UNINITIALIZED {
-		return errors.New("could not load CNDEV library")
-	}
-	if healthCheck {
-		return errorString(r)
+	if err := errorString(r); err != nil || healthCheck {
+		return err
 	}
 	return c.generateDeviceHandleMap()
 }
@@ -386,6 +384,13 @@ func (c *cndev) GetDeviceComputeCapability(idx uint) (uint, uint, error) {
 	return uint(major), uint(minor), errorString(r)
 }
 
+func (c *cndev) GetDeviceComputeMode(idx uint) (uint, error) {
+	var computeMode C.cndevComputeMode_t
+	computeMode.version = C.CNDEV_VERSION_6
+	r := C.cndevGetComputeMode(&computeMode, c.cndevHandleMap[idx])
+	return uint(computeMode.mode), errorString(r)
+}
+
 func (c *cndev) GetDeviceCoreNum(idx uint) (uint, error) {
 	var cardCoreNum C.cndevCardCoreCount_t
 	cardCoreNum.version = C.CNDEV_VERSION_5
@@ -498,11 +503,11 @@ func (c *cndev) GetDeviceFrequency(idx uint) (int, int, error) {
 	return int(cardFrequency.boardFreq), int(cardFrequency.ddrFreq), nil
 }
 
-func (c *cndev) GetDeviceHealth(idx uint) (int, error) {
+func (c *cndev) GetDeviceHealth(idx uint) (int, bool, bool, error) {
 	var cardHealthState C.cndevCardHealthState_t
 	cardHealthState.version = C.CNDEV_VERSION_5
 	r := C.cndevGetCardHealthState(&cardHealthState, c.cndevHandleMap[idx])
-	return int(cardHealthState.health), errorString(r)
+	return int(cardHealthState.health), cardHealthState.deviceState == C.CNDEV_HEALTH_STATE_DEVICE_GOOD, cardHealthState.driverState == C.CNDEV_HEALTH_STATE_DRIVER_RUNNING, errorString(r)
 }
 
 func (c *cndev) GetDeviceHeartbeatCount(idx uint) (uint32, error) {
@@ -583,6 +588,7 @@ func (c *cndev) GetDeviceMemory(idx uint) (int64, int64, int64, int64, error) {
 
 func (c *cndev) GetDeviceMemoryDieCount(idx uint) (int, error) {
 	//this api is deprecated, keep to comply with old version
+	log.Debugf("GetDeviceMemoryDieCount for slot:%d, this is deprecated, ignore", idx)
 	return 0, nil
 }
 
@@ -1183,6 +1189,12 @@ func (c *cndev) GetDeviceVoltageInfo(idx uint) (int, int, int, error) {
 	var voltageInfo C.cndevVoltageInfo_t
 	r := C.cndevGetVoltageInfo(&voltageInfo, c.cndevHandleMap[idx])
 	return int(voltageInfo.ipuCoreVoltage), int(voltageInfo.socVoltage), int(voltageInfo.hbmVddVoltage), errorString(r)
+}
+
+func (c *cndev) GetDeviceFrequencyStatus(idx uint) (int, error) {
+	var freqStatus C.cndevMLUFrequencyStatus_t
+	r := C.cndevGetMLUFrequencyStatus(&freqStatus, c.cndevHandleMap[idx])
+	return int(freqStatus.mluFrequencyLockStatus), errorString(r)
 }
 
 func (c *cndev) GetTopologyRelationship(domain, bus, device, function, rdmaDomain, rdmaBus, rdmaDevice, rdmaFunction uint) (int, error) {

@@ -103,14 +103,11 @@ func main() {
 
 	log.Info("Start loading cndev")
 	cndevcli := cndev.NewCndevClient()
-	if err := cndevcli.Init(false); err != nil {
-		log.Fatal(errors.Wrap(err, "Init cndev client"))
-	}
-	log.Info("Loaded cndev ok")
-	defer cndevcli.Release()
+	collector.EnsureMLUAllOk(cndevcli)
+	defer func() { log.Println("Shutdown of CNDEV returned:", cndevcli.Release()) }()
 	log.Debug("Start collectMLUInfo")
 	mluInfo := collector.CollectMLUInfo(cndevcli)
-	log.Debug("Start collectMLUInfo")
+	log.Debug("Finished collectMLUInfo")
 	metricConfig := metrics.GetMetrics(options.MetricsConfig, options.MetricsPrefix)
 	log.Debug("Start WatchMetrics")
 	go metrics.WatchMetrics(options.MetricsConfig, options.MetricsPrefix)
@@ -136,7 +133,7 @@ func main() {
 
 	http.Handle(options.MetricsPath, promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
 
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		cli := cndev.NewCndevClient()
 		if err := cli.Init(true); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

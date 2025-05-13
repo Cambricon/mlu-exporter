@@ -303,6 +303,18 @@ data:
           type: type
           uuid: uuid
         name: cluster_temperature
+      compute_mode:
+        help: The compute mode of Cambricon MLU, '0' means 'default mode', '1' means 'exclusive mode', '2' means 'prohibited mode'
+        labels:
+          driver: driver
+          mcu: mcu
+          mlu: mlu
+          model: model
+          node: node
+          sn: sn
+          type: type
+          uuid: uuid
+        name: compute_mode
       core_current:
         help: The IPU core current of Cambricon MLU , unit is 'mA'
         labels:
@@ -438,6 +450,18 @@ data:
           type: type
           uuid: uuid
         name: dram_ecc_sbe_count
+      driver_state:
+        help: The driver state of Cambricon MLU, 1 means 'running', 0 means 'not running'
+        labels:
+          driver: driver
+          mcu: mcu
+          mlu: mlu
+          model: model
+          node: node
+          sn: sn
+          type: type
+          uuid: uuid
+        name: driver_state
       ecc_address_forbidden_error_total:
         help: The ECC address forbidden error counts of Cambricon MLU
         labels:
@@ -582,6 +606,18 @@ data:
           type: type
           uuid: uuid
         name: frequency
+      frequency_status:
+        help: The lock frequency status of Cambricon MLU, 1 means locked, 0 means unlocked
+        labels:
+          driver: driver
+          mcu: mcu
+          mlu: mlu
+          model: model
+          node: node
+          sn: sn
+          type: type
+          uuid: uuid
+        name: frequency_status
       health:
         help: The health state of Cambricon MLU, 1 means health, 0 means sick
         labels:
@@ -1443,7 +1479,7 @@ data:
           vf: vf
         name: power_usage
       process_ipu_utilization:
-        help: The process ipu utilization of Cambricon MLU, unit is '%'
+        help: The process ipu utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host
         labels:
           driver: driver
           mcu: mcu
@@ -1456,7 +1492,7 @@ data:
           uuid: uuid
         name: process_ipu_utilization
       process_jpu_utilization:
-        help: The process jpu utilization of Cambricon MLU, unit is '%'
+        help: The process jpu utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host
         labels:
           driver: driver
           mcu: mcu
@@ -1469,7 +1505,7 @@ data:
           uuid: uuid
         name: process_jpu_utilization
       process_memory_utilization:
-        help: The process memory utilization of Cambricon MLU, unit is '%'
+        help: The process memory utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host
         labels:
           driver: driver
           mcu: mcu
@@ -1482,7 +1518,7 @@ data:
           uuid: uuid
         name: process_memory_utilization
       process_vpu_decode_utilization:
-        help: The process vpu decode utilization of Cambricon MLU, unit is '%'
+        help: The process vpu decode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host
         labels:
           driver: driver
           mcu: mcu
@@ -1495,7 +1531,7 @@ data:
           uuid: uuid
         name: process_vpu_decode_utilization
       process_vpu_encode_utilization:
-        help: The process vpu encode utilization of Cambricon MLU, unit is '%'
+        help: The process vpu encode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host
         labels:
           driver: driver
           mcu: mcu

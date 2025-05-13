@@ -221,6 +221,21 @@ func (mr *CndevMockRecorder) GetDeviceComputeCapability(idx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceComputeCapability", reflect.TypeOf((*Cndev)(nil).GetDeviceComputeCapability), idx)
 }
 
+// GetDeviceComputeMode mocks base method.
+func (m *Cndev) GetDeviceComputeMode(idx uint) (uint, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceComputeMode", idx)
+	ret0, _ := ret[0].(uint)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceComputeMode indicates an expected call of GetDeviceComputeMode.
+func (mr *CndevMockRecorder) GetDeviceComputeMode(idx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceComputeMode", reflect.TypeOf((*Cndev)(nil).GetDeviceComputeMode), idx)
+}
+
 // GetDeviceCoreNum mocks base method.
 func (m *Cndev) GetDeviceCoreNum(idx uint) (uint, error) {
 	m.ctrl.T.Helper()
@@ -369,13 +384,30 @@ func (mr *CndevMockRecorder) GetDeviceFrequency(idx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceFrequency", reflect.TypeOf((*Cndev)(nil).GetDeviceFrequency), idx)
 }
 
-// GetDeviceHealth mocks base method.
-func (m *Cndev) GetDeviceHealth(idx uint) (int, error) {
+// GetDeviceFrequencyStatus mocks base method.
+func (m *Cndev) GetDeviceFrequencyStatus(idx uint) (int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDeviceHealth", idx)
+	ret := m.ctrl.Call(m, "GetDeviceFrequencyStatus", idx)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
+}
+
+// GetDeviceFrequencyStatus indicates an expected call of GetDeviceFrequencyStatus.
+func (mr *CndevMockRecorder) GetDeviceFrequencyStatus(idx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceFrequencyStatus", reflect.TypeOf((*Cndev)(nil).GetDeviceFrequencyStatus), idx)
+}
+
+// GetDeviceHealth mocks base method.
+func (m *Cndev) GetDeviceHealth(idx uint) (int, bool, bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceHealth", idx)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(bool)
+	ret2, _ := ret[2].(bool)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
 }
 
 // GetDeviceHealth indicates an expected call of GetDeviceHealth.

@@ -74,7 +74,7 @@ func connectToServer(socket string, timeout time.Duration, maxSize int) (*grpc.C
 	defer cancel()
 
 	creds := insecure.NewCredentials()
-	dialer := func(ctx context.Context, address string) (net.Conn, error) {
+	dialer := func(_ context.Context, address string) (net.Conn, error) {
 		return net.DialTimeout("unix", address, timeout)
 	}
 	conn, err := grpc.DialContext(ctx, socket,

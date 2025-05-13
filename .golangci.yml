@@ -14,11 +14,11 @@
 
 linters:
   enable:
-    - exportloopref
+    - copyloopvar
     - gci
     - gofmt
     - goimports
-    - golint
+    - revive
     - gosimple
     - govet
     - unused

@@ -75,6 +75,7 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 		ChipCPUUser:                       c.collectChipCPUUser,
 		ChipTemperature:                   c.collectChipTemperature,
 		ClusterTemperature:                c.collectClusterTemperature,
+		ComputeMode:                       c.collectComputeMode,
 		CoreCurrent:                       c.collectCoreCurrent,
 		CoreUtil:                          c.collectCoreUtil,
 		CoreVoltage:                       c.collectCoreVoltage,
@@ -88,6 +89,7 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 		DoubleBitRetiredPageCount:         c.collectDoubleBitRetiredPageCount,
 		DramEccDbeCount:                   c.collectDramEccDbeCount,
 		DramEccSbeCount:                   c.collectDramEccSbeCount,
+		DriverState:                       c.collectDriverState,
 		ECCAddressForbiddenError:          c.collectECCAddressForbiddenError,
 		ECCCorrectedError:                 c.collectECCCorrectedError,
 		ECCCurrentMode:                    c.collectECCCurrentMode,
@@ -100,6 +102,7 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 		ECCUncorrectedError:               c.collectECCUncorrectedError,
 		FanSpeed:                          c.collectFanSpeed,
 		Frequency:                         c.collectFrequency,
+		FrequencyStatus:                   c.collectFrequencyStatus,
 		Health:                            c.collectHealth,
 		HeartbeatCount:                    c.collectHeartbeatCount,
 		ImageCodecUtil:                    c.collectImageCodecUtil,
@@ -257,13 +260,13 @@ func (c *cndevCollector) collectAddressSwapsMax(ch chan<- prometheus.Metric, m m
 		if stat.cndevInterfaceDisabled["addressSwapsDisabled"] {
 			continue
 		}
-		_, _, _, _, max, err := c.client.GetDeviceAddressSwaps(stat.slot)
+		_, _, _, _, maxAddressSwaps, err := c.client.GetDeviceAddressSwaps(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRetiredPageInfo", stat.slot))
 			continue
 		}
 		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(max), labelValues...)
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(maxAddressSwaps), labelValues...)
 	}
 }
 
@@ -585,6 +588,21 @@ func (c *cndevCollector) collectClusterTemperature(ch chan<- prometheus.Metric, 
 	}
 }
 
+func (c *cndevCollector) collectComputeMode(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo {
+		if stat.cndevInterfaceDisabled["computeModeDisabled"] {
+			continue
+		}
+		mode, err := c.client.GetDeviceComputeMode(stat.slot)
+		if err != nil {
+			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceComputeMode", stat.slot))
+			continue
+		}
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(mode), labelValues...)
+	}
+}
+
 func (c *cndevCollector) collectCoreCurrent(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.cndevInterfaceDisabled["currentInfoDisabled"] {
@@ -772,6 +790,22 @@ func (c *cndevCollector) collectDramEccSbeCount(ch chan<- prometheus.Metric, m m
 	}
 }
 
+func (c *cndevCollector) collectDriverState(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo {
+		var state int
+		_, _, isRunning, err := c.client.GetDeviceHealth(stat.slot)
+		if err != nil {
+			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceHealth", stat.slot))
+			continue
+		}
+		if isRunning {
+			state = 1
+		}
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(state), labelValues...)
+	}
+}
+
 func (c *cndevCollector) collectECCAddressForbiddenError(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
 		if stat.cndevInterfaceDisabled["eccDisabled"] {
@@ -952,9 +986,24 @@ func (c *cndevCollector) collectFrequency(ch chan<- prometheus.Metric, m metrics
 	}
 }
 
+func (c *cndevCollector) collectFrequencyStatus(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo {
+		if stat.cndevInterfaceDisabled["frequencyStatusDisabled"] {
+			continue
+		}
+		stats, err := c.client.GetDeviceFrequencyStatus(stat.slot)
+		if err != nil {
+			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceFrequencyStatus", stat.slot))
+			continue
+		}
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(stats), labelValues...)
+	}
+}
+
 func (c *cndevCollector) collectHealth(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo {
-		health, err := c.client.GetDeviceHealth(stat.slot)
+		health, _, _, err := c.client.GetDeviceHealth(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceHealth", stat.slot))
 			continue
