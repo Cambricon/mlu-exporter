@@ -25,6 +25,7 @@ import (
 	"github.com/Cambricon/mlu-exporter/pkg/metrics"
 	"github.com/Cambricon/mlu-exporter/pkg/mock"
 	"github.com/Cambricon/mlu-exporter/pkg/podresources"
+	"github.com/agiledragon/gomonkey/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
@@ -272,7 +273,13 @@ func TestCollect(t *testing.T) {
 		throttleReason = []bool{true, false, false, true}
 
 		// health
-		health = []int{1, 0, 1, 0}
+		health   = []int{1, 0, 1, 0}
+		unhealth = [][]string{
+			{},
+			{"CNDEV_FR_TEMP_VIOLATION"},
+			{},
+			{"CNDEV_FR_REPAIR_FAILURE"},
+		}
 
 		// parity
 		parityError = []int{3, 0, 0, 0}
@@ -374,9 +381,10 @@ func TestCollect(t *testing.T) {
 		ddrDataWidth = []int{1, 2, 3, 4}
 
 		// frequency
-		ddrFrequency    = []int{100, 50, 150, 200}
-		frequency       = []int{1000, 500, 1500, 2000}
-		frequencyStatus = []int{0, 0, 1, 1}
+		ddrFrequency     = []int{100, 50, 150, 200}
+		defaultFrequency = []int{2000, 2000, 2000, 2000}
+		frequency        = []int{1000, 500, 1500, 2000}
+		frequencyStatus  = []int{0, 0, 1, 1}
 
 		// codec
 		videoCodecUtil = [][]int{
@@ -501,6 +509,12 @@ func TestCollect(t *testing.T) {
 			{"1.1.1.3", "2.2.2.4"},
 			{"1.1.1.4", "2.2.2.5"},
 		}
+		mluLinkState = [][]int{
+			{1, 0},
+			{1, 1},
+			{0, 1},
+			{1, 1},
+		}
 		mluLinkOpticalPresent = [][]uint8{
 			{1, 0},
 			{1, 1},
@@ -537,6 +551,8 @@ func TestCollect(t *testing.T) {
 		mluLinkCounterErrReplay           = mluLinkCounterCntrReadByte
 		mluLinkCounterErrUncorrected      = mluLinkCounterCntrReadByte
 		mluLinkErrorCounter               = mluLinkEventCounter
+		mluLinkCorrectFecCounter          = mluLinkEventCounter
+		mluLinkUncorrectFecCounter        = mluLinkEventCounter
 		mluLinkSpeedFormat                = mluLinkPortMode
 		mluLinkStatusIsActive             = mluLinkPortMode
 		mluLinkStatusSerdesState          = mluLinkPortMode
@@ -577,11 +593,16 @@ func TestCollect(t *testing.T) {
 	// mcndev mock response
 	mcndev := mock.NewCndev(ctrl)
 	mcndev.EXPECT().Init(false).Return(nil).AnyTimes()
+	mcndev.EXPECT().Init(true).Return(nil).AnyTimes()
+	stub := gomonkey.ApplyFunc(fetchMLUCounts, func() (uint, error) {
+		return 4, nil
+	})
+	defer stub.Reset()
 
 	slots := []int{}
 	for _, stat := range mst {
 		mcndev.EXPECT().GetDeviceTemperature(stat.slot).Return(temperature[stat.slot], memTemperature[stat.slot], chipTemperature[stat.slot], clusterTemperatures[stat.slot], memDieTemperatures[stat.slot], nil).AnyTimes()
-		mcndev.EXPECT().GetDeviceHealth(stat.slot).Return(health[stat.slot], true, true, nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceHealth(stat.slot).Return(health[stat.slot], true, true, unhealth[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceVfState(stat.slot).Return(vfState[stat.slot], nil).AnyTimes()
 		for vf := 0; vf < len(virtualFunctionMemUsed[stat.slot]); vf++ {
 			mcndev.EXPECT().GetDeviceMemory(uint((vf+1)<<8|int(stat.slot))).Return(virtualFunctionMemUsed[stat.slot][vf], virtualFunctionMemTotal, virtualMemUsed[stat.slot], virtualMemTotal, nil).AnyTimes()
@@ -601,7 +622,7 @@ func TestCollect(t *testing.T) {
 		mcndev.EXPECT().GetDeviceTinyCoreUtil(stat.slot).Return(tinyCoreUtil[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceNUMANodeID(stat.slot).Return(numaNodeID[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceDDRInfo(stat.slot).Return(ddrDataWidth[stat.slot], ddrBandWidth[stat.slot], nil).AnyTimes()
-		mcndev.EXPECT().GetDeviceFrequency(stat.slot).Return(frequency[stat.slot], ddrFrequency[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceFrequency(stat.slot).Return(frequency[stat.slot], ddrFrequency[stat.slot], defaultFrequency[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceFrequencyStatus(stat.slot).Return(frequencyStatus[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceRetiredPageInfo(stat.slot).Return(pageCounts[stat.slot], pageCounts[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceRetiredPagesOperation(stat.slot).Return(retirement[stat.slot], nil).AnyTimes()
@@ -620,7 +641,7 @@ func TestCollect(t *testing.T) {
 			mcndev.EXPECT().GetDeviceMLULinkCounter(stat.slot, uint(link)).Return(mluLinkCounterCntrReadByte[stat.slot][link], mluLinkCounterCntrReadPackage[stat.slot][link], mluLinkCounterCntrWriteByte[stat.slot][link], mluLinkCounterCntrWritePackage[stat.slot][link],
 				mluLinkCounterErrCorrected[stat.slot][link], mluLinkCounterErrCRC24[stat.slot][link], mluLinkCounterErrCRC32[stat.slot][link], mluLinkCounterErrEccDouble[stat.slot][link], mluLinkCounterErrFatal[stat.slot][link], mluLinkCounterErrReplay[stat.slot][link],
 				mluLinkCounterErrUncorrected[stat.slot][link], mluLinkCounterCntrCnpPackage[stat.slot][link], mluLinkCounterCntrPfcPackage[stat.slot][link], nil).AnyTimes()
-			mcndev.EXPECT().GetDeviceMLULinkErrorCounter(stat.slot, uint(link)).Return(mluLinkErrorCounter[stat.slot][link], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceMLULinkErrorCounter(stat.slot, uint(link)).Return(mluLinkErrorCounter[stat.slot][link], mluLinkCorrectFecCounter[stat.slot][link], mluLinkUncorrectFecCounter[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkEventCounter(stat.slot, uint(link)).Return(mluLinkEventCounter[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceOpticalInfo(stat.slot, uint(link)).Return(mluLinkOpticalPresent[stat.slot][link], mluLinkOpticalTemp[stat.slot][link], mluLinkOpticalVolt[stat.slot][link], mluLinkOpticalTxpwr[stat.slot][link], mluLinkOpticalRxpwr[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkPortMode(stat.slot, uint(link)).Return(mluLinkPortMode[stat.slot][link], nil).AnyTimes()
@@ -629,6 +650,7 @@ func TestCollect(t *testing.T) {
 				mluLinkRemoteNcsUUID64[stat.slot][link], mluLinkRemoteIP[stat.slot][link], mluLinkRemoteMac[stat.slot][link], mluLinkRemoteUUID[stat.slot][link], mluLinkRemotePortName[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkSpeedInfo(stat.slot, uint(link)).Return(mluLinkSpeedValue[stat.slot][link], mluLinkSpeedFormat[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkStatus(stat.slot, uint(link)).Return(mluLinkStatusIsActive[stat.slot][link], mluLinkStatusSerdesState[stat.slot][link], mluLinkStatusCableState[stat.slot][link], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceMLULinkState(stat.slot, uint(link)).Return(mluLinkState[stat.slot][link], mluLinkState[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkVersion(stat.slot, uint(link)).Return(mluLinkMajor[stat.slot][link], mluLinkMinor[stat.slot][link], mluLinkBuild[stat.slot][link], nil).AnyTimes()
 		}
 		mcndev.EXPECT().GetDeviceMLULinkPortNumber(stat.slot).Return(mluLinkPortNumber).AnyTimes()

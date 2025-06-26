@@ -73,6 +73,8 @@ volumeMounts:
   name: pod-resources
 - mountPath: /dev
   name: dev
+- mountPath: /host/usr/lib
+  name: cndev-lib
 - mountPath: /etc/mlu-exporter
   name: mlu-exporter
 
@@ -83,6 +85,9 @@ volumes:
 - name: dev
   hostPath:
     path: /dev
+- name: cndev-lib
+  hostPath:
+    path: /usr/lib
 - name: mlu-exporter
   configMap:
     defaultMode: 420

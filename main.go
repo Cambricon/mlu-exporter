@@ -103,6 +103,9 @@ func main() {
 
 	log.Info("Start loading cndev")
 	cndevcli := cndev.NewCndevClient()
+	if err := collector.EnsureCndevLib(); err != nil {
+		log.Panicf("Failed to ensure CNDEV lib %v", err)
+	}
 	collector.EnsureMLUAllOk(cndevcli)
 	defer func() { log.Println("Shutdown of CNDEV returned:", cndevcli.Release()) }()
 	log.Debug("Start collectMLUInfo")

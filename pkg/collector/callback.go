@@ -73,7 +73,7 @@ func NewCallback(
 		return nil, err
 	}
 	cndevcli := cndev.NewCndevClient()
-	if err := cndevcli.Init(false); err != nil {
+	if err := cndevcli.Init(true); err != nil {
 		return nil, err
 	}
 	c := &Callback{

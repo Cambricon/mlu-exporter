@@ -16,10 +16,13 @@ package collector
 
 import (
 	"fmt"
+	"io"
 	"io/fs"
 	"net"
 	"os"
+	"path"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -71,11 +74,13 @@ type labelInfo struct {
 	mluLinkRemoteInfo mluLinkRemoteInfo
 	pcieInfo          pcieInfo
 	pid               uint32
+	ppi               string
 	podInfo           podresources.PodInfo
 	smluInstanceInfo  cndev.SmluInstanceInfo
 	smluProfileInfo   cndev.SmluProfileInfo
 	stat              MLUStat
 	typ               string
+	unhealthReason    string
 	vf                string
 	xidInfo           cndev.XIDInfoWithTimestamp
 }
@@ -118,7 +123,7 @@ func getLabelValues(labels []string, info labelInfo) []string {
 				smluInfos := info.stat.smluInfos
 				if len(info.stat.smluInfos) == 0 {
 					cli := cndev.NewCndevClient()
-					if err := cli.Init(false); err != nil {
+					if err := cli.Init(true); err != nil {
 						log.Error(errors.Wrap(err, "Init"))
 						break
 					}
@@ -167,7 +172,7 @@ func getLabelValues(labels []string, info labelInfo) []string {
 				smluInfos := info.stat.smluInfos
 				if len(info.stat.smluInfos) == 0 {
 					cli := cndev.NewCndevClient()
-					if err := cli.Init(false); err != nil {
+					if err := cli.Init(true); err != nil {
 						log.Error(errors.Wrap(err, "Init"))
 						break
 					}
@@ -227,6 +232,8 @@ func getLabelValues(labels []string, info labelInfo) []string {
 			values = append(values, info.podInfo.Namespace)
 		case Pod:
 			values = append(values, info.podInfo.Pod)
+		case PPI:
+			values = append(values, info.ppi)
 		case Container:
 			values = append(values, info.podInfo.Container)
 		case VF:
@@ -315,6 +322,8 @@ func getLabelValues(labels []string, info labelInfo) []string {
 			values = append(values, info.mluLinkRemoteInfo.remoteUUID)
 		case RemotePortName:
 			values = append(values, info.mluLinkRemoteInfo.remotePortName)
+		case UnhealthReason:
+			values = append(values, info.unhealthReason)
 		default:
 			values = append(values, "") // configured label not applicable, add this to prevent panic
 		}
@@ -328,6 +337,7 @@ type MLUStat struct {
 	driver                 string
 	link                   int
 	linkActive             map[int]bool
+	linkPPI                map[int]string
 	mcu                    string
 	mimEnabled             bool
 	mimInfos               []cndev.MimInfo
@@ -351,44 +361,58 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 	info := make(map[string]MLUStat)
 	for i := uint(0); i < count; i++ {
 		dis := make(map[string]bool)
+
 		log.Debugf("Start slot %d GetDeviceModel", i)
 		model := cli.GetDeviceModel(i)
+		if model == "" {
+			log.Panic(errors.Wrapf(err, "GetDeviceModel for slot %d", i))
+		}
+
 		log.Debugf("Start slot %d GetDeviceUUID", i)
 		uuid, err := cli.GetDeviceUUID(i)
 		if err != nil {
-			log.Error(errors.Wrap(err, "GetDeviceUUID"))
+			log.Panic(errors.Wrapf(err, "GetDeviceUUID for slot %d", i))
 		}
+
 		log.Debugf("Start slot %d GetDeviceSN", i)
 		sn, err := cli.GetDeviceSN(i)
 		if err != nil {
-			log.Error(errors.Wrap(err, "GetDeviceSN"))
+			log.Panic(errors.Wrapf(err, "GetDeviceSN for slot %d", i))
 		}
+
 		log.Debugf("Start slot %d GetDeviceVersion", i)
 		mcuMajor, mcuMinor, mcuBuild, driverMajor, driverMinor, driverBuild, err := cli.GetDeviceVersion(i)
 		if err != nil {
-			log.Error(errors.Wrap(err, "GetDeviceVersion"))
+			log.Panic(errors.Wrapf(err, "GetDeviceVersion for slot %d", i))
 		}
+
 		log.Debugf("Start slot %d DeviceMimModeEnabled", i)
+		var mimInfos []cndev.MimInfo
 		mimEnabled, err := cli.DeviceMimModeEnabled(i)
 		if err != nil {
-			log.Warn(errors.Wrap(err, "DeviceMimModeEnabled"))
-		}
-		var mimInfos []cndev.MimInfo
-		if mimEnabled {
+			log.Warn(errors.Wrapf(err, "DeviceMimModeEnabled for slot %d", i))
+		} else if mimEnabled {
 			mimInfos, err = cli.GetAllMLUInstanceInfo(i)
 			if err != nil {
 				log.Warn(errors.Wrap(err, "GetAllMLUInstanceInfo"))
 			}
 		}
+
 		log.Debugf("Start slot %d DeviceSmluModeEnabled", i)
 		smluEnabled, err := cli.DeviceSmluModeEnabled(i)
 		if err != nil {
-			log.Warn(errors.Wrap(err, "DeviceMimModeEnabled"))
+			log.Warn(errors.Wrapf(err, "DeviceMimModeEnabled for slot %d", i))
 		}
+
 		log.Debugf("Start slot %d GetDeviceMLULinkPortNumber", i)
 		link := cli.GetDeviceMLULinkPortNumber(i)
+		if link == -1 {
+			log.Warnf("GetDeviceMLULinkPortNumber for slot %d", i)
+			dis["mluLinkPortNumberDisabled"] = true
+		}
 		log.Debugf("Slot %d mlulink num %d", i, link)
 		linkActive := map[int]bool{}
+		linkPPI := map[int]string{}
 		opticalPresent := map[int]uint8{}
 		for j := 0; j < link; j++ {
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkStatus", i, j)
@@ -398,16 +422,37 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 				continue
 			}
 			linkActive[j] = active != 0
+
+			log.Debugf("Start slot %d link %d GetDeviceMLULinkCapability", i, j)
+			if _, _, err = cli.GetDeviceMLULinkCapability(i, uint(j)); err != nil {
+				log.Debug(errors.Wrapf(err, "Slot %d GetDeviceMLULinkCapability", i))
+				dis["mluLinkCapabilityDisabled"] = true
+			}
+
+			log.Debugf("Start slot %d link %d GetDeviceMLULinkPortMode", i, j)
+			if _, err = cli.GetDeviceMLULinkPortMode(i, uint(j)); err != nil {
+				log.Debug(errors.Wrapf(err, "Slot %d GetDeviceMLULinkPortMode", i))
+				dis["mluLinkPortModeDisabled"] = true
+			}
+
+			log.Debugf("Start slot %d link %d GetDeviceMLULinkVersion", i, j)
+			if _, _, _, err = cli.GetDeviceMLULinkVersion(i, uint(j)); err != nil {
+				log.Debug(errors.Wrapf(err, "Slot %d GetDeviceMLULinkVersion", i))
+				dis["mluLinkVersionDisabled"] = true
+			}
+
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkEventCounter", i, j)
 			if _, err = cli.GetDeviceMLULinkEventCounter(i, uint(j)); err != nil {
 				log.Debug(errors.Wrapf(err, "Slot %d GetDeviceMLULinkEventCounter", i))
 				dis["mluLinkEventCounterDisabled"] = true
 			}
+
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkErrorCounter", i, j)
-			if _, err = cli.GetDeviceMLULinkErrorCounter(i, uint(j)); err != nil {
+			if _, _, _, err = cli.GetDeviceMLULinkErrorCounter(i, uint(j)); err != nil {
 				log.Warn(errors.Wrapf(err, "Slot %d GetDeviceMLULinkErrorCounter", i))
 				dis["mluLinkErrorCounterDisabled"] = true
 			}
+
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkRemoteInfo", i, j)
 			if _, _, _, _, _, _, _, _, _, _, err = cli.GetDeviceMLULinkRemoteInfo(i, uint(j)); err != nil {
 				log.Warn(errors.Wrapf(err, "Slot %d GetDeviceMLULinkErrorCounter", i))
@@ -420,6 +465,7 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 				continue
 			}
 			if ppi != "N/A" {
+				linkPPI[j] = ppi
 				log.Debugf("Start slot %d link %d GetDeviceOpticalInfo", i, j)
 				present, _, _, _, _, err := cli.GetDeviceOpticalInfo(i, uint(j))
 				if err != nil {
@@ -429,134 +475,281 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 				opticalPresent[j] = present
 			}
 		}
+
 		log.Debugf("Start slot %d GetDeviceCRCInfo", i)
 		if _, _, err = cli.GetDeviceCRCInfo(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDeviceCRCInfo", i))
 			dis["crcDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceCRCInfo", i)
 		if _, _, _, _, _, _, _, _, err = cli.GetDeviceECCInfo(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", i))
 			dis["eccDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceProcessUtil", i)
 		if _, _, _, _, _, _, err = cli.GetDeviceProcessUtil(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDeviceProcessUtil", i))
 			dis["processUtilDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceRetiredPageInfo", i)
 		if _, _, err = cli.GetDeviceRetiredPageInfo(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDeviceRetiredPageInfo", i))
 			dis["retiredPageDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceRemappedRows", i)
 		if _, _, _, _, _, err = cli.GetDeviceRemappedRows(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDeviceRemappedRows", i))
 			dis["remappedRowsDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceHeartbeatCount", i)
 		if _, err = cli.GetDeviceHeartbeatCount(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDeviceHeartbeatCount", i))
 			dis["heartBeatDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceMemEccCounter", i)
 		if _, _, err = cli.GetDeviceMemEccCounter(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDeviceMemEccCounter", i))
 			dis["memEccDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceAddressSwaps", i)
 		if _, _, _, _, _, err = cli.GetDeviceAddressSwaps(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDeviceAddressSwaps", i))
 			dis["addressSwapsDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetSupportedEventTypes", i)
 		if err = cli.GetSupportedEventTypes(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetSupportedEventTypes", i))
 			dis["xidCallbackDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceCurrentInfo", i)
 		if _, _, _, err = cli.GetDeviceCurrentInfo(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDeviceCurrentInfo", i))
 			dis["currentInfoDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceVoltageInfo", i)
 		if _, _, _, err = cli.GetDeviceVoltageInfo(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDeviceVoltageInfo", i))
 			dis["voltageInfoDisabled"] = true
 		}
+
+		log.Debugf("Start slot %d GetDeviceFrequencyStatus", i)
 		if _, err = cli.GetDeviceFrequencyStatus(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDeviceFrequencyStatus", i))
 			dis["frequencyStatusDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDevicePerformanceThrottleReason", i)
 		if _, err = cli.GetDevicePerformanceThrottleReason(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDevicePerformanceThrottleReason", i))
 			dis["performanceThrottleDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceOverTemperatureInfo", i)
 		if _, _, err = cli.GetDeviceOverTemperatureInfo(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDeviceOverTemperatureInfo", i))
 			dis["overTemperatureInfoDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceOverTemperatureShutdownThreshold", i)
 		if _, err = cli.GetDeviceOverTemperatureShutdownThreshold(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDeviceOverTemperatureThreshold", i))
 			dis["overTemperatureThresholdDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDevicePowerManagementLimitation", i)
 		if _, err = cli.GetDevicePowerManagementLimitation(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDevicePowerManagementLimitation", i))
 			dis["powerCurrentLimitDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDevicePowerManagementDefaultLimitation", i)
 		if _, err = cli.GetDevicePowerManagementDefaultLimitation(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDevicePowerManagementDefaultLimitation", i))
 			dis["powerDefaultLimitDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDevicePowerManagementLimitRange", i)
 		if _, _, err = cli.GetDevicePowerManagementLimitRange(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDevicePowerManagementLimitRange", i))
 			dis["powerLimitRangeDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceBAR4MemoryInfo", i)
 		if _, _, _, err = cli.GetDeviceBAR4MemoryInfo(i); err != nil {
 			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceBAR4MemoryInfo", i))
 			dis["bar4MemoryInfoDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceCPUUtil", i)
 		if _, _, _, _, _, _, _, err = cli.GetDeviceCPUUtil(i); err != nil {
 			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceCPUUtil", i))
 			dis["cpuUtilDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceMaxPCIeInfo", i)
 		if _, _, err = cli.GetDeviceMaxPCIeInfo(i); err != nil {
 			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceMaxPCIeInfo", i))
 			dis["maxPCIeInfoDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceEccMode", i)
 		if _, _, err = cli.GetDeviceEccMode(i); err != nil {
 			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceEccMode", i))
 			dis["eccModeDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceRetiredPagesOperation", i)
 		if _, err = cli.GetDeviceRetiredPagesOperation(i); err != nil {
 			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceRetiredPagesOperation", i))
 			dis["retiredPagesOperationDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceComputeCapability", i)
 		if _, _, err = cli.GetDeviceComputeCapability(i); err != nil {
 			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceComputeCapability", i))
 			dis["computeCapabilityDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceTensorUtil", i)
 		if _, err = cli.GetDeviceTensorUtil(i); err != nil {
 			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceTensorUtil", i))
 			dis["tensorUtilDisabled"] = true
 		}
+
 		log.Debugf("Start slot %d GetDeviceComputeMode", i)
 		if _, err = cli.GetDeviceComputeMode(i); err != nil {
 			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceComputeMode", i))
 			dis["computeModeDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDeviceTemperature", i)
+		if _, _, _, _, _, err = cli.GetDeviceTemperature(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceTemperature", i))
+			dis["temperatureDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDeviceUtil", i)
+		if _, _, err = cli.GetDeviceUtil(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceUtil", i))
+			dis["deviceUtilDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDeviceDDRInfo", i)
+		if _, _, err = cli.GetDeviceDDRInfo(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceDDRInfo", i))
+			dis["ddrInfoDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDeviceFrequency", i)
+		if _, _, _, err = cli.GetDeviceFrequency(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceFrequency", i))
+			dis["frequencyDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDeviceOsMemory", i)
+		if _, _, err = cli.GetDeviceOsMemory(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceOsMemory", i))
+			dis["osMemoryDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDeviceHealth", i)
+		if _, _, _, _, err = cli.GetDeviceHealth(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceHealth", i))
+			dis["healthDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDeviceFanSpeed", i)
+		if _, err = cli.GetDeviceFanSpeed(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceFanSpeed", i))
+			dis["fanSpeedDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDeviceImageCodecUtil", i)
+		if _, err = cli.GetDeviceImageCodecUtil(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceImageCodecUtil", i))
+			dis["imageCodecUtilDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDeviceMemory", i)
+		if _, _, _, _, err = cli.GetDeviceMemory(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceMemory", i))
+			dis["deviceMemoryDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDevicePCIeInfo", i)
+		if _, _, _, _, _, _, _, _, _, err = cli.GetDevicePCIeInfo(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDevicePCIeInfo", i))
+			dis["pcieInfoDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDeviceNUMANodeID", i)
+		if _, err = cli.GetDeviceNUMANodeID(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceNUMANodeID", i))
+			dis["numaDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDeviceParityError", i)
+		if _, err = cli.GetDeviceParityError(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceParityError", i))
+			dis["parityErrorDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDeviceCurrentPCIeInfo", i)
+		if _, _, err = cli.GetDeviceCurrentPCIeInfo(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceCurrentPCIeInfo", i))
+			dis["currentPCIeInfoDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDevicePCIeThroughput", i)
+		if _, _, err = cli.GetDevicePCIeThroughput(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDevicePCIeThroughput", i))
+			dis["pcieThroughputDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDevicePCIeReplayCount", i)
+		if _, err = cli.GetDevicePCIeReplayCount(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDevicePCIeReplayCount", i))
+			dis["pcieRelayCountDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDevicePower", i)
+		if _, err = cli.GetDevicePower(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDevicePower", i))
+			dis["devicePowerDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDeviceTinyCoreUtil", i)
+		if _, err = cli.GetDeviceTinyCoreUtil(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceTinyCoreUtil", i))
+			dis["tinyCoreDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDeviceCndevVersion", i)
+		if _, _, _, err = cli.GetDeviceCndevVersion(); err != nil {
+			log.Warn(errors.Wrap(err, "GetDeviceCndevVersion"))
+			dis["cndevVersionDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDeviceVideoCodecUtil", i)
+		if _, _, err = cli.GetDeviceVideoCodecUtil(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceVideoCodecUtil", i))
+			dis["videoCodecUtilDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDeviceVfState", i)
+		if _, err = cli.GetDeviceVfState(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceVfState", i))
+			dis["vfStateDisabled"] = true
 		}
 
 		info[uuid] = MLUStat{
@@ -564,6 +757,7 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 			driver:                 calcVersion(driverMajor, driverMinor, driverBuild),
 			link:                   link,
 			linkActive:             linkActive,
+			linkPPI:                linkPPI,
 			mcu:                    calcVersion(mcuMajor, mcuMinor, mcuBuild),
 			mimEnabled:             mimEnabled,
 			mimInfos:               mimInfos,
@@ -782,7 +976,7 @@ func fetchMLUCounts() (uint, error) {
 
 func isDriverRunning(counts uint, cli cndev.Cndev) bool {
 	for i := range counts {
-		_, good, running, err := cli.GetDeviceHealth(i)
+		_, good, running, _, err := cli.GetDeviceHealth(i)
 		if err != nil {
 			log.Warn(errors.Wrapf(err, "GetDeviceHealth %d", i))
 			return false
@@ -806,14 +1000,27 @@ func EnsureMLUAllOk(cli cndev.Cndev) {
 			i = i << 1
 		}
 		time.Sleep(time.Duration(min(i, 60000)) * time.Millisecond)
-		if err := cli.Init(false); err != nil {
-			log.Error(errors.Wrap(err, "Init cndev client"))
-			continue
+
+		if i == 2 {
+			if err := cli.Init(false); err != nil {
+				log.Errorf("Init cndev client failed with err: %v", err)
+				continue
+			}
+		} else {
+			if err := cli.Init(true); err != nil {
+				log.Errorf("Init cndev client failed with err: %v", err)
+				continue
+			}
 		}
+
 		log.Debug("Start GetDeviceCount")
 		counts, err := cli.GetDeviceCount()
 		if err != nil {
 			log.Error(errors.Wrap(err, "GetDeviceCount"))
+			continue
+		}
+		if counts == 0 {
+			log.Warn("No MLU device found with GetDeviceCount")
 			continue
 		}
 		log.Debugf("Devie counts: %d", counts)
@@ -831,10 +1038,54 @@ func EnsureMLUAllOk(cli cndev.Cndev) {
 		}
 		log.Infof("MLU device count match, count is %d", counts)
 
+		if err := cli.GenerateDeviceHandleMap(counts); err != nil {
+			log.Panicf("Generate Device Handle Map failed, this should never happen, counts: %d, err: %v", counts, err)
+		}
+
 		if !isDriverRunning(counts, cli) {
 			continue
 		}
+
 		log.Info("Driver of MLU devices are all running")
 		return
 	}
+}
+
+func EnsureCndevLib() error {
+	arch := runtime.GOARCH
+	log.Infof("Ensuring cndev lib, arch is %s", arch)
+	var targetDir string
+	switch arch {
+	case "386", "x86_64", "amd64":
+		targetDir = "x86_64-linux-gnu"
+	case "aarch64", "arm", "arm64":
+		targetDir = "aarch64-linux-gnu"
+	default:
+		log.Infof("Invalid arch %s", arch)
+		return nil
+	}
+
+	src := path.Join("/host/usr/lib", targetDir, "libcndev.so")
+	dst := "/usr/lib/libcndev.so"
+	if _, err := os.Stat(src); err != nil {
+		log.Info("Found no libcndev.so on host, use default")
+		return nil
+	}
+	log.Info("Found libcndev.so in host, try to copy to /usr/lib")
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		log.Errorf("Can't open %s", src)
+		return err
+	}
+	defer sourceFile.Close()
+
+	destinationFile, err := os.Create(dst)
+	if err != nil {
+		log.Errorf("Can't create %s", dst)
+		return err
+	}
+	defer destinationFile.Close()
+
+	_, err = io.Copy(destinationFile, sourceFile)
+	return err
 }

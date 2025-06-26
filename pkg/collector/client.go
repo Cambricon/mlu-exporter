@@ -10,6 +10,7 @@ import (
 
 	"github.com/Cambricon/mlu-exporter/pkg/cndev"
 	"github.com/pkg/errors"
+	"github.com/prometheus/common/expfmt"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -72,9 +73,7 @@ func (c *HTTPClient) sendWithRetries(url, body string, retries int) error {
 			log.Errorln(errors.Wrap(err, "new request"))
 			continue
 		}
-		req.Header.Add("Content-Encoding", "snappy")
-		req.Header.Set("Content-Type", "application/x-protobuf")
-		req.Header.Set("User-Agent", "opcai")
+		req.Header.Set("Content-Type", string(expfmt.FmtText))
 
 		resp, err := c.client.Do(req)
 		if err != nil {

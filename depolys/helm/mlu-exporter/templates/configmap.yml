@@ -414,6 +414,18 @@ data:
           type: type
           uuid: uuid
         name: ddr_frequency
+      default_frequency:
+        help: The default frequency of Cambricon MLU, unit is 'MHz'
+        labels:
+          driver: driver
+          mcu: mcu
+          mlu: mlu
+          model: model
+          node: node
+          sn: sn
+          type: type
+          uuid: uuid
+        name: default_frequency
       double_bit_retired_page_count:
         help: The double bit retired page counts of Cambricon MLU
         labels:
@@ -628,6 +640,7 @@ data:
           node: node
           sn: sn
           type: type
+          unhealth_reason: unhealth_reason
           uuid: uuid
         name: health
       heartbeat_count:
@@ -823,6 +836,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -836,6 +850,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -849,6 +864,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -862,6 +878,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -875,6 +892,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -888,6 +906,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -901,6 +920,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -914,6 +934,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -927,6 +948,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -940,6 +962,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -953,6 +976,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -966,6 +990,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -979,6 +1004,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -992,6 +1018,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -1005,6 +1032,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -1018,10 +1046,25 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
         name: mlulink_illegal_access
+      mlulink_inbound_state:
+        help: The inbound command info of Cambricon MLU MLULink, '0' means 'disable', '1' means 'enable'
+        labels:
+          driver: driver
+          link: link
+          mcu: mcu
+          mlu: mlu
+          model: model
+          node: node
+          ppi: ppi
+          sn: sn
+          type: type
+          uuid: uuid
+        name: mlulink_inbound_state
       mlulink_interlaken_serdes_capability:
         help: The interlaken serdes capability of Cambricon MLU MLULink, '0' means 'disable', '1' means 'enable'
         labels:
@@ -1031,10 +1074,25 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
         name: mlulink_interlaken_serdes_capability
+      mlulink_outbound_state:
+        help: The outbound command info of Cambricon MLU MLULink, '0' means 'disable', '1' means 'enable'
+        labels:
+          driver: driver
+          link: link
+          mcu: mcu
+          mlu: mlu
+          model: model
+          node: node
+          ppi: ppi
+          sn: sn
+          type: type
+          uuid: uuid
+        name: mlulink_outbound_state
       mlulink_p2p_transfer_capability:
         help: The p2p transfer capability of Cambricon MLU MLULink, '0' means 'disable', '1' means 'enable'
         labels:
@@ -1044,6 +1102,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -1057,6 +1116,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -1070,6 +1130,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -1095,6 +1156,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -1109,7 +1171,7 @@ data:
           remote_port_name: remote_port_name
         name: mlulink_remote_info
       mlulink_serdes_status:
-        help: The serdes status of Cambricon MLU MLULink, '0' means 'disable', '1' means 'enable'
+        help: The serdes status of Cambricon MLU MLULink, '0' means 'disable', '1' means 'enable', '2' means 'establishing'
         labels:
           driver: driver
           link: link
@@ -1117,6 +1179,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -1130,6 +1193,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -1143,12 +1207,13 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
         name: mlulink_speed_format
       mlulink_status:
-        help: The status of Cambricon MLU MLULink, '0' means 'disable', '1' means 'enable'
+        help: The status of Cambricon MLU MLULink, '0' means 'disable', '1' means 'enable', '2' means 'lldp', '3' means 'ready'
         labels:
           driver: driver
           link: link
@@ -1156,6 +1221,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid
@@ -1170,6 +1236,7 @@ data:
           mlu: mlu
           model: model
           node: node
+          ppi: ppi
           sn: sn
           type: type
           uuid: uuid

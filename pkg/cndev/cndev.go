@@ -93,6 +93,7 @@ type Cndev interface {
 
 	DeviceMimModeEnabled(idx uint) (bool, error)
 	DeviceSmluModeEnabled(idx uint) (bool, error)
+	GenerateDeviceHandleMap(count uint) error
 	GetAllMLUInstanceInfo(idx uint) ([]MimInfo, error)
 	GetAllSMluInfo(idx uint) ([]SmluInfo, error)
 	GetDeviceAddressSwaps(idx uint) (uint32, uint32, uint32, uint32, uint32, error)
@@ -111,7 +112,7 @@ type Cndev interface {
 	GetDeviceECCInfo(idx uint) (uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, error)
 	GetDeviceEccMode(idx uint) (int, int, error)
 	GetDeviceFanSpeed(idx uint) (int, error)
-	GetDeviceHealth(idx uint) (int, bool, bool, error)
+	GetDeviceHealth(idx uint) (int, bool, bool, []string, error)
 	GetDeviceHeartbeatCount(idx uint) (uint32, error)
 	GetDeviceImageCodecUtil(idx uint) ([]int, error)
 	GetDeviceMaxPCIeInfo(idx uint) (int, int, error)
@@ -122,13 +123,14 @@ type Cndev interface {
 	GetDeviceMimProfileMaxInstanceCount(idx, profile uint) (int, error)
 	GetDeviceMLULinkCapability(idx, link uint) (uint, uint, error)
 	GetDeviceMLULinkCounter(idx, link uint) (uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, error)
-	GetDeviceMLULinkErrorCounter(idx, link uint) (uint64, error)
+	GetDeviceMLULinkErrorCounter(idx, link uint) (uint64, uint64, uint64, error)
 	GetDeviceMLULinkEventCounter(idx, link uint) (uint64, error)
 	GetDeviceMLULinkPortMode(idx, link uint) (int, error)
 	GetDeviceMLULinkPortNumber(idx uint) int
 	GetDeviceMLULinkPPI(idx, link uint) (string, error)
 	GetDeviceMLULinkRemoteInfo(idx, link uint) (uint64, uint64, uint32, uint32, int32, uint64, string, string, string, string, error)
 	GetDeviceMLULinkSpeedInfo(idx, link uint) (float32, int, error)
+	GetDeviceMLULinkState(idx, link uint) (int, int, error)
 	GetDeviceMLULinkStatus(idx, link uint) (int, int, int, error)
 	GetDeviceMLULinkVersion(idx, link uint) (uint, uint, uint, error)
 	GetDeviceMLUInstanceByID(idx uint, instanceID int) (uint, error)
@@ -159,7 +161,7 @@ type Cndev interface {
 	GetDeviceTensorUtil(idx uint) (int, error)
 	GetDeviceTinyCoreUtil(idx uint) ([]int, error)
 	GetDeviceUtil(idx uint) (int, []int, error)
-	GetDeviceFrequency(idx uint) (int, int, error)
+	GetDeviceFrequency(idx uint) (int, int, int, error)
 	GetDeviceUUID(idx uint) (string, error)
 	GetDeviceVersion(idx uint) (uint, uint, uint, uint, uint, uint, error)
 	GetDeviceVfState(idx uint) (int, error)
@@ -171,22 +173,25 @@ type Cndev interface {
 	GetSupportedEventTypes(idx uint) error
 }
 
+var (
+	cndevGlobalHandleMap = map[uint]C.cndevDevice_t{}
+)
+
 type cndev struct {
 	cndevHandleMap map[uint]C.cndevDevice_t
 }
 
 func NewCndevClient() Cndev {
 	return &cndev{
-		cndevHandleMap: map[uint]C.cndevDevice_t{},
+		cndevHandleMap: cndevGlobalHandleMap,
 	}
 }
 
 func (c *cndev) Init(healthCheck bool) error {
-	r := dl.cndevInit()
-	if err := errorString(r); err != nil || healthCheck {
-		return err
+	if healthCheck {
+		return (errorString(C.cndevInit(C.int(0))))
 	}
-	return c.generateDeviceHandleMap()
+	return errorString(dl.cndevInit())
 }
 
 func (c *cndev) Release() error {
@@ -195,20 +200,32 @@ func (c *cndev) Release() error {
 }
 
 func (c *cndev) DeviceMimModeEnabled(idx uint) (bool, error) {
+	if ret := dl.checkExist("cndevGetMimMode"); ret != C.CNDEV_SUCCESS {
+		return false, errorString(ret)
+	}
+
 	var mode C.cndevMimMode_t
-	mode.version = C.CNDEV_VERSION_5
+	mode.version = C.CNDEV_VERSION_6
 	r := C.cndevGetMimMode(&mode, c.cndevHandleMap[idx])
 	return mode.mimMode == C.CNDEV_FEATURE_ENABLED, errorString(r)
 }
 
 func (c *cndev) DeviceSmluModeEnabled(idx uint) (bool, error) {
+	if ret := dl.checkExist("cndevGetSMLUMode"); ret != C.CNDEV_SUCCESS {
+		return false, errorString(ret)
+	}
+
 	var mode C.cndevSMLUMode_t
-	mode.version = C.CNDEV_VERSION_5
+	mode.version = C.CNDEV_VERSION_6
 	r := C.cndevGetSMLUMode(&mode, c.cndevHandleMap[idx])
 	return mode.smluMode == C.CNDEV_FEATURE_ENABLED, errorString(r)
 }
 
 func (c *cndev) GetAllMLUInstanceInfo(idx uint) ([]MimInfo, error) {
+	if ret := dl.checkExist("cndevGetAllMluInstanceInfo"); ret != C.CNDEV_SUCCESS {
+		return nil, errorString(ret)
+	}
+
 	miCount := C.int(1 << 4)
 	var miInfos []MimInfo
 	var miInfo C.cndevMluInstanceInfo_t
@@ -279,6 +296,10 @@ func (c *cndev) GetAllMLUInstanceInfo(idx uint) ([]MimInfo, error) {
 }
 
 func (c *cndev) GetAllSMluInfo(idx uint) ([]SmluInfo, error) {
+	if ret := dl.checkExist("cndevGetAllSMluInstanceInfo"); ret != C.CNDEV_SUCCESS {
+		return nil, errorString(ret)
+	}
+
 	smluCount := C.int(1 << 7)
 	var smluInfos []SmluInfo
 	var smluInfo C.cndevSMluInfo_t
@@ -346,6 +367,10 @@ func (c *cndev) GetAllSMluInfo(idx uint) ([]SmluInfo, error) {
 }
 
 func (c *cndev) GetDeviceAddressSwaps(idx uint) (uint32, uint32, uint32, uint32, uint32, error) {
+	if ret := dl.checkExist("cndevGetAddressSwaps"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, 0, 0, errorString(ret)
+	}
+
 	var addressSwap C.cndevAddressSwap_t
 	addressSwap.version = C.CNDEV_VERSION_6
 	r := C.cndevGetAddressSwaps(&addressSwap, c.cndevHandleMap[idx])
@@ -353,38 +378,62 @@ func (c *cndev) GetDeviceAddressSwaps(idx uint) (uint32, uint32, uint32, uint32,
 }
 
 func (c *cndev) GetDeviceOsMemory(idx uint) (int64, int64, error) {
+	if ret := dl.checkExist("cndevGetDeviceOsMemoryUsageV2"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, errorString(ret)
+	}
+
 	var deviceOsMemInfo C.cndevDeviceOsMemoryInfo_t
 	r := C.cndevGetDeviceOsMemoryUsageV2(&deviceOsMemInfo, c.cndevHandleMap[idx])
 	return int64(deviceOsMemInfo.deviceSystemMemoryUsed), int64(deviceOsMemInfo.deviceSystemMemoryTotal), errorString(r)
 }
 
 func (c *cndev) GetDeviceBAR4MemoryInfo(idx uint) (uint64, uint64, uint64, error) {
+	if ret := dl.checkExist("cndevGetBAR4MemoryInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, errorString(ret)
+	}
+
 	var memInfo C.cndevBAR4Memory_t
 	r := C.cndevGetBAR4MemoryInfo(&memInfo, c.cndevHandleMap[idx])
 	return uint64(memInfo.total_size), uint64(memInfo.used_size), uint64(memInfo.free_size), errorString(r)
 }
 
 func (c *cndev) GetDeviceClusterCount(idx uint) (int, error) {
+	if ret := dl.checkExist("cndevGetClusterCount"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var cardClusterNum C.cndevCardClusterCount_t
-	cardClusterNum.version = C.CNDEV_VERSION_5
+	cardClusterNum.version = C.CNDEV_VERSION_6
 	r := C.cndevGetClusterCount(&cardClusterNum, c.cndevHandleMap[idx])
 	return int(cardClusterNum.count), errorString(r)
 }
 
 func (c *cndev) GetDeviceCndevVersion() (uint, uint, uint, error) {
+	if ret := dl.checkExist("cndevGetLibVersion"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, errorString(ret)
+	}
+
 	var cndevVersion C.cndevLibVersionInfo_t
-	cndevVersion.version = C.CNDEV_VERSION_5
+	cndevVersion.version = C.CNDEV_VERSION_6
 	r := C.cndevGetLibVersion(&cndevVersion)
 	return uint(cndevVersion.libMajorVersion), uint(cndevVersion.libMinorVersion), uint(cndevVersion.libBuildVersion), errorString(r)
 }
 
 func (c *cndev) GetDeviceComputeCapability(idx uint) (uint, uint, error) {
+	if ret := dl.checkExist("cndevGetComputeCapability"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, errorString(ret)
+	}
+
 	var major, minor C.uint
 	r := C.cndevGetComputeCapability(&major, &minor, c.cndevHandleMap[idx])
 	return uint(major), uint(minor), errorString(r)
 }
 
 func (c *cndev) GetDeviceComputeMode(idx uint) (uint, error) {
+	if ret := dl.checkExist("cndevGetComputeMode"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var computeMode C.cndevComputeMode_t
 	computeMode.version = C.CNDEV_VERSION_6
 	r := C.cndevGetComputeMode(&computeMode, c.cndevHandleMap[idx])
@@ -392,20 +441,31 @@ func (c *cndev) GetDeviceComputeMode(idx uint) (uint, error) {
 }
 
 func (c *cndev) GetDeviceCoreNum(idx uint) (uint, error) {
+	if ret := dl.checkExist("cndevGetCoreCount"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
 	var cardCoreNum C.cndevCardCoreCount_t
-	cardCoreNum.version = C.CNDEV_VERSION_5
+	cardCoreNum.version = C.CNDEV_VERSION_6
 	r := C.cndevGetCoreCount(&cardCoreNum, c.cndevHandleMap[idx])
 	return uint(cardCoreNum.count), errorString(r)
 }
 
 func (c *cndev) GetDeviceCount() (uint, error) {
+	if ret := dl.checkExist("cndevGetDeviceCount"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var cardInfo C.cndevCardInfo_t
-	cardInfo.version = C.CNDEV_VERSION_5
+	cardInfo.version = C.CNDEV_VERSION_6
 	r := C.cndevGetDeviceCount(&cardInfo)
 	return uint(cardInfo.number), errorString(r)
 }
 
 func (c *cndev) GetDeviceCPUUtil(idx uint) (uint16, []uint8, []uint8, []uint8, []uint8, []uint8, []uint8, error) {
+	if ret := dl.checkExist("cndevGetDeviceCPUUtilizationV2"); ret != C.CNDEV_SUCCESS {
+		return 0, nil, nil, nil, nil, nil, nil, errorString(ret)
+	}
+
 	var cardCPUUtil C.cndevDeviceCPUUtilizationV2_t
 	cardCPUUtil.version = C.CNDEV_VERSION_6
 	r := C.cndevGetDeviceCPUUtilizationV2(&cardCPUUtil, c.cndevHandleMap[idx])
@@ -431,28 +491,44 @@ func (c *cndev) GetDeviceCPUUtil(idx uint) (uint16, []uint8, []uint8, []uint8, [
 }
 
 func (c *cndev) GetDeviceCRCInfo(idx uint) (uint64, uint64, error) {
+	if ret := dl.checkExist("cndevGetCRCInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, errorString(ret)
+	}
+
 	var cardCRCInfo C.cndevCRCInfo_t
-	cardCRCInfo.version = C.CNDEV_VERSION_5
+	cardCRCInfo.version = C.CNDEV_VERSION_6
 	r := C.cndevGetCRCInfo(&cardCRCInfo, c.cndevHandleMap[idx])
 	return uint64(cardCRCInfo.die2dieCRCError), uint64(cardCRCInfo.die2dieCRCErrorOverflow), errorString(r)
 }
 
 func (c *cndev) GetDeviceCurrentInfo(idx uint) (int, int, int, error) {
+	if ret := dl.checkExist("cndevGetCurrentInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, errorString(ret)
+	}
+
 	var currentInfo C.cndevCurrentInfo_t
 	r := C.cndevGetCurrentInfo(&currentInfo, c.cndevHandleMap[idx])
 	return int(currentInfo.ipuCoreCurrent), int(currentInfo.socCurrent), int(currentInfo.hbmCurrent), errorString(r)
 }
 
 func (c *cndev) GetDeviceCurrentPCIeInfo(idx uint) (int, int, error) {
+	if ret := dl.checkExist("cndevGetCurrentPCIInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, errorString(ret)
+	}
+
 	var currentPCIeInfo C.cndevCurrentPCIInfo_t
-	currentPCIeInfo.version = C.CNDEV_VERSION_5
+	currentPCIeInfo.version = C.CNDEV_VERSION_6
 	r := C.cndevGetCurrentPCIInfo(&currentPCIeInfo, c.cndevHandleMap[idx])
 	return int(currentPCIeInfo.currentSpeed), int(currentPCIeInfo.currentWidth), errorString(r)
 }
 
 func (c *cndev) GetDeviceDDRInfo(idx uint) (int, float64, error) {
+	if ret := dl.checkExist("cndevGetDDRInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, errorString(ret)
+	}
+
 	var cardDDRInfo C.cndevDDRInfo_t
-	cardDDRInfo.version = C.CNDEV_VERSION_5
+	cardDDRInfo.version = C.CNDEV_VERSION_6
 	r := C.cndevGetDDRInfo(&cardDDRInfo, c.cndevHandleMap[idx])
 	if err := errorString(r); err != nil {
 		return 0, 0, err
@@ -465,20 +541,32 @@ func (c *cndev) GetDeviceDDRInfo(idx uint) (int, float64, error) {
 }
 
 func (c *cndev) GetDeviceDriverVersion(idx uint) (uint, uint, uint, error) {
+	if ret := dl.checkExist("cndevGetVersionInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, errorString(ret)
+	}
+
 	var cardVersionInfo C.cndevVersionInfo_t
-	cardVersionInfo.version = C.CNDEV_VERSION_5
+	cardVersionInfo.version = C.CNDEV_VERSION_6
 	r := C.cndevGetVersionInfo(&cardVersionInfo, c.cndevHandleMap[idx])
 	return uint(cardVersionInfo.driverMajorVersion), uint(cardVersionInfo.driverMinorVersion), uint(cardVersionInfo.driverBuildVersion), errorString(r)
 }
 
 func (c *cndev) GetDeviceECCInfo(idx uint) (uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, error) {
+	if ret := dl.checkExist("cndevGetECCInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, 0, 0, 0, 0, 0, errorString(ret)
+	}
+
 	var cardECCInfo C.cndevECCInfo_t
-	cardECCInfo.version = C.CNDEV_VERSION_5
+	cardECCInfo.version = C.CNDEV_VERSION_6
 	r := C.cndevGetECCInfo(&cardECCInfo, c.cndevHandleMap[idx])
 	return uint64(cardECCInfo.addressForbiddenError), uint64(cardECCInfo.correctedError), uint64(cardECCInfo.multipleError), uint64(cardECCInfo.multipleMultipleError), uint64(cardECCInfo.multipleOneError), uint64(cardECCInfo.oneBitError), uint64(cardECCInfo.totalError), uint64(cardECCInfo.uncorrectedError), errorString(r)
 }
 
 func (c *cndev) GetDeviceEccMode(idx uint) (int, int, error) {
+	if ret := dl.checkExist("cndevGetEccMode"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, errorString(ret)
+	}
+
 	var currentMode, pendingMode C.cndevEccMode_t
 	currentMode.version = C.CNDEV_VERSION_6
 	pendingMode.version = C.CNDEV_VERSION_6
@@ -487,32 +575,52 @@ func (c *cndev) GetDeviceEccMode(idx uint) (int, int, error) {
 }
 
 func (c *cndev) GetDeviceFanSpeed(idx uint) (int, error) {
+	if ret := dl.checkExist("cndevGetFanSpeedInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var cardFanSpeed C.cndevFanSpeedInfo_t
-	cardFanSpeed.version = C.CNDEV_VERSION_5
+	cardFanSpeed.version = C.CNDEV_VERSION_6
 	r := C.cndevGetFanSpeedInfo(&cardFanSpeed, c.cndevHandleMap[idx])
 	return int(cardFanSpeed.fanSpeed), errorString(r)
 }
 
-func (c *cndev) GetDeviceFrequency(idx uint) (int, int, error) {
+func (c *cndev) GetDeviceFrequency(idx uint) (int, int, int, error) {
+	if ret := dl.checkExist("cndevGetFrequencyInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, errorString(ret)
+	}
+
 	var cardFrequency C.cndevFrequencyInfo_t
-	cardFrequency.version = C.CNDEV_VERSION_5
+	cardFrequency.version = C.CNDEV_VERSION_6
 	r := C.cndevGetFrequencyInfo(&cardFrequency, c.cndevHandleMap[idx])
 	if err := errorString(r); err != nil {
-		return 0, 0, err
+		return 0, 0, 0, err
 	}
-	return int(cardFrequency.boardFreq), int(cardFrequency.ddrFreq), nil
+	return int(cardFrequency.boardFreq), int(cardFrequency.ddrFreq), int(cardFrequency.boardDefaultFreq), nil
 }
 
-func (c *cndev) GetDeviceHealth(idx uint) (int, bool, bool, error) {
-	var cardHealthState C.cndevCardHealthState_t
-	cardHealthState.version = C.CNDEV_VERSION_5
-	r := C.cndevGetCardHealthState(&cardHealthState, c.cndevHandleMap[idx])
-	return int(cardHealthState.health), cardHealthState.deviceState == C.CNDEV_HEALTH_STATE_DEVICE_GOOD, cardHealthState.driverState == C.CNDEV_HEALTH_STATE_DRIVER_RUNNING, errorString(r)
+func (c *cndev) GetDeviceHealth(idx uint) (int, bool, bool, []string, error) {
+	if ret := dl.checkExist("cndevGetCardHealthStateV2"); ret != C.CNDEV_SUCCESS {
+		return 0, false, false, nil, errorString(ret)
+	}
+
+	var cardHealthState C.cndevCardHealthStateV2_t
+	r := C.cndevGetCardHealthStateV2(&cardHealthState, c.cndevHandleMap[idx])
+	unhealth := make([]string, 0, cardHealthState.incident_count)
+	for i := 0; i < int(cardHealthState.incident_count); i++ {
+		errorCode := cardHealthState.incidents[i].error.code
+		unhealth = append(unhealth, healthErrorCodeToString(errorCode))
+	}
+	return int(cardHealthState.health), cardHealthState.deviceState == C.CNDEV_HEALTH_STATE_DEVICE_GOOD, cardHealthState.driverState == C.CNDEV_HEALTH_STATE_DRIVER_RUNNING, unhealth, errorString(r)
 }
 
 func (c *cndev) GetDeviceHeartbeatCount(idx uint) (uint32, error) {
+	if ret := dl.checkExist("cndevGetCardHeartbeatCount"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var heartbeatCount C.cndevCardHeartbeatCount_t
-	heartbeatCount.version = C.CNDEV_VERSION_5
+	heartbeatCount.version = C.CNDEV_VERSION_6
 	index := C.int(idx)
 	if id, ok := c.cndevHandleMap[idx]; ok {
 		index = id
@@ -525,8 +633,12 @@ func (c *cndev) GetDeviceHeartbeatCount(idx uint) (uint32, error) {
 }
 
 func (c *cndev) GetDeviceImageCodecUtil(idx uint) ([]int, error) {
+	if ret := dl.checkExist("cndevGetImageCodecUtilization"); ret != C.CNDEV_SUCCESS {
+		return nil, errorString(ret)
+	}
+
 	var cardImageCodecUtil C.cndevImageCodecUtilization_t
-	cardImageCodecUtil.version = C.CNDEV_VERSION_5
+	cardImageCodecUtil.version = C.CNDEV_VERSION_6
 	r := C.cndevGetImageCodecUtilization(&cardImageCodecUtil, c.cndevHandleMap[idx])
 	if err := errorString(r); err != nil {
 		return nil, err
@@ -539,6 +651,10 @@ func (c *cndev) GetDeviceImageCodecUtil(idx uint) ([]int, error) {
 }
 
 func (c *cndev) GetDeviceMaxPCIeInfo(idx uint) (int, int, error) {
+	if ret := dl.checkExist("cndevGetMaxPCIInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, errorString(ret)
+	}
+
 	var pcieInfo C.cndevPCIInfo_t
 	pcieInfo.version = C.CNDEV_VERSION_6
 	r := C.cndevGetMaxPCIInfo(&pcieInfo, c.cndevHandleMap[idx])
@@ -546,6 +662,10 @@ func (c *cndev) GetDeviceMaxPCIeInfo(idx uint) (int, int, error) {
 }
 
 func (c *cndev) GetDeviceMemEccCounter(idx uint) ([]uint32, []uint64, error) {
+	if ret := dl.checkExist("cndevGetMemEccCounter"); ret != C.CNDEV_SUCCESS {
+		return nil, nil, errorString(ret)
+	}
+
 	var memEccCounter C.cndevMemEccCounter_t
 	memEccCounter.version = C.CNDEV_VERSION_6
 	index := C.int(idx)
@@ -577,6 +697,10 @@ func (c *cndev) GetDeviceMemEccCounter(idx uint) ([]uint32, []uint64, error) {
 }
 
 func (c *cndev) GetDeviceMemory(idx uint) (int64, int64, int64, int64, error) {
+	if ret := dl.checkExist("cndevGetMemoryUsageV2"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, 0, errorString(ret)
+	}
+
 	var cardMemInfo C.cndevMemoryInfoV2_t
 	index := C.int(idx)
 	if id, ok := c.cndevHandleMap[idx]; ok {
@@ -593,6 +717,10 @@ func (c *cndev) GetDeviceMemoryDieCount(idx uint) (int, error) {
 }
 
 func (c *cndev) GetDeviceMimProfileInfo(idx uint) ([]MimProfileInfo, error) {
+	if ret := dl.checkExist("cndevGetMluInstanceProfileInfo"); ret != C.CNDEV_SUCCESS {
+		return nil, errorString(ret)
+	}
+
 	var mimProfileInfos []MimProfileInfo
 
 	for profileID := 0; profileID < C.CNDEV_MLUINSTANCE_PROFILE_COUNT; profileID++ {
@@ -619,21 +747,33 @@ func (c *cndev) GetDeviceMimProfileInfo(idx uint) ([]MimProfileInfo, error) {
 }
 
 func (c *cndev) GetDeviceMimProfileMaxInstanceCount(idx, profile uint) (int, error) {
+	if ret := dl.checkExist("cndevGetMaxMluInstanceCount"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var count C.int
 	r := C.cndevGetMaxMluInstanceCount(&count, C.int(profile), c.cndevHandleMap[idx])
 	return int(count), errorString(r)
 }
 
 func (c *cndev) GetDeviceMLULinkCapability(idx, link uint) (uint, uint, error) {
+	if ret := dl.checkExist("cndevGetMLULinkCapability"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, errorString(ret)
+	}
+
 	var cardMLULinkCapability C.cndevMLULinkCapability_t
-	cardMLULinkCapability.version = C.CNDEV_VERSION_5
+	cardMLULinkCapability.version = C.CNDEV_VERSION_6
 	r := C.cndevGetMLULinkCapability(&cardMLULinkCapability, c.cndevHandleMap[idx], C.int(link))
 	return uint(cardMLULinkCapability.p2pTransfer), uint(cardMLULinkCapability.interlakenSerdes), errorString(r)
 }
 
 func (c *cndev) GetDeviceMLULinkCounter(idx, link uint) (uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, error) {
+	if ret := dl.checkExist("cndevGetMLULinkCounter"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, errorString(ret)
+	}
+
 	var cardMLULinkCount C.cndevMLULinkCounter_t
-	cardMLULinkCount.version = C.CNDEV_VERSION_5
+	cardMLULinkCount.version = C.CNDEV_VERSION_6
 	r := C.cndevGetMLULinkCounter(&cardMLULinkCount, c.cndevHandleMap[idx], C.int(link))
 	return uint64(cardMLULinkCount.cntrReadByte), uint64(cardMLULinkCount.cntrReadPackage), uint64(cardMLULinkCount.cntrWriteByte), uint64(cardMLULinkCount.cntrWritePackage),
 		uint64(cardMLULinkCount.errCorrected), uint64(cardMLULinkCount.errCRC24), uint64(cardMLULinkCount.errCRC32), uint64(cardMLULinkCount.errEccDouble),
@@ -641,43 +781,71 @@ func (c *cndev) GetDeviceMLULinkCounter(idx, link uint) (uint64, uint64, uint64,
 		uint64(cardMLULinkCount.cntrPfcPackage), errorString(r)
 }
 
-func (c *cndev) GetDeviceMLULinkErrorCounter(idx, link uint) (uint64, error) {
+func (c *cndev) GetDeviceMLULinkErrorCounter(idx, link uint) (uint64, uint64, uint64, error) {
+	if ret := dl.checkExist("cndevGetMLULinkErrorCounter"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, errorString(ret)
+	}
+
 	var cardMLULinkErrorCounter C.cndevMLULinkErrorCounter_t
 	r := C.cndevGetMLULinkErrorCounter(&cardMLULinkErrorCounter, c.cndevHandleMap[idx], C.int(link))
-	return uint64(cardMLULinkErrorCounter.illegalAccessCnt), errorString(r)
+	return uint64(cardMLULinkErrorCounter.illegalAccessCnt), uint64(cardMLULinkErrorCounter.correctFecCnt), uint64(cardMLULinkErrorCounter.uncorrectFecCnt), errorString(r)
 }
 
 func (c *cndev) GetDeviceMLULinkEventCounter(idx, link uint) (uint64, error) {
+	if ret := dl.checkExist("cndevGetMLULinkEventCounter"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var cardMLULinkEventCounter C.cndevMLULinkEventCounter_t
 	r := C.cndevGetMLULinkEventCounter(&cardMLULinkEventCounter, c.cndevHandleMap[idx], C.int(link))
 	return uint64(cardMLULinkEventCounter.linkDown), errorString(r)
 }
 
 func (c *cndev) GetDeviceMLULinkPortMode(idx, link uint) (int, error) {
+	if ret := dl.checkExist("cndevGetMLULinkPortMode"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var cardMLULinkPortMode C.cndevMLULinkPortMode_t
-	cardMLULinkPortMode.version = C.CNDEV_VERSION_5
+	cardMLULinkPortMode.version = C.CNDEV_VERSION_6
 	r := C.cndevGetMLULinkPortMode(&cardMLULinkPortMode, c.cndevHandleMap[idx], C.int(link))
 	return int(cardMLULinkPortMode.mode), errorString(r)
 }
 
 func (c *cndev) GetDeviceMLULinkPortNumber(idx uint) int {
+	if ret := dl.checkExist("cndevGetMLULinkPortNumber"); ret != C.CNDEV_SUCCESS {
+		return -1
+	}
+
 	return int(C.cndevGetMLULinkPortNumber(c.cndevHandleMap[idx]))
 }
 
 func (c *cndev) GetDeviceMLULinkPPI(idx, link uint) (string, error) {
+	if ret := dl.checkExist("cndevGetMLULinkPPI"); ret != C.CNDEV_SUCCESS {
+		return "", errorString(ret)
+	}
+
 	var cardMLULinkPPI C.cndevMLULinkPPI_t
 	r := C.cndevGetMLULinkPPI(&cardMLULinkPPI, c.cndevHandleMap[idx], C.int(link))
 	return C.GoString((*C.char)(unsafe.Pointer(&cardMLULinkPPI.ppi))), errorString(r)
 }
 
 func (c *cndev) GetDeviceMLULinkSpeedInfo(idx, link uint) (float32, int, error) {
+	if ret := dl.checkExist("cndevGetMLULinkSpeedInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, errorString(ret)
+	}
+
 	var cardMLULinkSpeedInfo C.cndevMLULinkSpeed_t
-	cardMLULinkSpeedInfo.version = C.CNDEV_VERSION_5
+	cardMLULinkSpeedInfo.version = C.CNDEV_VERSION_6
 	r := C.cndevGetMLULinkSpeedInfo(&cardMLULinkSpeedInfo, c.cndevHandleMap[idx], C.int(link))
 	return float32(cardMLULinkSpeedInfo.speedValue), int(cardMLULinkSpeedInfo.speedFormat), errorString(r)
 }
 
 func (c *cndev) GetDeviceMLULinkRemoteInfo(idx, link uint) (uint64, uint64, uint32, uint32, int32, uint64, string, string, string, string, error) {
+	if ret := dl.checkExist("cndevGetMLULinkRemoteInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, 0, 0, 0, "", "", "", "", errorString(ret)
+	}
+
 	var cardMLULinkRemoteInfo C.cndevMLULinkRemoteInfo_t
 	cardMLULinkRemoteInfo.version = C.CNDEV_VERSION_6
 	r := C.cndevGetMLULinkRemoteInfo(&cardMLULinkRemoteInfo, c.cndevHandleMap[idx], C.int(link))
@@ -692,37 +860,71 @@ func (c *cndev) GetDeviceMLULinkRemoteInfo(idx, link uint) (uint64, uint64, uint
 	return uint64(cardMLULinkRemoteInfo.mcSn), uint64(cardMLULinkRemoteInfo.baSn), uint32(cardMLULinkRemoteInfo.slotId), uint32(cardMLULinkRemoteInfo.portId), int32(cardMLULinkRemoteInfo.connectType), uint64(cardMLULinkRemoteInfo.ncsUUID64), ip, mac, uuid, portName, errorString(r)
 }
 
+func (c *cndev) GetDeviceMLULinkState(idx, link uint) (int, int, error) {
+	if ret := dl.checkExist("cndevSetMLULinkState"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, errorString(ret)
+	}
+
+	var ibCmdInfo, obCmdInfo C.int
+	r := C.cndevGetMLULinkState(&ibCmdInfo, &obCmdInfo, c.cndevHandleMap[idx], C.int(link))
+	return int(ibCmdInfo), int(obCmdInfo), errorString(r)
+}
+
 func (c *cndev) GetDeviceMLULinkStatus(idx, link uint) (int, int, int, error) {
+	if ret := dl.checkExist("cndevGetMLULinkStatusV2"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, errorString(ret)
+	}
+
 	var cardMLULinkStatus C.cndevMLULinkStatusV2_t
 	r := C.cndevGetMLULinkStatusV2(&cardMLULinkStatus, c.cndevHandleMap[idx], C.int(link))
 	return int(cardMLULinkStatus.macState), int(cardMLULinkStatus.serdesState), int(cardMLULinkStatus.presenceState), errorString(r)
 }
 
 func (c *cndev) GetDeviceMLULinkVersion(idx, link uint) (uint, uint, uint, error) {
+	if ret := dl.checkExist("cndevGetMLULinkVersion"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, errorString(ret)
+	}
+
 	var cardMLULinkVersion C.cndevMLULinkVersion_t
-	cardMLULinkVersion.version = C.CNDEV_VERSION_5
+	cardMLULinkVersion.version = C.CNDEV_VERSION_6
 	r := C.cndevGetMLULinkVersion(&cardMLULinkVersion, c.cndevHandleMap[idx], C.int(link))
 	return uint(cardMLULinkVersion.majorVersion), uint(cardMLULinkVersion.minorVersion), uint(cardMLULinkVersion.buildVersion), errorString(r)
 }
 
 func (c *cndev) GetDeviceMLUInstanceByID(idx uint, instanceID int) (uint, error) {
+	if ret := dl.checkExist("cndevGetMluInstanceById"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var handle C.cndevMluInstance_t
 	r := C.cndevGetMluInstanceById(&handle, C.int(instanceID), c.cndevHandleMap[idx])
 	return uint(handle), errorString(r)
 }
 
 func (c *cndev) GetDeviceModel(idx uint) string {
+	if ret := dl.checkExist("cndevGetCardNameStringByDevId"); ret != C.CNDEV_SUCCESS {
+		return ""
+	}
+
 	return C.GoString(C.cndevGetCardNameStringByDevId(c.cndevHandleMap[idx]))
 }
 
 func (c *cndev) GetDeviceNUMANodeID(idx uint) (int, error) {
+	if ret := dl.checkExist("cndevGetNUMANodeIdByDevId"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var cardNUMANodeID C.cndevNUMANodeId_t
-	cardNUMANodeID.version = C.CNDEV_VERSION_5
+	cardNUMANodeID.version = C.CNDEV_VERSION_6
 	r := C.cndevGetNUMANodeIdByDevId(&cardNUMANodeID, c.cndevHandleMap[idx])
 	return int(cardNUMANodeID.nodeId), errorString(r)
 }
 
 func (c *cndev) GetDeviceOverTemperatureInfo(idx uint) (uint32, uint32, error) {
+	if ret := dl.checkExist("cndevGetOverTemperatureInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, errorString(ret)
+	}
+
 	var overTemperatureInfo C.cndevOverTemperatureInfo_t
 	overTemperatureInfo.version = C.CNDEV_VERSION_6
 	r := C.cndevGetOverTemperatureInfo(&overTemperatureInfo, c.cndevHandleMap[idx])
@@ -730,6 +932,10 @@ func (c *cndev) GetDeviceOverTemperatureInfo(idx uint) (uint32, uint32, error) {
 }
 
 func (c *cndev) GetDeviceOpticalInfo(idx, link uint) (uint8, float32, float32, []float32, []float32, error) {
+	if ret := dl.checkExist("cndevGetOpticalInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, nil, nil, errorString(ret)
+	}
+
 	var opticalInfo C.cndevOpticalInfo_t
 	r := C.cndevGetOpticalInfo(&opticalInfo, c.cndevHandleMap[idx], C.int(link))
 	if err := errorString(r); err != nil {
@@ -747,6 +953,10 @@ func (c *cndev) GetDeviceOpticalInfo(idx, link uint) (uint8, float32, float32, [
 }
 
 func (c *cndev) GetDeviceOverTemperatureShutdownThreshold(idx uint) (int, error) {
+	if ret := dl.checkExist("cndevDeviceGetFieldValues"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	type fieldVaule struct {
 		fieldID     int32
 		ret         int32
@@ -776,6 +986,10 @@ func (c *cndev) GetDeviceOverTemperatureShutdownThreshold(idx uint) (int, error)
 }
 
 func (c *cndev) GetDeviceOverTemperatureSlowdownThreshold(idx uint) (int, error) {
+	if ret := dl.checkExist("cndevDeviceGetFieldValues"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	type fieldVaule struct {
 		fieldID     int32
 		ret         int32
@@ -805,13 +1019,21 @@ func (c *cndev) GetDeviceOverTemperatureSlowdownThreshold(idx uint) (int, error)
 }
 
 func (c *cndev) GetDeviceParityError(idx uint) (int, error) {
+	if ret := dl.checkExist("cndevGetParityError"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var parityError C.cndevParityError_t
-	parityError.version = C.CNDEV_VERSION_5
+	parityError.version = C.CNDEV_VERSION_6
 	r := C.cndevGetParityError(&parityError, c.cndevHandleMap[idx])
 	return int(parityError.counter), errorString(r)
 }
 
 func (c *cndev) GetDevicePCIeInfo(idx uint) (int, uint, uint, uint16, uint16, uint, uint, uint, uint, error) {
+	if ret := dl.checkExist("cndevGetPCIeInfoV2"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, 0, 0, 0, 0, 0, 0, errorString(ret)
+	}
+
 	var pcieInfo C.cndevPCIeInfoV2_t
 	r := C.cndevGetPCIeInfoV2(&pcieInfo, c.cndevHandleMap[idx])
 	return int(pcieInfo.slotId), uint(pcieInfo.subsystemId), uint(pcieInfo.deviceId), uint16(pcieInfo.vendor),
@@ -820,19 +1042,31 @@ func (c *cndev) GetDevicePCIeInfo(idx uint) (int, uint, uint, uint16, uint16, ui
 }
 
 func (c *cndev) GetDevicePCIeReplayCount(idx uint) (uint32, error) {
+	if ret := dl.checkExist("cndevGetPcieReplayCounter"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var pcieReplay C.cndevPcieReplayCounter_t
-	pcieReplay.version = C.CNDEV_VERSION_5
+	pcieReplay.version = C.CNDEV_VERSION_6
 	r := C.cndevGetPcieReplayCounter(&pcieReplay, c.cndevHandleMap[idx])
 	return uint32(pcieReplay.counter), errorString(r)
 }
 
 func (c *cndev) GetDevicePCIeThroughput(idx uint) (int64, int64, error) {
+	if ret := dl.checkExist("cndevGetPCIethroughputV2"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, errorString(ret)
+	}
+
 	var pcieThroughput C.cndevPCIethroughputV2_t
 	r := C.cndevGetPCIethroughputV2(&pcieThroughput, c.cndevHandleMap[idx])
 	return int64(pcieThroughput.pcieRead), int64(pcieThroughput.pcieWrite), errorString(r)
 }
 
 func (c *cndev) GetDevicePower(idx uint) (int, error) {
+	if ret := dl.checkExist("cndevGetDevicePowerInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var devicePower C.cndevDevicePowerInfo_t
 	index := C.int(idx)
 	if id, ok := c.cndevHandleMap[idx]; ok {
@@ -843,6 +1077,10 @@ func (c *cndev) GetDevicePower(idx uint) (int, error) {
 }
 
 func (c *cndev) GetDevicePowerManagementDefaultLimitation(idx uint) (uint16, error) {
+	if ret := dl.checkExist("cndevGetPowerManagementDefaultLimitation"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var powerManagementLimitation C.cndevPowerManagementLimitation_t
 	powerManagementLimitation.version = C.CNDEV_VERSION_6
 	r := C.cndevGetPowerManagementDefaultLimitation(&powerManagementLimitation, c.cndevHandleMap[idx])
@@ -850,6 +1088,10 @@ func (c *cndev) GetDevicePowerManagementDefaultLimitation(idx uint) (uint16, err
 }
 
 func (c *cndev) GetDevicePowerManagementLimitation(idx uint) (uint16, error) {
+	if ret := dl.checkExist("cndevGetPowerManagementLimitation"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var powerManagementLimitation C.cndevPowerManagementLimitation_t
 	powerManagementLimitation.version = C.CNDEV_VERSION_6
 	r := C.cndevGetPowerManagementLimitation(&powerManagementLimitation, c.cndevHandleMap[idx])
@@ -857,6 +1099,10 @@ func (c *cndev) GetDevicePowerManagementLimitation(idx uint) (uint16, error) {
 }
 
 func (c *cndev) GetDevicePowerManagementLimitRange(idx uint) (uint16, uint16, error) {
+	if ret := dl.checkExist("cndevGetPowerManagementLimitationRange"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, errorString(ret)
+	}
+
 	var powerManagementLimitRange C.cndevPowerManagementLimitationRange_t
 	powerManagementLimitRange.version = C.CNDEV_VERSION_6
 	r := C.cndevGetPowerManagementLimitationRange(&powerManagementLimitRange, c.cndevHandleMap[idx])
@@ -864,6 +1110,10 @@ func (c *cndev) GetDevicePowerManagementLimitRange(idx uint) (uint16, uint16, er
 }
 
 func (c *cndev) GetDevicePerformanceThrottleReason(idx uint) (bool, error) {
+	if ret := dl.checkExist("cndevGetPerformanceThrottleReason"); ret != C.CNDEV_SUCCESS {
+		return false, errorString(ret)
+	}
+
 	var performanceThrottleReason C.cndevPerformanceThrottleReason_t
 	performanceThrottleReason.version = C.CNDEV_VERSION_6
 	r := C.cndevGetPerformanceThrottleReason(&performanceThrottleReason, c.cndevHandleMap[idx])
@@ -871,6 +1121,10 @@ func (c *cndev) GetDevicePerformanceThrottleReason(idx uint) (bool, error) {
 }
 
 func (c *cndev) GetDeviceProcessUtil(idx uint) ([]uint32, []uint32, []uint32, []uint32, []uint32, []uint32, error) {
+	if ret := dl.checkExist("cndevGetProcessUtilization"); ret != C.CNDEV_SUCCESS {
+		return nil, nil, nil, nil, nil, nil, errorString(ret)
+	}
+
 	processCount := 1 << 4
 	var util C.cndevProcessUtilization_t
 	utils := (*C.cndevProcessUtilization_t)(C.malloc(C.size_t(processCount) * C.size_t(unsafe.Sizeof(util))))
@@ -883,7 +1137,7 @@ func (c *cndev) GetDeviceProcessUtil(idx uint) ([]uint32, []uint32, []uint32, []
 		}
 	}()
 
-	utils.version = C.CNDEV_VERSION_5
+	utils.version = C.CNDEV_VERSION_6
 	r := C.cndevGetProcessUtilization((*C.uint)(unsafe.Pointer(&processCount)), utils, c.cndevHandleMap[idx])
 	if err := errorString(r); err != nil && r != C.CNDEV_ERROR_INSUFFICIENT_SPACE {
 		return nil, nil, nil, nil, nil, nil, err
@@ -943,6 +1197,10 @@ func (c *cndev) GetDeviceRemappedRows(idx uint) (uint32, uint32, uint32, uint32,
 	v2 := semver.MustParse("6.0.2")
 
 	if v1.GreaterThan(v2) {
+		if ret := dl.checkExist("cndevGetRemappedRowsV2", "cndevGetRepairStatus"); ret != C.CNDEV_SUCCESS {
+			return 0, 0, 0, 0, 0, errorString(ret)
+		}
+
 		var remappedRowsV2 C.cndevRemappedRowV2_t
 		remappedRowsV2.version = C.CNDEV_VERSION_6
 		r := C.cndevGetRemappedRowsV2(&remappedRowsV2, c.cndevHandleMap[idx])
@@ -975,6 +1233,10 @@ func (c *cndev) GetDeviceRemappedRows(idx uint) (uint32, uint32, uint32, uint32,
 			uint32(pendingRows), uint32(failedRows), uint32(retirePending), nil
 	}
 
+	if ret := dl.checkExist("cndevGetRemappedRows"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, 0, 0, err
+	}
+
 	var remappedRows C.cndevRemappedRow_t
 	remappedRows.version = C.CNDEV_VERSION_6
 	r := C.cndevGetRemappedRows(&remappedRows, c.cndevHandleMap[idx])
@@ -983,8 +1245,12 @@ func (c *cndev) GetDeviceRemappedRows(idx uint) (uint32, uint32, uint32, uint32,
 }
 
 func (c *cndev) GetDeviceRetiredPageInfo(idx uint) (uint32, uint32, error) {
+	if ret := dl.checkExist("cndevGetRetiredPages"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, errorString(ret)
+	}
+
 	var retiredPage C.cndevRetiredPageInfo_t
-	retiredPage.version = C.CNDEV_VERSION_5
+	retiredPage.version = C.CNDEV_VERSION_6
 	retiredPage.cause = 0
 	r := C.cndevGetRetiredPages(&retiredPage, c.cndevHandleMap[idx])
 	if err := errorString(r); err != nil {
@@ -1001,6 +1267,10 @@ func (c *cndev) GetDeviceRetiredPageInfo(idx uint) (uint32, uint32, error) {
 }
 
 func (c *cndev) GetDeviceRetiredPagesOperation(idx uint) (int, error) {
+	if ret := dl.checkExist("cndevGetRetiredPagesOperation"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var retirement C.cndevRetiredPageOperation_t
 	retirement.version = C.CNDEV_VERSION_6
 	r := C.cndevGetRetiredPagesOperation(&retirement, c.cndevHandleMap[idx])
@@ -1008,6 +1278,10 @@ func (c *cndev) GetDeviceRetiredPagesOperation(idx uint) (int, error) {
 }
 
 func (c *cndev) GetDeviceSMluProfileIDInfo(idx uint) ([]int, error) {
+	if ret := dl.checkExist("cndevGetSMluProfileIdInfo"); ret != C.CNDEV_SUCCESS {
+		return nil, errorString(ret)
+	}
+
 	var profileIDInfo C.cndevSMluProfileIdInfo_t
 	profileIDInfo.version = C.CNDEV_VERSION_6
 	r := C.cndevGetSMluProfileIdInfo(&profileIDInfo, c.cndevHandleMap[idx])
@@ -1022,6 +1296,10 @@ func (c *cndev) GetDeviceSMluProfileIDInfo(idx uint) ([]int, error) {
 }
 
 func (c *cndev) GetDeviceSMluProfileInfo(idx, profile uint) (SmluProfileInfo, uint32, uint32, error) {
+	if ret := dl.checkExist("cndevGetSMluProfileInfo"); ret != C.CNDEV_SUCCESS {
+		return SmluProfileInfo{}, 0, 0, errorString(ret)
+	}
+
 	var profileInfo C.cndevSMluProfileInfo_t
 	var smluProfileInfo SmluProfileInfo
 	profileInfo.version = C.CNDEV_VERSION_6
@@ -1041,8 +1319,12 @@ func (c *cndev) GetDeviceSMluProfileInfo(idx, profile uint) (SmluProfileInfo, ui
 }
 
 func (c *cndev) GetDeviceSN(idx uint) (string, error) {
+	if ret := dl.checkExist("cndevGetCardSN"); ret != C.CNDEV_SUCCESS {
+		return "", errorString(ret)
+	}
+
 	var cardSN C.cndevCardSN_t
-	cardSN.version = C.CNDEV_VERSION_5
+	cardSN.version = C.CNDEV_VERSION_6
 	r := C.cndevGetCardSN(&cardSN, c.cndevHandleMap[idx])
 	if err := errorString(r); err != nil {
 		return "", err
@@ -1052,8 +1334,12 @@ func (c *cndev) GetDeviceSN(idx uint) (string, error) {
 }
 
 func (c *cndev) GetDeviceTemperature(idx uint) (int, int, int, []int, []int, error) {
+	if ret := dl.checkExist("cndevGetTemperatureInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, nil, nil, errorString(ret)
+	}
+
 	var cardTemperature C.cndevTemperatureInfo_t
-	cardTemperature.version = C.CNDEV_VERSION_5
+	cardTemperature.version = C.CNDEV_VERSION_6
 	cluster, err := c.GetDeviceClusterCount(idx)
 	if err != nil {
 		return 0, 0, 0, nil, nil, err
@@ -1079,6 +1365,10 @@ func (c *cndev) GetDeviceTemperature(idx uint) (int, int, int, []int, []int, err
 }
 
 func (c *cndev) GetDeviceTensorUtil(idx uint) (int, error) {
+	if ret := dl.checkExist("cndevDeviceGetFieldValues"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	type fieldVaule struct {
 		fieldID     int32
 		ret         int32
@@ -1109,8 +1399,12 @@ func (c *cndev) GetDeviceTensorUtil(idx uint) (int, error) {
 }
 
 func (c *cndev) GetDeviceTinyCoreUtil(idx uint) ([]int, error) {
+	if ret := dl.checkExist("cndevGetTinyCoreUtilization"); ret != C.CNDEV_SUCCESS {
+		return nil, errorString(ret)
+	}
+
 	var cardTinyCoreUtil C.cndevTinyCoreUtilization_t
-	cardTinyCoreUtil.version = C.CNDEV_VERSION_5
+	cardTinyCoreUtil.version = C.CNDEV_VERSION_6
 	r := C.cndevGetTinyCoreUtilization(&cardTinyCoreUtil, c.cndevHandleMap[idx])
 	if err := errorString(r); err != nil {
 		return nil, err
@@ -1123,8 +1417,12 @@ func (c *cndev) GetDeviceTinyCoreUtil(idx uint) ([]int, error) {
 }
 
 func (c *cndev) GetDeviceUtil(idx uint) (int, []int, error) {
+	if ret := dl.checkExist("cndevGetDeviceUtilizationInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, nil, errorString(ret)
+	}
+
 	var cardUtil C.cndevUtilizationInfo_t
-	cardUtil.version = C.CNDEV_VERSION_5
+	cardUtil.version = C.CNDEV_VERSION_6
 	core, err := c.GetDeviceCoreNum(idx)
 	if err != nil {
 		return 0, nil, err
@@ -1141,8 +1439,12 @@ func (c *cndev) GetDeviceUtil(idx uint) (int, []int, error) {
 }
 
 func (c *cndev) GetDeviceUUID(idx uint) (string, error) {
+	if ret := dl.checkExist("cndevGetUUID"); ret != C.CNDEV_SUCCESS {
+		return "", errorString(ret)
+	}
+
 	var uuidInfo C.cndevUUID_t
-	uuidInfo.version = C.CNDEV_VERSION_5
+	uuidInfo.version = C.CNDEV_VERSION_6
 	r := C.cndevGetUUID(&uuidInfo, c.cndevHandleMap[idx])
 	if err := errorString(r); err != nil {
 		return "", err
@@ -1151,24 +1453,36 @@ func (c *cndev) GetDeviceUUID(idx uint) (string, error) {
 }
 
 func (c *cndev) GetDeviceVersion(idx uint) (uint, uint, uint, uint, uint, uint, error) {
+	if ret := dl.checkExist("cndevGetVersionInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, 0, 0, 0, errorString(ret)
+	}
+
 	var versionInfo C.cndevVersionInfo_t
-	versionInfo.version = C.CNDEV_VERSION_5
+	versionInfo.version = C.CNDEV_VERSION_6
 	r := C.cndevGetVersionInfo(&versionInfo, c.cndevHandleMap[idx])
 	return uint(versionInfo.mcuMajorVersion), uint(versionInfo.mcuMinorVersion), uint(versionInfo.mcuBuildVersion), uint(versionInfo.driverMajorVersion), uint(versionInfo.driverMinorVersion), uint(versionInfo.driverBuildVersion), errorString(r)
 }
 
 // GetDeviceVfState returns cndevCardVfState_t.vfState, which is bitmap of mlu vf state. See cndev user doc for more details.
 func (c *cndev) GetDeviceVfState(idx uint) (int, error) {
+	if ret := dl.checkExist("cndevGetCardVfState"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var vfstate C.cndevCardVfState_t
-	vfstate.version = C.CNDEV_VERSION_5
+	vfstate.version = C.CNDEV_VERSION_6
 	r := C.cndevGetCardVfState(&vfstate, c.cndevHandleMap[idx])
 	log.Debugf("slot:%d, vfstate is:%d", idx, int(vfstate.vfState))
 	return int(vfstate.vfState), errorString(r)
 }
 
 func (c *cndev) GetDeviceVideoCodecUtil(idx uint) ([]int, []int, error) {
+	if ret := dl.checkExist("cndevGetVideoCodecUtilization"); ret != C.CNDEV_SUCCESS {
+		return nil, nil, errorString(ret)
+	}
+
 	var cardVideoCodecUtil C.cndevVideoCodecUtilization_t
-	cardVideoCodecUtil.version = C.CNDEV_VERSION_5
+	cardVideoCodecUtil.version = C.CNDEV_VERSION_6
 	r := C.cndevGetVideoCodecUtilization(&cardVideoCodecUtil, c.cndevHandleMap[idx])
 	if err := errorString(r); err != nil {
 		return nil, nil, err
@@ -1186,18 +1500,30 @@ func (c *cndev) GetDeviceVideoCodecUtil(idx uint) ([]int, []int, error) {
 }
 
 func (c *cndev) GetDeviceVoltageInfo(idx uint) (int, int, int, error) {
+	if ret := dl.checkExist("cndevGetVoltageInfo"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, errorString(ret)
+	}
+
 	var voltageInfo C.cndevVoltageInfo_t
 	r := C.cndevGetVoltageInfo(&voltageInfo, c.cndevHandleMap[idx])
 	return int(voltageInfo.ipuCoreVoltage), int(voltageInfo.socVoltage), int(voltageInfo.hbmVddVoltage), errorString(r)
 }
 
 func (c *cndev) GetDeviceFrequencyStatus(idx uint) (int, error) {
+	if ret := dl.checkExist("cndevGetMLUFrequencyStatus"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var freqStatus C.cndevMLUFrequencyStatus_t
 	r := C.cndevGetMLUFrequencyStatus(&freqStatus, c.cndevHandleMap[idx])
 	return int(freqStatus.mluFrequencyLockStatus), errorString(r)
 }
 
 func (c *cndev) GetTopologyRelationship(domain, bus, device, function, rdmaDomain, rdmaBus, rdmaDevice, rdmaFunction uint) (int, error) {
+	if ret := dl.checkExist("cndevGetNodeByBDF", "cndevTopologyGetRelationshipByNode"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
 	var treeNode, rdmaTreeNode *C.cndevTopologyNode_t
 	version := C.CNDEV_VERSION_6
 	r := C.cndevGetNodeByBDF(C.int(version), &treeNode, C.uint(domain), C.uint(bus), C.uint(device), C.uint(function))
@@ -1219,6 +1545,10 @@ func (c *cndev) GetTopologyRelationship(domain, bus, device, function, rdmaDomai
 }
 
 func (c *cndev) GetSupportedEventTypes(idx uint) error {
+	if ret := dl.checkExist("cndevGetSupportedEventTypes"); ret != C.CNDEV_SUCCESS {
+		return errorString(ret)
+	}
+
 	types := C.ulonglong(C.cndevEventTypeAll)
 	r := C.cndevGetSupportedEventTypes(&types, c.cndevHandleMap[idx])
 
@@ -1226,6 +1556,10 @@ func (c *cndev) GetSupportedEventTypes(idx uint) error {
 }
 
 func (c *cndev) RegisterEventsHandleAndWait(slots []int, ch chan XIDInfoWithTimestamp) error {
+	if ret := dl.checkExist("cndevEventHandleCreate", "cndevRegisterEvents"); ret != C.CNDEV_SUCCESS {
+		return errorString(ret)
+	}
+
 	var handle C.cndevEventHandle
 	r := C.cndevEventHandleCreate(&handle)
 	if err := errorString(r); err != nil {
@@ -1244,6 +1578,10 @@ func (c *cndev) RegisterEventsHandleAndWait(slots []int, ch chan XIDInfoWithTime
 }
 
 func waitEvents(handle C.cndevEventHandle, ch chan XIDInfoWithTimestamp) {
+	if ret := dl.checkExist("cndevEventWait"); ret != C.CNDEV_SUCCESS {
+		return
+	}
+
 	var ret C.cndevRet_t
 	var eventData C.cndevEventData_t
 	for {
@@ -1281,6 +1619,10 @@ func waitEvents(handle C.cndevEventHandle, ch chan XIDInfoWithTimestamp) {
 }
 
 func errorString(ret C.cndevRet_t) error {
+	if ret := dl.checkExist("cndevGetErrorString"); ret != C.CNDEV_SUCCESS {
+		return fmt.Errorf("cndev: not support cndevGetErrorString")
+	}
+
 	if ret == C.CNDEV_SUCCESS {
 		return nil
 	}
@@ -1288,18 +1630,88 @@ func errorString(ret C.cndevRet_t) error {
 	return fmt.Errorf("cndev: %v", err)
 }
 
-func (c *cndev) generateDeviceHandleMap() error {
-	num, err := c.GetDeviceCount()
-	if err != nil {
-		return err
+func (c *cndev) GenerateDeviceHandleMap(count uint) error {
+	if ret := dl.checkExist("cndevGetDeviceHandleByIndex"); ret != C.CNDEV_SUCCESS {
+		return errorString(ret)
 	}
-	for i := uint(0); i < num; i++ {
+
+	for i := uint(0); i < count; i++ {
 		var handle C.cndevDevice_t
 		r := C.cndevGetDeviceHandleByIndex(C.int(i), &handle)
 		if errorString(r) != nil {
 			return errorString(r)
 		}
-		c.cndevHandleMap[i] = handle
+		cndevGlobalHandleMap[i] = handle
 	}
+
 	return nil
+}
+
+func healthErrorCodeToString(code C.cndevHealthError_t) string {
+	switch code {
+	case C.CNDEV_FR_OK:
+		return "CNDEV_FR_OK"
+	case C.CNDEV_FR_UNKNOWN:
+		return "CNDEV_FR_UNKNOWN"
+	case C.CNDEV_FR_INTERNAL:
+		return "CNDEV_FR_INTERNAL"
+	case C.CNDEV_FR_XID_ERROR:
+		return "CNDEV_FR_XID_ERROR"
+	case C.CNDEV_FR_PCIE_REPLAY_RATE:
+		return "CNDEV_FR_PCIE_REPLAY_RATE"
+	case C.CNDEV_FR_PCIE_GENERATION:
+		return "CNDEV_FR_PCIE_REPLAY_RATE"
+	case C.CNDEV_FR_PCIE_WIDTH:
+		return "CNDEV_FR_PCIE_WIDTH"
+	case C.CNDEV_FR_LOW_BANDWIDTH:
+		return "CNDEV_FR_LOW_BANDWIDTH"
+	case C.CNDEV_FR_HIGH_LATENCY:
+		return "CNDEV_FR_HIGH_LATENCY"
+	case C.CNDEV_FR_MLULINK_DOWN:
+		return "CNDEV_FR_MLULINK_DOWN"
+	case C.CNDEV_FR_MLULINK_REPLAY:
+		return "CNDEV_FR_MLULINK_REPLAY"
+	case C.CNDEV_FR_MLULINK_ERROR_THRESHOLD:
+		return "CNDEV_FR_MLULINK_ERROR_THRESHOLD"
+	case C.CNDEV_FR_MLULINK_CRC_ERROR_THRESHOLD:
+		return "CNDEV_FR_MLULINK_CRC_ERROR_THRESHOLD"
+	case C.CNDEV_FR_DIE2DIE_CRC_ERROR_THRESHOLD:
+		return "CNDEV_FR_DIE2DIE_CRC_ERROR_THRESHOLD"
+	case C.CNDEV_FR_SBE_VIOLATION:
+		return "CNDEV_FR_SBE_VIOLATION"
+	case C.CNDEV_FR_DBE_VIOLATION:
+		return "CNDEV_FR_DBE_VIOLATION"
+	case C.CNDEV_FR_SBE_THRESHOLD_VIOLATION:
+		return "CNDEV_FR_SBE_THRESHOLD_VIOLATION"
+	case C.CNDEV_FR_DBE_THRESHOLD_VIOLATION:
+		return "CNDEV_FR_DBE_THRESHOLD_VIOLATION"
+	case C.CNDEV_FR_ROW_REMAP_FAILURE:
+		return "CNDEV_FR_ROW_REMAP_FAILURE"
+	case C.CNDEV_FR_PENDING_ROW_REMAP:
+		return "CNDEV_FR_PENDING_ROW_REMAP"
+	case C.CNDEV_FR_ADDRESSSWAP_FAILURE:
+		return "CNDEV_FR_ADDRESSSWAP_FAILURE"
+	case C.CNDEV_FR_PENDING_ADDRESSSWAP:
+		return "CNDEV_FR_PENDING_ADDRESSSWAP"
+	case C.CNDEV_FR_REPAIR_FAILURE:
+		return "CNDEV_FR_REPAIR_FAILURE"
+	case C.CNDEV_FR_PENDING_PAGE_REPAIR:
+		return "CNDEV_FR_PENDING_PAGE_REPAIR"
+	case C.CNDEV_FR_PENDING_PAGE_RETIREMENTS:
+		return "CNDEV_FR_PENDING_PAGE_RETIREMENTS"
+	case C.CNDEV_FR_PAGE_REPAIR_RESOURCE_THRESHOLD:
+		return "CNDEV_FR_PAGE_REPAIR_RESOURCE_THRESHOLD"
+	case C.CNDEV_FR_TEMP_VIOLATION:
+		return "CNDEV_FR_TEMP_VIOLATION"
+	case C.CNDEV_FR_THERMAL_VIOLATION:
+		return "CNDEV_FR_THERMAL_VIOLATION"
+	case C.CNDEV_FR_DEVICE_COUNT_MISMATCH:
+		return "CNDEV_FR_DEVICE_COUNT_MISMATCH"
+	case C.CNDEV_FR_DRIVER_ERROR:
+		return "CNDEV_FR_DRIVER_ERROR"
+	case C.CNDEV_FR_DEVSYS_ERROR:
+		return "CNDEV_FR_DEVSYS_ERROR"
+	default:
+		return fmt.Sprintf("CNDEV_FR_UNKNOWN_CODE_%d", code)
+	}
 }

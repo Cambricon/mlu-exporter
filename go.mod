@@ -3,6 +3,7 @@ module github.com/Cambricon/mlu-exporter
 go 1.23
 
 require (
+	github.com/agiledragon/gomonkey/v2 v2.13.0
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/pkg/errors v0.9.1

@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.0.19
+
+- Support to mount cndev dynamically
+- Add default frequency metrics
+
 ## v2.0.18
 
 - Bump `cndev` to version 6.5.14
