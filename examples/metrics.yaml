@@ -191,6 +191,105 @@ cndev:
       type: type
       uuid: uuid
     name: bar4_memory_free
+  chassis_ib_info:
+    help: The ib info of Cambricon MLU chassis
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+      chassis_sn: chassis_sn
+      chassis_product_date: chassis_product_date
+      chassis_product_name: chassis_product_name
+      chassis_vendor_name: chassis_vendor_name
+      chassis_part_number: chassis_part_number
+      chassis_bmc_ip: chassis_bmc_ip
+      chassis_nvme_num: chassis_nvme_num
+      chassis_ib_num: chassis_ib_num
+      chassis_psu_num: chassis_psu_num
+      chassis_dev: chassis_dev
+      chassis_dev_fw: chassis_dev_fw
+      chassis_dev_mfc: chassis_dev_mfc
+      chassis_dev_model: chassis_dev_model
+      chassis_dev_sn: chassis_dev_sn
+    name: chassis_ib_info
+  chassis_info:
+    help: The info of Cambricon MLU chassis
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+      chassis_sn: chassis_sn
+      chassis_product_date: chassis_product_date
+      chassis_product_name: chassis_product_name
+      chassis_vendor_name: chassis_vendor_name
+      chassis_part_number: chassis_part_number
+      chassis_bmc_ip: chassis_bmc_ip
+      chassis_nvme_num: chassis_nvme_num
+      chassis_ib_num: chassis_ib_num
+      chassis_psu_num: chassis_psu_num
+    name: chassis_info
+  chassis_nvme_info:
+    help: The nvme info of Cambricon MLU chassis
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+      chassis_sn: chassis_sn
+      chassis_product_date: chassis_product_date
+      chassis_product_name: chassis_product_name
+      chassis_vendor_name: chassis_vendor_name
+      chassis_part_number: chassis_part_number
+      chassis_bmc_ip: chassis_bmc_ip
+      chassis_nvme_num: chassis_nvme_num
+      chassis_ib_num: chassis_ib_num
+      chassis_psu_num: chassis_psu_num
+      chassis_dev: chassis_dev
+      chassis_dev_fw: chassis_dev_fw
+      chassis_dev_mfc: chassis_dev_mfc
+      chassis_dev_model: chassis_dev_model
+      chassis_dev_sn: chassis_dev_sn
+    name: chassis_nvme_info
+  chassis_psu_info:
+    help: The psu info of Cambricon MLU chassis
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+      chassis_sn: chassis_sn
+      chassis_product_date: chassis_product_date
+      chassis_product_name: chassis_product_name
+      chassis_vendor_name: chassis_vendor_name
+      chassis_part_number: chassis_part_number
+      chassis_bmc_ip: chassis_bmc_ip
+      chassis_nvme_num: chassis_nvme_num
+      chassis_ib_num: chassis_ib_num
+      chassis_psu_num: chassis_psu_num
+      chassis_dev: chassis_dev
+      chassis_dev_fw: chassis_dev_fw
+      chassis_dev_mfc: chassis_dev_mfc
+      chassis_dev_model: chassis_dev_model
+      chassis_dev_sn: chassis_dev_sn
+    name: chassis_psu_info
   chip_cpu_utilization:
     help: The utilization of Cambricon MLU chip cpu, unit is '%'
     labels:
@@ -1427,6 +1526,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      module_id: module_id
       pcie_device_id: pcie_device_id
       pcie_id: pcie_id
       pcie_slot: pcie_slot
@@ -1575,6 +1675,32 @@ cndev:
       type: type
       uuid: uuid
     name: process_memory_utilization
+  process_physical_memory_used:
+    help: The process used physical memory of Cambricon MLU, unit is 'B', need exporter to share HostPID and HostIPC with host
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      pid: pid
+      sn: sn
+      type: type
+      uuid: uuid
+    name: process_physical_memory_used
+  process_virtual_memory_used:
+    help: The process used virtual memory of Cambricon MLU, unit is 'B', need exporter to share HostPID and HostIPC with host
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      pid: pid
+      sn: sn
+      type: type
+      uuid: uuid
+    name: process_virtual_memory_used
   process_vpu_decode_utilization:
     help: The process vpu decode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host
     labels:
@@ -1665,8 +1791,32 @@ cndev:
       type: type
       uuid: uuid
     name: remapped_uncorrect_rows
+  repair_failure:
+    help: The status of Cambricon MLU memory error repair failure, '0' means 'false', '1' means 'true'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: repair_failure
+  repair_pending:
+    help: The status of Cambricon MLU memory error repair pending, '0' means 'false', '1' means 'true'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      sn: sn
+      type: type
+      uuid: uuid
+    name: repair_pending
   repair_retire_pending:
-    help: The status of Cambricon MLU memory error retirement operation
+    help: The status of Cambricon MLU memory error retirement operation, '0' means 'false', '1' means 'true'
     labels:
       driver: driver
       mcu: mcu

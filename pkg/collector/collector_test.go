@@ -42,6 +42,56 @@ type testMetrics struct {
 
 func TestCollect(t *testing.T) {
 	var (
+		// fake chassis info
+		chassisSn          = uint64(8039172446100346)
+		chassisProductDate = "2024-11-23"
+		chassisProductName = "HBBU-M9DE"
+		chassisVendorName  = "Cambricon"
+		chassisPartNumber  = "DS591026"
+		chassisBmcIP       = "192.168.100.50"
+		chassisNvme        = []cndev.ChassisDevInfo{
+			{
+				SN:    "S63UNE0W300023",
+				Model: "PM9A3",
+				Fw:    "00-1.5-1.2",
+				Mfc:   "Samsung",
+			},
+			{
+				SN:    "S63UNE0W300024",
+				Model: "PM9A3",
+				Fw:    "00-1.5-1.2",
+				Mfc:   "Samsung",
+			},
+		}
+		chassisIb = []cndev.ChassisDevInfo{
+			{
+				SN:    "MT22394008L0",
+				Model: "MCX653105A-HDAT",
+				Fw:    "AG",
+				Mfc:   "Mellanox",
+			},
+			{
+				SN:    "MT22394008L1",
+				Model: "MCX653105A-HDAT",
+				Fw:    "AG",
+				Mfc:   "Mellanox",
+			},
+		}
+		chassisPsu = []cndev.ChassisDevInfo{
+			{
+				SN:    "S63UNE0W300022",
+				Model: "ECD16010099",
+				Fw:    "00-1.5-1.2-1.3",
+				Mfc:   "DELTA",
+			},
+			{
+				SN:    "S63UNE0W300023",
+				Model: "ECD16010099",
+				Fw:    "00-1.5-1.2-1.3",
+				Mfc:   "DELTA",
+			},
+		}
+
 		// fake node info
 		node         = "machine1"
 		hostCPUTotal = float64(6185912)
@@ -101,8 +151,7 @@ func TestCollect(t *testing.T) {
 						PlacementSize:  2,
 					},
 				},
-				link:       2,
-				linkActive: map[int]bool{0: true, 1: true},
+				link: 2,
 			},
 			uuid2: {
 				slot:        1,
@@ -144,18 +193,16 @@ func TestCollect(t *testing.T) {
 						MemUsed: 3400000,
 					},
 				},
-				link:       2,
-				linkActive: map[int]bool{0: true, 1: true},
+				link: 2,
 			},
 			uuid3: {
-				slot:       2,
-				model:      "MLU590",
-				uuid:       uuid3,
-				sn:         "sn3",
-				mcu:        "v1.1.1",
-				driver:     "v2.2.2",
-				link:       2,
-				linkActive: map[int]bool{0: true, 1: true},
+				slot:   2,
+				model:  "MLU590",
+				uuid:   uuid3,
+				sn:     "sn3",
+				mcu:    "v1.1.1",
+				driver: "v2.2.2",
+				link:   2,
 			},
 			uuid4: {
 				slot:                   3,
@@ -165,7 +212,6 @@ func TestCollect(t *testing.T) {
 				mcu:                    "v1.1.1",
 				driver:                 "v2.2.2",
 				link:                   2,
-				linkActive:             map[int]bool{0: true, 1: true},
 				cndevInterfaceDisabled: map[string]bool{"crcDisabled": true},
 			},
 		}
@@ -319,6 +365,7 @@ func TestCollect(t *testing.T) {
 		pcieFunction        = uint(0)
 		pcieSpeed           = 4
 		pcieWidth           = 4
+		moduleID            = []uint16{0, 1, 2, 3}
 
 		pcieRead       = []int64{100, 200, 300, 400}
 		pcieReplay     = []uint32{100, 200, 300, 400}
@@ -349,10 +396,17 @@ func TestCollect(t *testing.T) {
 			{15, 21},
 			{41, 22},
 		}
-		processJpuUtil       = processIpuUtil
-		processMemUtil       = processIpuUtil
-		processVpuDecodeUtil = processIpuUtil
-		processVpuEncodeUtil = processIpuUtil
+		processJpuUtil         = processIpuUtil
+		processMemUtil         = processIpuUtil
+		processVpuDecodeUtil   = processIpuUtil
+		processVpuEncodeUtil   = processIpuUtil
+		processPhysicalMemUsed = [][]uint64{
+			{1100, 1200},
+			{1300, 3200},
+			{1500, 2100},
+			{4100, 2200},
+		}
+		processVirtualMemUsed = processPhysicalMemUsed
 
 		// chip
 		chipCPUUtil     = []uint16{25, 25, 26, 26}
@@ -406,6 +460,11 @@ func TestCollect(t *testing.T) {
 		pendingRows   = []uint32{2, 1, 2, 1}
 		uncorrectRows = []uint32{1, 1, 1, 1}
 		retirePending = []uint32{1, 1, 0, 1}
+
+		// repair status
+		repairPending       = []bool{false, false, true, false}
+		repairFailed        = repairPending
+		repairRetirePending = repairPending
 
 		// ecc & crc
 		eccAddressForbiddenError = []uint64{100, 100, 100, 100}
@@ -613,7 +672,7 @@ func TestCollect(t *testing.T) {
 		mcndev.EXPECT().GetDeviceFanSpeed(stat.slot).Return(0, nil).AnyTimes()
 		mcndev.EXPECT().GetAllSMluInfo(stat.slot).Return(stat.smluInfos, nil).AnyTimes()
 		mcndev.EXPECT().GetDevicePower(stat.slot).Return(power[stat.slot], nil).AnyTimes()
-		mcndev.EXPECT().GetDevicePCIeInfo(stat.slot).Return(pcieSlotID[stat.slot], pcieSubsystemID, pcieDeviceID, pcieVendor, pcieSubsystemVendor, pcieDomain, pcieBus[stat.slot], pcieDevice, pcieFunction, nil).AnyTimes()
+		mcndev.EXPECT().GetDevicePCIeInfo(stat.slot).Return(pcieSlotID[stat.slot], pcieSubsystemID, pcieDeviceID, pcieVendor, pcieSubsystemVendor, pcieDomain, pcieBus[stat.slot], pcieDevice, pcieFunction, moduleID[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDevicePCIeThroughput(stat.slot).Return(pcieRead[stat.slot], pcieWrite[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceCurrentPCIeInfo(stat.slot).Return(pcieSpeed, pcieWidth, nil).AnyTimes()
 		mcndev.EXPECT().GetDevicePCIeReplayCount(stat.slot).Return(pcieReplay[stat.slot], nil).AnyTimes()
@@ -627,6 +686,7 @@ func TestCollect(t *testing.T) {
 		mcndev.EXPECT().GetDeviceRetiredPageInfo(stat.slot).Return(pageCounts[stat.slot], pageCounts[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceRetiredPagesOperation(stat.slot).Return(retirement[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceRemappedRows(stat.slot).Return(correctRows[stat.slot], uncorrectRows[stat.slot], pendingRows[stat.slot], failedRows[stat.slot], retirePending[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceRepairStatus(stat.slot).Return(repairPending[stat.slot], repairFailed[stat.slot], repairRetirePending[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceVideoCodecUtil(stat.slot).Return(videoCodecUtil[stat.slot], videoDecoderUtil[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceImageCodecUtil(stat.slot).Return(imageCodecUtil[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceECCInfo(stat.slot).Return(eccAddressForbiddenError[stat.slot], eccCorrectedError[stat.slot], eccMultipleError[stat.slot], eccMultipleMultipleError[stat.slot], eccMultipleOneError[stat.slot], eccOneBitError[stat.slot], eccTotalError[stat.slot], eccUncorrectedError[stat.slot], nil).AnyTimes()
@@ -655,6 +715,7 @@ func TestCollect(t *testing.T) {
 		}
 		mcndev.EXPECT().GetDeviceMLULinkPortNumber(stat.slot).Return(mluLinkPortNumber).AnyTimes()
 		mcndev.EXPECT().GetDeviceProcessUtil(stat.slot).Return(pid[stat.slot], processIpuUtil[stat.slot], processJpuUtil[stat.slot], processMemUtil[stat.slot], processVpuDecodeUtil[stat.slot], processVpuEncodeUtil[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceProcessInfo(stat.slot).Return(pid[stat.slot], processPhysicalMemUsed[stat.slot], processVirtualMemUsed[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceParityError(stat.slot).Return(parityError[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceAddressSwaps(stat.slot).Return(addressSwap[stat.slot][0], addressSwap[stat.slot][1], addressSwap[stat.slot][1], addressSwap[stat.slot][1], addressSwap[stat.slot][1], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceCurrentInfo(stat.slot).Return(current[stat.slot][0], current[stat.slot][1], current[stat.slot][2], nil).AnyTimes()
@@ -676,6 +737,7 @@ func TestCollect(t *testing.T) {
 		mcndev.EXPECT().GetDeviceSMluProfileInfo(stat.slot, uint(sMluProfileIDInfo[stat.slot][0])).Return(sMluProfileInfo, sMluProfileTotal[stat.slot], sMluProfileRemain[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceComputeCapability(stat.slot).Return(computeCapability[0], computeCapability[1], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceComputeMode(stat.slot).Return(computeMode[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceChassisInfo(stat.slot).Return(chassisSn, chassisProductDate, chassisProductName, chassisVendorName, chassisPartNumber, chassisBmcIP, chassisNvme, chassisIb, chassisPsu, nil).AnyTimes()
 
 		slots = append(slots, int(stat.slot))
 	}
@@ -737,7 +799,7 @@ func collectMetrics(node string, rdmaDevice []rdmaDevice, mst map[string]MLUStat
 			MLUInstanceID:     0,
 		}: {
 			XIDBase10: 3155969,
-			XID:       "0x30d641",
+			XID:       "0x000000000030d641",
 		},
 		{
 			Device:            1,
@@ -745,7 +807,7 @@ func collectMetrics(node string, rdmaDevice []rdmaDevice, mst map[string]MLUStat
 			MLUInstanceID:     0,
 		}: {
 			XIDBase10: 3155969,
-			XID:       "0x30d641",
+			XID:       "0x000000000030d641",
 		},
 	}
 	cndevCollector.mluXIDCounter = map[cndev.XIDInfo]int{
@@ -755,7 +817,7 @@ func collectMetrics(node string, rdmaDevice []rdmaDevice, mst map[string]MLUStat
 				ComputeInstanceID: 0,
 				MLUInstanceID:     0,
 			},
-			XID:       "0x30d641",
+			XID:       "0x000000000030d641",
 			XIDBase10: 3155969,
 		}: 5,
 		{
@@ -764,7 +826,7 @@ func collectMetrics(node string, rdmaDevice []rdmaDevice, mst map[string]MLUStat
 				ComputeInstanceID: 0,
 				MLUInstanceID:     0,
 			},
-			XID:       "0x30d641",
+			XID:       "0x000000000030d641",
 			XIDBase10: 3155969,
 		}: 10,
 	}
