@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.0.20
+
+- Add chassis info metrics
+- Add process memory info metrics
+- Add unhealth reason label
+- Add mlulink state metrics
+- Add memory repair status metrics
+
 ## v2.0.19
 
 - Support to mount cndev dynamically

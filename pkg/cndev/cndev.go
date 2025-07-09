@@ -87,6 +87,13 @@ type XIDInfoWithTimestamp struct {
 	XIDInfo
 }
 
+type ChassisDevInfo struct {
+	SN    string
+	Model string
+	Fw    string
+	Mfc   string
+}
+
 type Cndev interface {
 	Init(healthCheck bool) error
 	Release() error
@@ -98,6 +105,7 @@ type Cndev interface {
 	GetAllSMluInfo(idx uint) ([]SmluInfo, error)
 	GetDeviceAddressSwaps(idx uint) (uint32, uint32, uint32, uint32, uint32, error)
 	GetDeviceBAR4MemoryInfo(idx uint) (uint64, uint64, uint64, error)
+	GetDeviceChassisInfo(idx uint) (uint64, string, string, string, string, string, []ChassisDevInfo, []ChassisDevInfo, []ChassisDevInfo, error)
 	GetDeviceClusterCount(idx uint) (int, error)
 	GetDeviceCndevVersion() (uint, uint, uint, error)
 	GetDeviceComputeCapability(idx uint) (uint, uint, error)
@@ -142,7 +150,7 @@ type Cndev interface {
 	GetDeviceOverTemperatureShutdownThreshold(idx uint) (int, error)
 	GetDeviceOverTemperatureSlowdownThreshold(idx uint) (int, error)
 	GetDeviceParityError(idx uint) (int, error)
-	GetDevicePCIeInfo(idx uint) (int, uint, uint, uint16, uint16, uint, uint, uint, uint, error)
+	GetDevicePCIeInfo(idx uint) (int, uint, uint, uint16, uint16, uint, uint, uint, uint, uint16, error)
 	GetDevicePCIeReplayCount(idx uint) (uint32, error)
 	GetDevicePCIeThroughput(idx uint) (int64, int64, error)
 	GetDevicePerformanceThrottleReason(idx uint) (bool, error)
@@ -150,8 +158,10 @@ type Cndev interface {
 	GetDevicePowerManagementDefaultLimitation(idx uint) (uint16, error)
 	GetDevicePowerManagementLimitation(idx uint) (uint16, error)
 	GetDevicePowerManagementLimitRange(idx uint) (uint16, uint16, error)
+	GetDeviceProcessInfo(idx uint) ([]uint32, []uint64, []uint64, error)
 	GetDeviceProcessUtil(idx uint) ([]uint32, []uint32, []uint32, []uint32, []uint32, []uint32, error)
 	GetDeviceRemappedRows(idx uint) (uint32, uint32, uint32, uint32, uint32, error)
+	GetDeviceRepairStatus(idx uint) (bool, bool, bool, error)
 	GetDeviceRetiredPageInfo(idx uint) (uint32, uint32, error)
 	GetDeviceRetiredPagesOperation(idx uint) (int, error)
 	GetDeviceSMluProfileIDInfo(idx uint) ([]int, error)
@@ -395,6 +405,56 @@ func (c *cndev) GetDeviceBAR4MemoryInfo(idx uint) (uint64, uint64, uint64, error
 	var memInfo C.cndevBAR4Memory_t
 	r := C.cndevGetBAR4MemoryInfo(&memInfo, c.cndevHandleMap[idx])
 	return uint64(memInfo.total_size), uint64(memInfo.used_size), uint64(memInfo.free_size), errorString(r)
+}
+
+func (c *cndev) GetDeviceChassisInfo(idx uint) (uint64, string, string, string, string, string, []ChassisDevInfo, []ChassisDevInfo, []ChassisDevInfo, error) {
+	if ret := dl.checkExist("cndevGetChassisInfoV2"); ret != C.CNDEV_SUCCESS {
+		return 0, "", "", "", "", "", nil, nil, nil, errorString(ret)
+	}
+
+	var chassisInfo C.cndevChassisInfoV2_t
+	chassisInfo.version = C.CNDEV_VERSION_6
+	r := C.cndevGetChassisInfoV2(&chassisInfo, c.cndevHandleMap[idx])
+	if err := errorString(r); err != nil {
+		return 0, "", "", "", "", "", nil, nil, nil, err
+	}
+	nvme := make([]ChassisDevInfo, uint8(chassisInfo.nvmeSsdNum))
+	ib := make([]ChassisDevInfo, uint8(chassisInfo.ibBoardNum))
+	psu := make([]ChassisDevInfo, uint8(chassisInfo.psuNum))
+	for i := uint8(0); i < uint8(chassisInfo.nvmeSsdNum); i++ {
+		nvme = append(nvme,
+			ChassisDevInfo{
+				SN:    C.GoString((*C.char)(unsafe.Pointer(&chassisInfo.nvmeInfo[i].nvmeSn[0]))),
+				Model: C.GoString((*C.char)(unsafe.Pointer(&chassisInfo.nvmeInfo[i].nvmeModel[0]))),
+				Fw:    C.GoString((*C.char)(unsafe.Pointer(&chassisInfo.nvmeInfo[i].nvmeFw[0]))),
+				Mfc:   C.GoString((*C.char)(unsafe.Pointer(&chassisInfo.nvmeInfo[i].nvmeMfc[0]))),
+			})
+	}
+	log.Debugf("chassis nvme infos for device %d num: %d info: %+v", idx, chassisInfo.nvmeSsdNum, nvme)
+	for i := uint8(0); i < uint8(chassisInfo.ibBoardNum); i++ {
+		ib = append(ib,
+			ChassisDevInfo{
+				SN:    C.GoString((*C.char)(unsafe.Pointer(&chassisInfo.ibInfo[i].ibSn[0]))),
+				Model: C.GoString((*C.char)(unsafe.Pointer(&chassisInfo.ibInfo[i].ibModel[0]))),
+				Fw:    C.GoString((*C.char)(unsafe.Pointer(&chassisInfo.ibInfo[i].ibFw[0]))),
+				Mfc:   C.GoString((*C.char)(unsafe.Pointer(&chassisInfo.ibInfo[i].ibMfc[0]))),
+			})
+	}
+	log.Debugf("chassis ib infos for device %d num: %d info: %+v", idx, chassisInfo.ibBoardNum, ib)
+	for i := uint8(0); i < uint8(chassisInfo.psuNum); i++ {
+		psu = append(psu,
+			ChassisDevInfo{
+				SN:    C.GoString((*C.char)(unsafe.Pointer(&chassisInfo.psuInfo[i].psuSn[0]))),
+				Model: C.GoString((*C.char)(unsafe.Pointer(&chassisInfo.psuInfo[i].psuModel[0]))),
+				Fw:    C.GoString((*C.char)(unsafe.Pointer(&chassisInfo.psuInfo[i].psuFw[0]))),
+				Mfc:   C.GoString((*C.char)(unsafe.Pointer(&chassisInfo.psuInfo[i].psuMfc[0]))),
+			})
+	}
+	log.Debugf("chassis psu for device %d num: %d info: %+v", idx, chassisInfo.psuNum, psu)
+
+	return uint64(chassisInfo.chassisSn), C.GoString((*C.char)(unsafe.Pointer(&chassisInfo.chassisProductDate))), C.GoString((*C.char)(unsafe.Pointer(&chassisInfo.chassisProductName))),
+		C.GoString((*C.char)(unsafe.Pointer(&chassisInfo.chassisVendorName))), C.GoString((*C.char)(unsafe.Pointer(&chassisInfo.chassisPartNumber))),
+		C.GoString((*C.char)(unsafe.Pointer(&chassisInfo.bmcIP[0]))), nvme, ib, psu, errorString(r)
 }
 
 func (c *cndev) GetDeviceClusterCount(idx uint) (int, error) {
@@ -1029,16 +1089,16 @@ func (c *cndev) GetDeviceParityError(idx uint) (int, error) {
 	return int(parityError.counter), errorString(r)
 }
 
-func (c *cndev) GetDevicePCIeInfo(idx uint) (int, uint, uint, uint16, uint16, uint, uint, uint, uint, error) {
+func (c *cndev) GetDevicePCIeInfo(idx uint) (int, uint, uint, uint16, uint16, uint, uint, uint, uint, uint16, error) {
 	if ret := dl.checkExist("cndevGetPCIeInfoV2"); ret != C.CNDEV_SUCCESS {
-		return 0, 0, 0, 0, 0, 0, 0, 0, 0, errorString(ret)
+		return 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, errorString(ret)
 	}
 
 	var pcieInfo C.cndevPCIeInfoV2_t
 	r := C.cndevGetPCIeInfoV2(&pcieInfo, c.cndevHandleMap[idx])
 	return int(pcieInfo.slotId), uint(pcieInfo.subsystemId), uint(pcieInfo.deviceId), uint16(pcieInfo.vendor),
 		uint16(pcieInfo.subsystemVendor), uint(pcieInfo.domain), uint(pcieInfo.bus), uint(pcieInfo.device),
-		uint(pcieInfo.function), errorString(r)
+		uint(pcieInfo.function), uint16(pcieInfo.moduleId), errorString(r)
 }
 
 func (c *cndev) GetDevicePCIeReplayCount(idx uint) (uint32, error) {
@@ -1118,6 +1178,64 @@ func (c *cndev) GetDevicePerformanceThrottleReason(idx uint) (bool, error) {
 	performanceThrottleReason.version = C.CNDEV_VERSION_6
 	r := C.cndevGetPerformanceThrottleReason(&performanceThrottleReason, c.cndevHandleMap[idx])
 	return performanceThrottleReason.thermalSlowdown == C.CNDEV_FEATURE_ENABLED, errorString(r)
+}
+
+func (c *cndev) GetDeviceProcessInfo(idx uint) ([]uint32, []uint64, []uint64, error) {
+	if ret := dl.checkExist("cndevGetProcessInfo"); ret != C.CNDEV_SUCCESS {
+		return nil, nil, nil, errorString(ret)
+	}
+
+	processCount := 1 << 4
+	var util C.cndevProcessInfo_t
+	utils := (*C.cndevProcessInfo_t)(C.malloc(C.size_t(processCount) * C.size_t(unsafe.Sizeof(util))))
+	if utils == nil {
+		return nil, nil, nil, fmt.Errorf("malloc failed for cndevGetProcessInfo")
+	}
+	defer func() {
+		if utils != nil {
+			C.free(unsafe.Pointer(utils))
+		}
+	}()
+
+	utils.version = C.CNDEV_VERSION_6
+	r := C.cndevGetProcessInfo((*C.uint)(unsafe.Pointer(&processCount)), utils, c.cndevHandleMap[idx])
+	if err := errorString(r); err != nil && r != C.CNDEV_ERROR_INSUFFICIENT_SPACE {
+		return nil, nil, nil, err
+	}
+
+	// handle the case when the initial count is insufficient,
+	// after cndevGetProcessUtilization call the processCount will be set to real count,
+	// while new process may be produced between two cndevGetProcessUtilization calls,
+	// so need to loop until this corner case vanishes
+	for {
+		err := errorString(r)
+		if err == nil {
+			break
+		}
+		if r == C.CNDEV_ERROR_INSUFFICIENT_SPACE {
+			log.Debugf("cndevGetProcessInfo with insufficient space with real counts %d, with slot: %d, will try with the real counts", processCount, idx)
+			newUtils := (*C.cndevProcessInfo_t)(C.realloc(unsafe.Pointer(utils), C.size_t(processCount)*C.size_t(unsafe.Sizeof(util))))
+			if newUtils == nil {
+				return nil, nil, nil, fmt.Errorf("realloc failed for cndevGetProcessInfo")
+			}
+			utils = newUtils
+			r = C.cndevGetProcessInfo((*C.uint)(unsafe.Pointer(&processCount)), utils, c.cndevHandleMap[idx])
+			continue
+		}
+		return nil, nil, nil, err
+	}
+
+	pids := make([]uint32, processCount)
+	physicalMemUsed := make([]uint64, processCount)
+	virtualMemUsed := make([]uint64, processCount)
+	results := (*[1 << 16]C.cndevProcessInfo_t)(unsafe.Pointer(utils))[:processCount]
+	for i := 0; i < processCount; i++ {
+		pids[i] = uint32(results[i].pid)
+		physicalMemUsed[i] = uint64(results[i].physicalMemoryUsed)
+		virtualMemUsed[i] = uint64(results[i].virtualMemoryUsed)
+	}
+
+	return pids, physicalMemUsed, virtualMemUsed, nil
 }
 
 func (c *cndev) GetDeviceProcessUtil(idx uint) ([]uint32, []uint32, []uint32, []uint32, []uint32, []uint32, error) {
@@ -1242,6 +1360,17 @@ func (c *cndev) GetDeviceRemappedRows(idx uint) (uint32, uint32, uint32, uint32,
 	r := C.cndevGetRemappedRows(&remappedRows, c.cndevHandleMap[idx])
 	return uint32(remappedRows.correctRows), uint32(remappedRows.uncorrectRows),
 		uint32(remappedRows.pendingRows), uint32(remappedRows.failedRows), 0, errorString(r)
+}
+
+func (c *cndev) GetDeviceRepairStatus(idx uint) (bool, bool, bool, error) {
+	if ret := dl.checkExist("cndevGetRepairStatus"); ret != C.CNDEV_SUCCESS {
+		return false, false, false, errorString(ret)
+	}
+
+	var repairStatus C.cndevRepairStatus_t
+	repairStatus.version = C.CNDEV_VERSION_6
+	r := C.cndevGetRepairStatus(&repairStatus, c.cndevHandleMap[idx])
+	return bool(repairStatus.isPending), bool(repairStatus.isFailure), bool(repairStatus.isRetirePending), errorString(r)
 }
 
 func (c *cndev) GetDeviceRetiredPageInfo(idx uint) (uint32, uint32, error) {
@@ -1597,7 +1726,7 @@ func waitEvents(handle C.cndevEventHandle, ch chan XIDInfoWithTimestamp) {
 
 		info := XIDInfoWithTimestamp{
 			XIDInfo: XIDInfo{
-				XID:       fmt.Sprintf("%x", eventData.eventData),
+				XID:       fmt.Sprintf("0x%016x", eventData.eventData),
 				XIDBase10: int64(eventData.eventData),
 				DeviceInfo: DeviceInfo{
 					Device:            uint(eventData.device),

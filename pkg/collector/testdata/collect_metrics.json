@@ -2714,6 +2714,2670 @@
     }
   },
   {
+    "Desc": "Desc{fqName: \"chassis_ib_info\", help: \"The ib info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "0"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "AG"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "Mellanox"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "MCX653105A-HDAT"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "MT22394008L0"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_ib_info\", help: \"The ib info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "0"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "AG"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "Mellanox"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "MCX653105A-HDAT"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "MT22394008L0"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_ib_info\", help: \"The ib info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "0"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "AG"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "Mellanox"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "MCX653105A-HDAT"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "MT22394008L0"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_ib_info\", help: \"The ib info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "0"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "AG"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "Mellanox"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "MCX653105A-HDAT"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "MT22394008L0"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_ib_info\", help: \"The ib info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "1"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "AG"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "Mellanox"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "MCX653105A-HDAT"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "MT22394008L1"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_ib_info\", help: \"The ib info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "1"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "AG"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "Mellanox"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "MCX653105A-HDAT"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "MT22394008L1"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_ib_info\", help: \"The ib info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "1"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "AG"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "Mellanox"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "MCX653105A-HDAT"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "MT22394008L1"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_ib_info\", help: \"The ib info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "1"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "AG"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "Mellanox"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "MCX653105A-HDAT"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "MT22394008L1"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_info\", help: \"The info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_info\", help: \"The info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_info\", help: \"The info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_info\", help: \"The info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_nvme_info\", help: \"The nvme info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "0"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "00-1.5-1.2"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "Samsung"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "PM9A3"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "S63UNE0W300023"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_nvme_info\", help: \"The nvme info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "0"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "00-1.5-1.2"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "Samsung"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "PM9A3"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "S63UNE0W300023"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_nvme_info\", help: \"The nvme info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "0"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "00-1.5-1.2"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "Samsung"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "PM9A3"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "S63UNE0W300023"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_nvme_info\", help: \"The nvme info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "0"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "00-1.5-1.2"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "Samsung"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "PM9A3"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "S63UNE0W300023"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_nvme_info\", help: \"The nvme info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "1"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "00-1.5-1.2"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "Samsung"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "PM9A3"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "S63UNE0W300024"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_nvme_info\", help: \"The nvme info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "1"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "00-1.5-1.2"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "Samsung"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "PM9A3"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "S63UNE0W300024"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_nvme_info\", help: \"The nvme info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "1"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "00-1.5-1.2"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "Samsung"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "PM9A3"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "S63UNE0W300024"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_nvme_info\", help: \"The nvme info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "1"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "00-1.5-1.2"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "Samsung"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "PM9A3"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "S63UNE0W300024"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_psu_info\", help: \"The psu info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "0"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "00-1.5-1.2-1.3"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "DELTA"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "ECD16010099"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "S63UNE0W300022"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_psu_info\", help: \"The psu info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "0"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "00-1.5-1.2-1.3"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "DELTA"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "ECD16010099"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "S63UNE0W300022"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_psu_info\", help: \"The psu info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "0"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "00-1.5-1.2-1.3"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "DELTA"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "ECD16010099"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "S63UNE0W300022"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_psu_info\", help: \"The psu info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "0"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "00-1.5-1.2-1.3"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "DELTA"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "ECD16010099"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "S63UNE0W300022"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_psu_info\", help: \"The psu info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "1"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "00-1.5-1.2-1.3"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "DELTA"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "ECD16010099"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "S63UNE0W300023"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_psu_info\", help: \"The psu info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "1"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "00-1.5-1.2-1.3"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "DELTA"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "ECD16010099"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "S63UNE0W300023"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_psu_info\", help: \"The psu info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "1"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "00-1.5-1.2-1.3"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "DELTA"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "ECD16010099"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "S63UNE0W300023"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"chassis_psu_info\", help: \"The psu info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "chassis_bmc_ip",
+          "value": "192.168.100.50"
+        },
+        {
+          "name": "chassis_dev",
+          "value": "1"
+        },
+        {
+          "name": "chassis_dev_fw",
+          "value": "00-1.5-1.2-1.3"
+        },
+        {
+          "name": "chassis_dev_mfc",
+          "value": "DELTA"
+        },
+        {
+          "name": "chassis_dev_model",
+          "value": "ECD16010099"
+        },
+        {
+          "name": "chassis_dev_sn",
+          "value": "S63UNE0W300023"
+        },
+        {
+          "name": "chassis_ib_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_nvme_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_part_number",
+          "value": "DS591026"
+        },
+        {
+          "name": "chassis_product_date",
+          "value": "2024-11-23"
+        },
+        {
+          "name": "chassis_product_name",
+          "value": "HBBU-M9DE"
+        },
+        {
+          "name": "chassis_psu_num",
+          "value": "2"
+        },
+        {
+          "name": "chassis_sn",
+          "value": "8039172446100346"
+        },
+        {
+          "name": "chassis_vendor_name",
+          "value": "Cambricon"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
     "Desc": "Desc{fqName: \"chip_cpu_hi\", help: \"The hardware interrupt utilization of Cambricon MLU chip cpu, unit is '%'\", constLabels: {}, variableLabels: [cpu_core driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
@@ -17075,7 +19739,7 @@
         },
         {
           "name": "xid",
-          "value": "0x30d641"
+          "value": "0x000000000030d641"
         },
         {
           "name": "xid_compute_instance_id",
@@ -17129,7 +19793,7 @@
         },
         {
           "name": "xid",
-          "value": "0x30d641"
+          "value": "0x000000000030d641"
         },
         {
           "name": "xid_compute_instance_id",
@@ -32960,7 +35624,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_info\", help: \"The pcie information of MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node pcie_device_id pcie_id pcie_slot pcie_speed pcie_subsystem pcie_subsystem_vendor pcie_vendor pcie_width sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_info\", help: \"The pcie information of MLU\", constLabels: {}, variableLabels: [driver mcu mlu model module_id node pcie_device_id pcie_id pcie_slot pcie_speed pcie_subsystem pcie_subsystem_vendor pcie_vendor pcie_width sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -32978,6 +35642,10 @@
         {
           "name": "model",
           "value": "MLU590"
+        },
+        {
+          "name": "module_id",
+          "value": "0"
         },
         {
           "name": "node",
@@ -33034,7 +35702,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_info\", help: \"The pcie information of MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node pcie_device_id pcie_id pcie_slot pcie_speed pcie_subsystem pcie_subsystem_vendor pcie_vendor pcie_width sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_info\", help: \"The pcie information of MLU\", constLabels: {}, variableLabels: [driver mcu mlu model module_id node pcie_device_id pcie_id pcie_slot pcie_speed pcie_subsystem pcie_subsystem_vendor pcie_vendor pcie_width sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33052,6 +35720,10 @@
         {
           "name": "model",
           "value": "MLU590"
+        },
+        {
+          "name": "module_id",
+          "value": "1"
         },
         {
           "name": "node",
@@ -33108,7 +35780,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_info\", help: \"The pcie information of MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node pcie_device_id pcie_id pcie_slot pcie_speed pcie_subsystem pcie_subsystem_vendor pcie_vendor pcie_width sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_info\", help: \"The pcie information of MLU\", constLabels: {}, variableLabels: [driver mcu mlu model module_id node pcie_device_id pcie_id pcie_slot pcie_speed pcie_subsystem pcie_subsystem_vendor pcie_vendor pcie_width sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33126,6 +35798,10 @@
         {
           "name": "model",
           "value": "MLU590"
+        },
+        {
+          "name": "module_id",
+          "value": "2"
         },
         {
           "name": "node",
@@ -33182,7 +35858,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"pcie_info\", help: \"The pcie information of MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node pcie_device_id pcie_id pcie_slot pcie_speed pcie_subsystem pcie_subsystem_vendor pcie_vendor pcie_width sn type uuid]}",
+    "Desc": "Desc{fqName: \"pcie_info\", help: \"The pcie information of MLU\", constLabels: {}, variableLabels: [driver mcu mlu model module_id node pcie_device_id pcie_id pcie_slot pcie_speed pcie_subsystem pcie_subsystem_vendor pcie_vendor pcie_width sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -33200,6 +35876,10 @@
         {
           "name": "model",
           "value": "MLU590"
+        },
+        {
+          "name": "module_id",
+          "value": "3"
         },
         {
           "name": "node",
@@ -36516,6 +39196,742 @@
     }
   },
   {
+    "Desc": "Desc{fqName: \"process_physical_memory_used\", help: \"The process used physical memory of Cambricon MLU, unit is 'B', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "pid",
+          "value": "1100"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 1126400
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"process_physical_memory_used\", help: \"The process used physical memory of Cambricon MLU, unit is 'B', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "pid",
+          "value": "1101"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 1228800
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"process_physical_memory_used\", help: \"The process used physical memory of Cambricon MLU, unit is 'B', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "pid",
+          "value": "1102"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1331200
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"process_physical_memory_used\", help: \"The process used physical memory of Cambricon MLU, unit is 'B', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "pid",
+          "value": "1103"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 3276800
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"process_physical_memory_used\", help: \"The process used physical memory of Cambricon MLU, unit is 'B', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "pid",
+          "value": "1104"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 1536000
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"process_physical_memory_used\", help: \"The process used physical memory of Cambricon MLU, unit is 'B', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "pid",
+          "value": "1105"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 2150400
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"process_physical_memory_used\", help: \"The process used physical memory of Cambricon MLU, unit is 'B', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "pid",
+          "value": "1106"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 4198400
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"process_physical_memory_used\", help: \"The process used physical memory of Cambricon MLU, unit is 'B', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "pid",
+          "value": "1107"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 2252800
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"process_virtual_memory_used\", help: \"The process used virtual memory of Cambricon MLU, unit is 'B', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "pid",
+          "value": "1100"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 1126400
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"process_virtual_memory_used\", help: \"The process used virtual memory of Cambricon MLU, unit is 'B', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "pid",
+          "value": "1101"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 1228800
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"process_virtual_memory_used\", help: \"The process used virtual memory of Cambricon MLU, unit is 'B', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "pid",
+          "value": "1102"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1331200
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"process_virtual_memory_used\", help: \"The process used virtual memory of Cambricon MLU, unit is 'B', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "pid",
+          "value": "1103"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 3276800
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"process_virtual_memory_used\", help: \"The process used virtual memory of Cambricon MLU, unit is 'B', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "pid",
+          "value": "1104"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 1536000
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"process_virtual_memory_used\", help: \"The process used virtual memory of Cambricon MLU, unit is 'B', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "pid",
+          "value": "1105"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 2150400
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"process_virtual_memory_used\", help: \"The process used virtual memory of Cambricon MLU, unit is 'B', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "pid",
+          "value": "1106"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 4198400
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"process_virtual_memory_used\", help: \"The process used virtual memory of Cambricon MLU, unit is 'B', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "pid",
+          "value": "1107"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 2252800
+      }
+    }
+  },
+  {
     "Desc": "Desc{fqName: \"process_vpu_decode_utilization\", help: \"The process vpu decode utilization of Cambricon MLU, unit is '%', need exporter to share HostPID and HostIPC with host\", constLabels: {}, variableLabels: [driver mcu mlu model node pid sn type uuid]}",
     "Metric": {
       "label": [
@@ -38388,7 +41804,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"repair_retire_pending\", help: \"The status of Cambricon MLU memory error retirement operation\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"repair_failure\", help: \"The status of Cambricon MLU memory error repair failure, '0' means 'false', '1' means 'true'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -38422,90 +41838,6 @@
         {
           "name": "uuid",
           "value": "uuid1"
-        }
-      ],
-      "gauge": {
-        "value": 1
-      }
-    }
-  },
-  {
-    "Desc": "Desc{fqName: \"repair_retire_pending\", help: \"The status of Cambricon MLU memory error retirement operation\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
-    "Metric": {
-      "label": [
-        {
-          "name": "driver",
-          "value": "v2.2.2"
-        },
-        {
-          "name": "mcu",
-          "value": "v1.1.1"
-        },
-        {
-          "name": "mlu",
-          "value": "1"
-        },
-        {
-          "name": "model",
-          "value": "MLU590"
-        },
-        {
-          "name": "node",
-          "value": "machine1"
-        },
-        {
-          "name": "sn",
-          "value": "sn2"
-        },
-        {
-          "name": "type",
-          "value": "mlu590"
-        },
-        {
-          "name": "uuid",
-          "value": "uuid2"
-        }
-      ],
-      "gauge": {
-        "value": 1
-      }
-    }
-  },
-  {
-    "Desc": "Desc{fqName: \"repair_retire_pending\", help: \"The status of Cambricon MLU memory error retirement operation\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
-    "Metric": {
-      "label": [
-        {
-          "name": "driver",
-          "value": "v2.2.2"
-        },
-        {
-          "name": "mcu",
-          "value": "v1.1.1"
-        },
-        {
-          "name": "mlu",
-          "value": "2"
-        },
-        {
-          "name": "model",
-          "value": "MLU590"
-        },
-        {
-          "name": "node",
-          "value": "machine1"
-        },
-        {
-          "name": "sn",
-          "value": "sn3"
-        },
-        {
-          "name": "type",
-          "value": "mlu590"
-        },
-        {
-          "name": "uuid",
-          "value": "uuid3"
         }
       ],
       "gauge": {
@@ -38514,7 +41846,91 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"repair_retire_pending\", help: \"The status of Cambricon MLU memory error retirement operation\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"repair_failure\", help: \"The status of Cambricon MLU memory error repair failure, '0' means 'false', '1' means 'true'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"repair_failure\", help: \"The status of Cambricon MLU memory error repair failure, '0' means 'false', '1' means 'true'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"repair_failure\", help: \"The status of Cambricon MLU memory error repair failure, '0' means 'false', '1' means 'true'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -38551,7 +41967,343 @@
         }
       ],
       "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"repair_pending\", help: \"The status of Cambricon MLU memory error repair pending, '0' means 'false', '1' means 'true'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"repair_pending\", help: \"The status of Cambricon MLU memory error repair pending, '0' means 'false', '1' means 'true'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"repair_pending\", help: \"The status of Cambricon MLU memory error repair pending, '0' means 'false', '1' means 'true'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
         "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"repair_pending\", help: \"The status of Cambricon MLU memory error repair pending, '0' means 'false', '1' means 'true'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"repair_retire_pending\", help: \"The status of Cambricon MLU memory error retirement operation, '0' means 'false', '1' means 'true'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"repair_retire_pending\", help: \"The status of Cambricon MLU memory error retirement operation, '0' means 'false', '1' means 'true'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"repair_retire_pending\", help: \"The status of Cambricon MLU memory error retirement operation, '0' means 'false', '1' means 'true'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"repair_retire_pending\", help: \"The status of Cambricon MLU memory error retirement operation, '0' means 'false', '1' means 'true'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 0
       }
     }
   },
@@ -45731,7 +49483,7 @@
         },
         {
           "name": "xid",
-          "value": "0x30d641"
+          "value": "0x000000000030d641"
         },
         {
           "name": "xid_base_10",
@@ -45789,7 +49541,7 @@
         },
         {
           "name": "xid",
-          "value": "0x30d641"
+          "value": "0x000000000030d641"
         },
         {
           "name": "xid_base_10",

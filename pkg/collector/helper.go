@@ -34,6 +34,18 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type chassisInfo struct {
+	chassisSN          uint64
+	chassisProductDate string
+	chassisProductName string
+	chassisVendorName  string
+	chassisPartNumber  string
+	chassisBmcIP       string
+	nvmeNum            int
+	ibNum              int
+	psuNum             int
+}
+
 type pcieInfo struct {
 	pcieSlot            string
 	pcieSubsystem       string
@@ -58,6 +70,9 @@ type mluLinkRemoteInfo struct {
 }
 
 type labelInfo struct {
+	chassisDev        int
+	chassisDevInfo    cndev.ChassisDevInfo
+	chassisInfo       chassisInfo
 	cluster           string
 	cndevVersion      string
 	computeCapability string
@@ -72,6 +87,7 @@ type labelInfo struct {
 	mimInstanceInfo   cndev.MimInstanceInfo
 	mimProfileInfo    cndev.MimProfileInfo
 	mluLinkRemoteInfo mluLinkRemoteInfo
+	moduleID          uint16
 	pcieInfo          pcieInfo
 	pid               uint32
 	ppi               string
@@ -260,6 +276,8 @@ func getLabelValues(labels []string, info labelInfo) []string {
 			values = append(values, fmt.Sprintf("%d", info.link))
 		case LinkVersion:
 			values = append(values, info.linkVersion)
+		case ModuleID:
+			values = append(values, fmt.Sprintf("%d", info.moduleID))
 		case PCIeSlot:
 			values = append(values, info.pcieInfo.pcieSlot)
 		case PCIeSubsystem:
@@ -324,6 +342,34 @@ func getLabelValues(labels []string, info labelInfo) []string {
 			values = append(values, info.mluLinkRemoteInfo.remotePortName)
 		case UnhealthReason:
 			values = append(values, info.unhealthReason)
+		case ChassisDev:
+			values = append(values, fmt.Sprintf("%d", info.chassisDev))
+		case ChassisSN:
+			values = append(values, fmt.Sprintf("%d", info.chassisInfo.chassisSN))
+		case ChassisProductDate:
+			values = append(values, info.chassisInfo.chassisProductDate)
+		case ChassisProductName:
+			values = append(values, info.chassisInfo.chassisProductName)
+		case ChassisVendorName:
+			values = append(values, info.chassisInfo.chassisVendorName)
+		case ChassisPartNumber:
+			values = append(values, info.chassisInfo.chassisPartNumber)
+		case ChassisBmcIP:
+			values = append(values, info.chassisInfo.chassisBmcIP)
+		case ChassisNvmeNum:
+			values = append(values, fmt.Sprintf("%d", info.chassisInfo.nvmeNum))
+		case ChassisIbNum:
+			values = append(values, fmt.Sprintf("%d", info.chassisInfo.ibNum))
+		case ChassisPsuNum:
+			values = append(values, fmt.Sprintf("%d", info.chassisInfo.psuNum))
+		case ChassisDevSN:
+			values = append(values, info.chassisDevInfo.SN)
+		case ChassisDevModel:
+			values = append(values, info.chassisDevInfo.Model)
+		case ChassisDevFw:
+			values = append(values, info.chassisDevInfo.Fw)
+		case ChassisDevMfc:
+			values = append(values, info.chassisDevInfo.Mfc)
 		default:
 			values = append(values, "") // configured label not applicable, add this to prevent panic
 		}
@@ -336,7 +382,6 @@ type MLUStat struct {
 	cndevInterfaceDisabled map[string]bool
 	driver                 string
 	link                   int
-	linkActive             map[int]bool
 	linkPPI                map[int]string
 	mcu                    string
 	mimEnabled             bool
@@ -401,7 +446,7 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 		log.Debugf("Start slot %d DeviceSmluModeEnabled", i)
 		smluEnabled, err := cli.DeviceSmluModeEnabled(i)
 		if err != nil {
-			log.Warn(errors.Wrapf(err, "DeviceMimModeEnabled for slot %d", i))
+			log.Warn(errors.Wrapf(err, "DeviceSmluModeEnabled for slot %d", i))
 		}
 
 		log.Debugf("Start slot %d GetDeviceMLULinkPortNumber", i)
@@ -411,17 +456,20 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 			dis["mluLinkPortNumberDisabled"] = true
 		}
 		log.Debugf("Slot %d mlulink num %d", i, link)
-		linkActive := map[int]bool{}
 		linkPPI := map[int]string{}
 		opticalPresent := map[int]uint8{}
 		for j := 0; j < link; j++ {
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkStatus", i, j)
-			active, _, _, err := cli.GetDeviceMLULinkStatus(i, uint(j))
-			if err != nil {
+			if _, _, _, err = cli.GetDeviceMLULinkStatus(i, uint(j)); err != nil {
 				log.Debug(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkStatus", i, j))
-				continue
+				dis["mluLinkStatusDisabled"] = true
 			}
-			linkActive[j] = active != 0
+
+			log.Debugf("Start slot %d link %d GetDeviceMLULinkState", i, j)
+			if _, _, err = cli.GetDeviceMLULinkState(i, uint(j)); err != nil {
+				log.Debug(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkState", i, j))
+				dis["mluLinkStateDisabled"] = true
+			}
 
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkCapability", i, j)
 			if _, _, err = cli.GetDeviceMLULinkCapability(i, uint(j)); err != nil {
@@ -453,11 +501,24 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 				dis["mluLinkErrorCounterDisabled"] = true
 			}
 
+			log.Debugf("Start slot %d link %d GetDeviceMLULinkCounter", i, j)
+			if _, _, _, _, _, _, _, _, _, _, _, _, _, err = cli.GetDeviceMLULinkCounter(i, uint(j)); err != nil {
+				log.Warn(errors.Wrapf(err, "Slot %d GetDeviceMLULinkCounter", i))
+				dis["mluLinkCounterDisabled"] = true
+			}
+
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkRemoteInfo", i, j)
 			if _, _, _, _, _, _, _, _, _, _, err = cli.GetDeviceMLULinkRemoteInfo(i, uint(j)); err != nil {
 				log.Warn(errors.Wrapf(err, "Slot %d GetDeviceMLULinkErrorCounter", i))
 				dis["mluLinkRemoteInfoDisabled"] = true
 			}
+
+			log.Debugf("Start slot %d link %d GetDeviceMLULinkSpeedInfo", i, j)
+			if _, _, err = cli.GetDeviceMLULinkSpeedInfo(i, uint(j)); err != nil {
+				log.Warn(errors.Wrapf(err, "Slot %d GetDeviceMLULinkSpeedInfo", i))
+				dis["mluLinkSpeedInfoDisabled"] = true
+			}
+
 			var ppi string
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkPPI", i, j)
 			if ppi, err = cli.GetDeviceMLULinkPPI(i, uint(j)); err != nil {
@@ -486,6 +547,12 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 		if _, _, _, _, _, _, _, _, err = cli.GetDeviceECCInfo(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", i))
 			dis["eccDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d cndevGetProcessInfo", i)
+		if _, _, _, err = cli.GetDeviceProcessInfo(i); err != nil {
+			log.Debug(errors.Wrapf(err, "Slot %d GetDeviceProcessInfo", i))
+			dis["processInfoDisabled"] = true
 		}
 
 		log.Debugf("Start slot %d GetDeviceProcessUtil", i)
@@ -687,7 +754,7 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 		}
 
 		log.Debugf("Start slot %d GetDevicePCIeInfo", i)
-		if _, _, _, _, _, _, _, _, _, err = cli.GetDevicePCIeInfo(i); err != nil {
+		if _, _, _, _, _, _, _, _, _, _, err = cli.GetDevicePCIeInfo(i); err != nil {
 			log.Warn(errors.Wrapf(err, "Slot %d GetDevicePCIeInfo", i))
 			dis["pcieInfoDisabled"] = true
 		}
@@ -752,11 +819,22 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 			dis["vfStateDisabled"] = true
 		}
 
+		log.Debugf("Start slot %d GetDeviceRepairStatus", i)
+		if _, _, _, err = cli.GetDeviceRepairStatus(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceRepairStatus", i))
+			dis["repairStatusDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDeviceChassisInfo", i)
+		if _, _, _, _, _, _, _, _, _, err = cli.GetDeviceChassisInfo(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceChassisInfo", i))
+			dis["chassisInfo"] = true
+		}
+
 		info[uuid] = MLUStat{
 			cndevInterfaceDisabled: dis,
 			driver:                 calcVersion(driverMajor, driverMinor, driverBuild),
 			link:                   link,
-			linkActive:             linkActive,
 			linkPPI:                linkPPI,
 			mcu:                    calcVersion(mcuMajor, mcuMinor, mcuBuild),
 			mimEnabled:             mimEnabled,
@@ -949,6 +1027,10 @@ func fetchMLUCounts() (uint, error) {
 	var count uint
 	for _, entry := range entries {
 		devicePath := filepath.Join(pciDevicesPath, entry.Name())
+		if _, err := os.Stat(filepath.Join(devicePath, "physfn")); err == nil {
+			log.Debugf("Skip SR-IOV VF device: %s", devicePath)
+			continue
+		}
 		vendorID, err := readHexFile(filepath.Join(devicePath, "vendor"))
 		if err != nil {
 			log.Warnf("Can't read vendor file: %v", err)
