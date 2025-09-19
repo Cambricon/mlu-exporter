@@ -1,5 +1,173 @@
 [
   {
+    "Desc": "Desc{fqName: \"activity\", help: \"The activity of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 11
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"activity\", help: \"The activity of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 12
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"activity\", help: \"The activity of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 13
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"activity\", help: \"The activity of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 21
+      }
+    }
+  },
+  {
     "Desc": "Desc{fqName: \"address_swaps_correct_count\", help: \"The address swaps correct counts of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
@@ -1869,7 +2037,7 @@
         }
       ],
       "gauge": {
-        "value": 2
+        "value": 5
       }
     }
   },
@@ -10871,7 +11039,7 @@
       "label": [
         {
           "name": "container",
-          "value": ""
+          "value": "container0"
         },
         {
           "name": "driver",
@@ -10891,7 +11059,7 @@
         },
         {
           "name": "namespace",
-          "value": ""
+          "value": "namespace0"
         },
         {
           "name": "node",
@@ -10899,7 +11067,7 @@
         },
         {
           "name": "pod",
-          "value": ""
+          "value": "pod0"
         },
         {
           "name": "sn",
@@ -10915,69 +11083,11 @@
         },
         {
           "name": "vf",
-          "value": ""
+          "value": "0"
         }
       ],
       "gauge": {
-        "value": 0
-      }
-    }
-  },
-  {
-    "Desc": "Desc{fqName: \"container\", help: \"The k8s container info of Cambricon MLUs allocated\", constLabels: {}, variableLabels: [container driver mcu mlu model namespace node pod sn type uuid vf]}",
-    "Metric": {
-      "label": [
-        {
-          "name": "container",
-          "value": ""
-        },
-        {
-          "name": "driver",
-          "value": "v2.2.2"
-        },
-        {
-          "name": "mcu",
-          "value": "v1.1.1"
-        },
-        {
-          "name": "mlu",
-          "value": "3"
-        },
-        {
-          "name": "model",
-          "value": "MLU590"
-        },
-        {
-          "name": "namespace",
-          "value": ""
-        },
-        {
-          "name": "node",
-          "value": "machine1"
-        },
-        {
-          "name": "pod",
-          "value": ""
-        },
-        {
-          "name": "sn",
-          "value": "sn4"
-        },
-        {
-          "name": "type",
-          "value": "mlu590"
-        },
-        {
-          "name": "uuid",
-          "value": "uuid4"
-        },
-        {
-          "name": "vf",
-          "value": ""
-        }
-      ],
-      "gauge": {
-        "value": 0
+        "value": 1
       }
     }
   },
@@ -11032,6 +11142,122 @@
         {
           "name": "vf",
           "value": ""
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"container\", help: \"The k8s container info of Cambricon MLUs allocated\", constLabels: {}, variableLabels: [container driver mcu mlu model namespace node pod sn type uuid vf]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "container",
+          "value": "container1"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "namespace",
+          "value": "namespace1"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "pod",
+          "value": "pod1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        },
+        {
+          "name": "vf",
+          "value": "1"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"container\", help: \"The k8s container info of Cambricon MLUs allocated\", constLabels: {}, variableLabels: [container driver mcu mlu model namespace node pod sn type uuid vf]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "container",
+          "value": "container1"
+        },
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "namespace",
+          "value": "namespace1"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "pod",
+          "value": "pod1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        },
+        {
+          "name": "vf",
+          "value": "0"
         }
       ],
       "gauge": {
@@ -17686,6 +17912,174 @@
     }
   },
   {
+    "Desc": "Desc{fqName: \"env_share_exhausted\", help: \"Indicate whether the envShare MLUs are exhausted for physical slot, '0' means not exhausted, '1' means exhausted\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"env_share_exhausted\", help: \"Indicate whether the envShare MLUs are exhausted for physical slot, '0' means not exhausted, '1' means exhausted\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"env_share_exhausted\", help: \"Indicate whether the envShare MLUs are exhausted for physical slot, '0' means not exhausted, '1' means exhausted\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"env_share_exhausted\", help: \"Indicate whether the envShare MLUs are exhausted for physical slot, '0' means not exhausted, '1' means exhausted\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
     "Desc": "Desc{fqName: \"fan_speed\", help: \"Fan speed of Cambricon MLU, unit is 'rpm', '-1' means no fan on MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
@@ -20057,7 +20451,7 @@
         }
       ],
       "gauge": {
-        "value": 1027604480
+        "value": 1017118720
       }
     }
   },
@@ -20099,7 +20493,7 @@
         }
       ],
       "gauge": {
-        "value": 1026555904
+        "value": 1016070144
       }
     }
   },
@@ -20141,7 +20535,7 @@
         }
       ],
       "gauge": {
-        "value": 1025507328
+        "value": 1015021568
       }
     }
   },
@@ -20183,7 +20577,175 @@
         }
       ],
       "gauge": {
-        "value": 1024458752
+        "value": 1013972992
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"memory_reserved\", help: \"The reserved memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 10485760
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"memory_reserved\", help: \"The reserved memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 10485760
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"memory_reserved\", help: \"The reserved memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 10485760
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"memory_reserved\", help: \"The reserved memory of Cambricon MLU, unit is 'B'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU590"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu590"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 10485760
       }
     }
   },
@@ -43956,7 +44518,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"tensor_util\", help: \"the tensor util of Cambircon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"tensor_util\", help: \"The tensor util of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -43998,7 +44560,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"tensor_util\", help: \"the tensor util of Cambircon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"tensor_util\", help: \"The tensor util of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {
@@ -44040,7 +44602,7 @@
     }
   },
   {
-    "Desc": "Desc{fqName: \"tensor_util\", help: \"the tensor util of Cambircon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
+    "Desc": "Desc{fqName: \"tensor_util\", help: \"The tensor util of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node sn type uuid]}",
     "Metric": {
       "label": [
         {

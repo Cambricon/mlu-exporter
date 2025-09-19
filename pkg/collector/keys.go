@@ -19,6 +19,7 @@ const (
 	PodResources = "podresources"
 	Host         = "host"
 
+	Activity                          = "activity"
 	AddressSwapsCorrectCount          = "address_swaps_correct_count"
 	AddressSwapsMax                   = "address_swaps_max"
 	AddressSwapsNone                  = "address_swaps_none"
@@ -82,6 +83,7 @@ const (
 	MaxPCIeWidth                      = "pcie_max_width"
 	MemCurrent                        = "memory_current"
 	MemFree                           = "memory_free"
+	MemReserved                       = "memory_reserved"
 	MemTemperature                    = "memory_temperature"
 	MemTotal                          = "memory_total"
 	MemUsed                           = "memory_used"
@@ -187,8 +189,9 @@ const (
 	XIDErrorCount                     = "xid_error_count"
 	LastXIDError                      = "last_xid_error"
 
-	Allocated = "allocated"
-	Container = "container"
+	Allocated         = "allocated"
+	Container         = "container"
+	EnvShareExhausted = "env_share_exhausted"
 
 	PCIeRead     = "pcie_read"
 	PCIeWrite    = "pcie_write"

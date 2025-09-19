@@ -17,21 +17,21 @@ import (
 type HTTPClient struct {
 	url        *url.URL
 	client     *http.Client
-	sharedInfo map[string]MLUStat
+	sharedInfo *MLUStatMap
 	labels     []string
 	host       string
 	metricName string
 	jobName    string
 }
 
-func NewClient(ur string, sharedInfo map[string]MLUStat, labels []string, host, metricName, jobName string) (c *HTTPClient, err error) {
+func NewClient(httpC *http.Client, ur string, sharedInfo *MLUStatMap, labels []string, host, metricName, jobName string) (c *HTTPClient, err error) {
 	u, err := url.Parse(ur)
 	if err != nil {
 		return
 	}
 	c = &HTTPClient{
 		url:        u,
-		client:     &http.Client{},
+		client:     httpC,
 		sharedInfo: sharedInfo,
 		labels:     labels,
 		host:       host,
@@ -43,7 +43,7 @@ func NewClient(ur string, sharedInfo map[string]MLUStat, labels []string, host, 
 
 func (c *HTTPClient) PushWithRetries(event cndev.XIDInfoWithTimestamp, retries int) (err error) {
 	slotInfo := map[uint]MLUStat{}
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		slotInfo[stat.slot] = stat
 	}
 

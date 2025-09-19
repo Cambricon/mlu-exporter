@@ -1,12 +1,20 @@
 # Changelog
 
+## v2.0.21
+
+- Support tls when pushing metrics to PushGateway:
+  - config push-ca-file、push-tls-file、push-key-file to set tls files
+- Add reserved memory and replace physicalMemoryTotal with globalMemory
+- Add allocated exhausted for envshare
+- Add activity and bump cndev to 6.5.24
+
 ## v2.0.20
 
 - Add chassis info metrics
 - Add process memory info metrics
 - Add unhealth reason label
 - Add mlulink state metrics
-- Add memeory repair status metrics
+- Add memory repair status metrics
 
 ## v2.0.19
 

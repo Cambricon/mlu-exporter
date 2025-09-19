@@ -20,12 +20,12 @@ import (
 	"io/fs"
 	"net"
 	"os"
-	"path"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Cambricon/mlu-exporter/pkg/cndev"
@@ -379,56 +379,74 @@ func getLabelValues(labels []string, info labelInfo) []string {
 }
 
 type MLUStat struct {
-	cndevInterfaceDisabled map[string]bool
-	driver                 string
-	link                   int
-	linkPPI                map[int]string
-	mcu                    string
-	mimEnabled             bool
-	mimInfos               []cndev.MimInfo
-	model                  string
-	opticalPresent         map[int]uint8
-	slot                   uint
-	smluEnabled            bool
-	smluInfos              []cndev.SmluInfo
-	sn                     string
-	uuid                   string
+	cndevInterfaceDisabled   map[string]bool
+	mlulinkInterfaceDisabled map[int]map[string]bool
+	driver                   string
+	link                     int
+	linkPPI                  map[int]string
+	mcu                      string
+	mimEnabled               bool
+	mimInfos                 []cndev.MimInfo
+	model                    string
+	opticalPresent           map[int]uint8
+	slot                     uint
+	smluEnabled              bool
+	smluInfos                []cndev.SmluInfo
+	sn                       string
+	uuid                     string
 }
 
-func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
-	log.Debug("Start GetDeviceCount in CollectMLUInfo")
-	count, err := cli.GetDeviceCount()
-	if err != nil || count == 0 {
-		log.Panic(errors.Wrap(err, "GetDeviceCount"))
-	}
-	log.Debugf("Device counts %d", count)
+type MLUStatMap struct {
+	StatMap   sync.Map
+	InProblem atomic.Bool
+}
 
-	info := make(map[string]MLUStat)
+func (m *MLUStatMap) Range(f func(key string, value MLUStat) bool) {
+	m.StatMap.Range(func(key, value interface{}) bool {
+		return f(key.(string), value.(MLUStat))
+	})
+}
+
+func (m *MLUStatMap) Load(key string) MLUStat {
+	value, ok := m.StatMap.Load(key)
+	if !ok {
+		return MLUStat{}
+	}
+	return value.(MLUStat)
+}
+
+func collectMLUInfo(mluInfo *MLUStatMap, cli cndev.Cndev, count uint) {
+	mluInfo.InProblem.Store(false)
+
 	for i := uint(0); i < count; i++ {
 		dis := make(map[string]bool)
 
 		log.Debugf("Start slot %d GetDeviceModel", i)
 		model := cli.GetDeviceModel(i)
 		if model == "" {
-			log.Panic(errors.Wrapf(err, "GetDeviceModel for slot %d", i))
+			log.Warnf("GetDeviceModel for slot %d model is empty", i)
+			mluInfo.InProblem.Store(true)
 		}
 
 		log.Debugf("Start slot %d GetDeviceUUID", i)
 		uuid, err := cli.GetDeviceUUID(i)
-		if err != nil {
-			log.Panic(errors.Wrapf(err, "GetDeviceUUID for slot %d", i))
+		if err != nil || uuid == "" {
+			log.Warn(errors.Wrapf(err, "GetDeviceUUID for slot %d with err or uuid is empty", i))
+			mluInfo.InProblem.Store(true)
 		}
 
 		log.Debugf("Start slot %d GetDeviceSN", i)
 		sn, err := cli.GetDeviceSN(i)
-		if err != nil {
-			log.Panic(errors.Wrapf(err, "GetDeviceSN for slot %d", i))
+		if err != nil || sn == "" {
+			log.Warn(errors.Wrapf(err, "GetDeviceSN for slot %d with err or sn is empty", i))
+			mluInfo.InProblem.Store(true)
 		}
 
 		log.Debugf("Start slot %d GetDeviceVersion", i)
 		mcuMajor, mcuMinor, mcuBuild, driverMajor, driverMinor, driverBuild, err := cli.GetDeviceVersion(i)
 		if err != nil {
-			log.Panic(errors.Wrapf(err, "GetDeviceVersion for slot %d", i))
+			log.Warn(errors.Wrapf(err, "GetDeviceVersion for slot %d", i))
+			mluInfo.InProblem.Store(true)
 		}
 
 		log.Debugf("Start slot %d DeviceMimModeEnabled", i)
@@ -458,65 +476,67 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 		log.Debugf("Slot %d mlulink num %d", i, link)
 		linkPPI := map[int]string{}
 		opticalPresent := map[int]uint8{}
+		mlulinkDis := make(map[int]map[string]bool)
 		for j := 0; j < link; j++ {
+			mlulinkDis[j] = make(map[string]bool)
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkStatus", i, j)
 			if _, _, _, err = cli.GetDeviceMLULinkStatus(i, uint(j)); err != nil {
 				log.Debug(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkStatus", i, j))
-				dis["mluLinkStatusDisabled"] = true
+				mlulinkDis[j]["mluLinkStatusDisabled"] = true
 			}
 
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkState", i, j)
 			if _, _, err = cli.GetDeviceMLULinkState(i, uint(j)); err != nil {
 				log.Debug(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkState", i, j))
-				dis["mluLinkStateDisabled"] = true
+				mlulinkDis[j]["mluLinkStateDisabled"] = true
 			}
 
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkCapability", i, j)
 			if _, _, err = cli.GetDeviceMLULinkCapability(i, uint(j)); err != nil {
 				log.Debug(errors.Wrapf(err, "Slot %d GetDeviceMLULinkCapability", i))
-				dis["mluLinkCapabilityDisabled"] = true
+				mlulinkDis[j]["mluLinkCapabilityDisabled"] = true
 			}
 
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkPortMode", i, j)
 			if _, err = cli.GetDeviceMLULinkPortMode(i, uint(j)); err != nil {
 				log.Debug(errors.Wrapf(err, "Slot %d GetDeviceMLULinkPortMode", i))
-				dis["mluLinkPortModeDisabled"] = true
+				mlulinkDis[j]["mluLinkPortModeDisabled"] = true
 			}
 
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkVersion", i, j)
 			if _, _, _, err = cli.GetDeviceMLULinkVersion(i, uint(j)); err != nil {
 				log.Debug(errors.Wrapf(err, "Slot %d GetDeviceMLULinkVersion", i))
-				dis["mluLinkVersionDisabled"] = true
+				mlulinkDis[j]["mluLinkVersionDisabled"] = true
 			}
 
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkEventCounter", i, j)
 			if _, err = cli.GetDeviceMLULinkEventCounter(i, uint(j)); err != nil {
 				log.Debug(errors.Wrapf(err, "Slot %d GetDeviceMLULinkEventCounter", i))
-				dis["mluLinkEventCounterDisabled"] = true
+				mlulinkDis[j]["mluLinkEventCounterDisabled"] = true
 			}
 
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkErrorCounter", i, j)
 			if _, _, _, err = cli.GetDeviceMLULinkErrorCounter(i, uint(j)); err != nil {
 				log.Warn(errors.Wrapf(err, "Slot %d GetDeviceMLULinkErrorCounter", i))
-				dis["mluLinkErrorCounterDisabled"] = true
+				mlulinkDis[j]["mluLinkErrorCounterDisabled"] = true
 			}
 
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkCounter", i, j)
 			if _, _, _, _, _, _, _, _, _, _, _, _, _, err = cli.GetDeviceMLULinkCounter(i, uint(j)); err != nil {
 				log.Warn(errors.Wrapf(err, "Slot %d GetDeviceMLULinkCounter", i))
-				dis["mluLinkCounterDisabled"] = true
+				mlulinkDis[j]["mluLinkCounterDisabled"] = true
 			}
 
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkRemoteInfo", i, j)
 			if _, _, _, _, _, _, _, _, _, _, err = cli.GetDeviceMLULinkRemoteInfo(i, uint(j)); err != nil {
 				log.Warn(errors.Wrapf(err, "Slot %d GetDeviceMLULinkErrorCounter", i))
-				dis["mluLinkRemoteInfoDisabled"] = true
+				mlulinkDis[j]["mluLinkRemoteInfoDisabled"] = true
 			}
 
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkSpeedInfo", i, j)
 			if _, _, err = cli.GetDeviceMLULinkSpeedInfo(i, uint(j)); err != nil {
 				log.Warn(errors.Wrapf(err, "Slot %d GetDeviceMLULinkSpeedInfo", i))
-				dis["mluLinkSpeedInfoDisabled"] = true
+				mlulinkDis[j]["mluLinkSpeedInfoDisabled"] = true
 			}
 
 			var ppi string
@@ -543,7 +563,7 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 			dis["crcDisabled"] = true
 		}
 
-		log.Debugf("Start slot %d GetDeviceCRCInfo", i)
+		log.Debugf("Start slot %d GetDeviceECCInfo", i)
 		if _, _, _, _, _, _, _, _, err = cli.GetDeviceECCInfo(i); err != nil {
 			log.Debug(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", i))
 			dis["eccDisabled"] = true
@@ -748,7 +768,7 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 		}
 
 		log.Debugf("Start slot %d GetDeviceMemory", i)
-		if _, _, _, _, err = cli.GetDeviceMemory(i); err != nil {
+		if _, _, _, _, _, err = cli.GetDeviceMemory(i); err != nil {
 			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceMemory", i))
 			dis["deviceMemoryDisabled"] = true
 		}
@@ -831,27 +851,33 @@ func CollectMLUInfo(cli cndev.Cndev) map[string]MLUStat {
 			dis["chassisInfo"] = true
 		}
 
-		info[uuid] = MLUStat{
-			cndevInterfaceDisabled: dis,
-			driver:                 calcVersion(driverMajor, driverMinor, driverBuild),
-			link:                   link,
-			linkPPI:                linkPPI,
-			mcu:                    calcVersion(mcuMajor, mcuMinor, mcuBuild),
-			mimEnabled:             mimEnabled,
-			mimInfos:               mimInfos,
-			model:                  model,
-			opticalPresent:         opticalPresent,
-			slot:                   i,
-			smluEnabled:            smluEnabled,
-			sn:                     sn,
-			uuid:                   uuid,
+		log.Debugf("Start slot %d GetDeviceActivity", i)
+		if _, err = cli.GetDeviceActivity(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceActivity", i))
+			dis["activityDisabled"] = true
 		}
-		if len(dis) != 0 && i == 0 {
-			log.Warnf("Some cndev interfaces are not supported: %v", dis)
+
+		mluInfo.StatMap.Store(uuid, MLUStat{
+			cndevInterfaceDisabled:   dis,
+			mlulinkInterfaceDisabled: mlulinkDis,
+			driver:                   calcVersion(driverMajor, driverMinor, driverBuild),
+			link:                     link,
+			linkPPI:                  linkPPI,
+			mcu:                      calcVersion(mcuMajor, mcuMinor, mcuBuild),
+			mimEnabled:               mimEnabled,
+			mimInfos:                 mimInfos,
+			model:                    model,
+			opticalPresent:           opticalPresent,
+			slot:                     i,
+			smluEnabled:              smluEnabled,
+			sn:                       sn,
+			uuid:                     uuid,
+		})
+
+		if (len(dis) != 0 || len(mlulinkDis) != 0) && i == 0 {
+			log.Warnf("Some cndev interfaces are not supported: %v, %v", dis, mlulinkDis)
 		}
 	}
-	log.Debugf("CollectSharedInfo: %+v", info)
-	return info
 }
 
 func calcVersion(major uint, minor uint, build uint) string {
@@ -1074,7 +1100,7 @@ func isDriverRunning(counts uint, cli cndev.Cndev) bool {
 	return true
 }
 
-func EnsureMLUAllOk(cli cndev.Cndev) {
+func EnsureMLUAllOK(cli cndev.Cndev, mluInfo *MLUStatMap, ignoreMissingLabels bool) {
 	log.Infof("Start to ensure mlu driver status is ok")
 	i := 1
 	for {
@@ -1083,7 +1109,7 @@ func EnsureMLUAllOk(cli cndev.Cndev) {
 		}
 		time.Sleep(time.Duration(min(i, 60000)) * time.Millisecond)
 
-		if i == 2 {
+		if i == 2 && ignoreMissingLabels {
 			if err := cli.Init(false); err != nil {
 				log.Errorf("Init cndev client failed with err: %v", err)
 				continue
@@ -1118,41 +1144,56 @@ func EnsureMLUAllOk(cli cndev.Cndev) {
 			log.Warnf("MLU device count not match, counts: %d, realCounts: %d", counts, realCounts)
 			continue
 		}
-		log.Infof("MLU device count match, count is %d", counts)
+		log.Debugf("MLU device count match, count is %d", counts)
 
 		if err := cli.GenerateDeviceHandleMap(counts); err != nil {
 			log.Panicf("Generate Device Handle Map failed, this should never happen, counts: %d, err: %v", counts, err)
 		}
 
 		if !isDriverRunning(counts, cli) {
-			continue
+			log.Warn("MLU driver is in problem, please check the device")
+			if !ignoreMissingLabels {
+				log.Debug("MLU driver is not running, now as ignoreMissingLabels is false, should try to get driver status again")
+				continue
+			}
 		}
 
-		log.Info("Driver of MLU devices are all running")
+		collectMLUInfo(mluInfo, cli, counts)
+
+		if mluInfo.InProblem.Load() {
+			log.Warn("MLU labels are missing, will try to get them again")
+			if !ignoreMissingLabels {
+				log.Debug("MLU labels are missing, now as ignoreMissingLabels is false, should try to get labels again")
+				continue
+			}
+		} else {
+			log.Info("Driver of MLU devices are all running")
+		}
+
 		return
 	}
 }
 
 func EnsureCndevLib() error {
-	arch := runtime.GOARCH
-	log.Infof("Ensuring cndev lib, arch is %s", arch)
-	var targetDir string
-	switch arch {
-	case "386", "x86_64", "amd64":
-		targetDir = "x86_64-linux-gnu"
-	case "aarch64", "arm", "arm64":
-		targetDir = "aarch64-linux-gnu"
-	default:
-		log.Infof("Invalid arch %s", arch)
-		return nil
-	}
-
-	src := path.Join("/host/usr/lib", targetDir, "libcndev.so")
-	dst := "/usr/lib/libcndev.so"
-	if _, err := os.Stat(src); err != nil {
+	var src string
+	x86Src := "/host/usr/lib/x86_64-linux-gnu/libcndev.so"
+	armSrc := "/host/usr/lib/aarch64-linux-gnu/libcndev.so"
+	lib64Src := "/host/usr/lib64/libcndev.so"
+	if _, err := os.Stat(x86Src); err == nil {
+		src = x86Src
+		log.Infof("Found libcndev.so on host: %s", x86Src)
+	} else if _, err := os.Stat(armSrc); err == nil {
+		src = armSrc
+		log.Infof("Found libcndev.so on host: %s", armSrc)
+	} else if _, err := os.Stat(lib64Src); err == nil {
+		src = lib64Src
+		log.Infof("Found libcndev.so on host: %s", lib64Src)
+	} else {
 		log.Info("Found no libcndev.so on host, use default")
 		return nil
 	}
+
+	dst := "/usr/lib/libcndev.so"
 	log.Info("Found libcndev.so in host, try to copy to /usr/lib")
 	sourceFile, err := os.Open(src)
 	if err != nil {

@@ -30,7 +30,7 @@ type hostCollector struct {
 	metrics    metrics.CollectorMetrics
 	host       string
 	client     host.Host
-	sharedInfo map[string]MLUStat
+	sharedInfo *MLUStatMap
 	fnMap      map[string]interface{}
 }
 
@@ -50,7 +50,7 @@ func NewHostCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 	return c
 }
 
-func (c *hostCollector) init(info map[string]MLUStat) error {
+func (c *hostCollector) init(info *MLUStatMap) error {
 	c.sharedInfo = info
 	return nil
 }

@@ -114,6 +114,21 @@ func (mr *CndevMockRecorder) GetAllSMluInfo(idx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSMluInfo", reflect.TypeOf((*Cndev)(nil).GetAllSMluInfo), idx)
 }
 
+// GetDeviceActivity mocks base method.
+func (m *Cndev) GetDeviceActivity(idx uint) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceActivity", idx)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceActivity indicates an expected call of GetDeviceActivity.
+func (mr *CndevMockRecorder) GetDeviceActivity(idx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceActivity", reflect.TypeOf((*Cndev)(nil).GetDeviceActivity), idx)
+}
+
 // GetDeviceAddressSwaps mocks base method.
 func (m *Cndev) GetDeviceAddressSwaps(idx uint) (uint32, uint32, uint32, uint32, uint32, error) {
 	m.ctrl.T.Helper()
@@ -742,15 +757,16 @@ func (mr *CndevMockRecorder) GetDeviceMemEccCounter(idx any) *gomock.Call {
 }
 
 // GetDeviceMemory mocks base method.
-func (m *Cndev) GetDeviceMemory(idx uint) (int64, int64, int64, int64, error) {
+func (m *Cndev) GetDeviceMemory(idx uint) (int64, int64, int64, int64, int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDeviceMemory", idx)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(int64)
 	ret2, _ := ret[2].(int64)
 	ret3, _ := ret[3].(int64)
-	ret4, _ := ret[4].(error)
-	return ret0, ret1, ret2, ret3, ret4
+	ret4, _ := ret[4].(int64)
+	ret5, _ := ret[5].(error)
+	return ret0, ret1, ret2, ret3, ret4, ret5
 }
 
 // GetDeviceMemory indicates an expected call of GetDeviceMemory.

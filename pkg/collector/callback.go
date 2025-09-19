@@ -17,6 +17,7 @@ package collector
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"sort"
 	"sync"
@@ -32,7 +33,7 @@ type Callback struct {
 	client     *HTTPClient
 	metric     *metrics.Metric
 	metricName string
-	sharedInfo map[string]MLUStat
+	sharedInfo *MLUStatMap
 	retryTimes int
 	logFile    string
 
@@ -40,9 +41,10 @@ type Callback struct {
 }
 
 func NewCallback(
+	pushClient *http.Client,
 	importURL string,
 	metricConfig map[string]metrics.CollectorMetrics,
-	info map[string]MLUStat,
+	info *MLUStatMap,
 	metricName, metricPrefix, host, logFile string,
 	retryTimes int,
 	jobName string,
@@ -50,7 +52,7 @@ func NewCallback(
 
 	// xid callback was disabled
 	disabled := true
-	for _, i := range info {
+	for _, i := range info.Range {
 		if !i.cndevInterfaceDisabled["xidCallbackDisabled"] {
 			disabled = false
 			break
@@ -68,10 +70,11 @@ func NewCallback(
 	if metricPrefix != "" {
 		fqName = fmt.Sprintf("%s_%s", metricPrefix, fqName)
 	}
-	client, err := NewClient(importURL, info, m.Labels, host, fqName, jobName)
+	client, err := NewClient(pushClient, importURL, info, m.Labels, host, fqName, jobName)
 	if err != nil {
 		return nil, err
 	}
+
 	cndevcli := cndev.NewCndevClient()
 	if err := cndevcli.Init(true); err != nil {
 		return nil, err
@@ -104,7 +107,7 @@ func filterMetric(cfg map[string]metrics.CollectorMetrics, metricName string) *m
 
 func (c *Callback) Start() {
 	slots := []int{}
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		slots = append(slots, int(stat.slot))
 	}
 	sort.Ints(slots)

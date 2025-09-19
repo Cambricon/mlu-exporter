@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: cambricon-mlu-monitor
-        image: cambricon-mlu-exporter:v2.0.20
+        image: cambricon-mlu-exporter:v2.0.21
         imagePullPolicy: IfNotPresent
         command:
         - /usr/bin/mlu-exporter
@@ -45,6 +45,9 @@ spec:
         # - --virtual-mode # virtual mode for devices, choice: "env-share", default:""
         # - --push-gateway-url=http://vmagent-vmagent.monitoring:8429/api/v1/import/prometheus # If set, metrics will push to this server via prometheus push gateway protocol
         # - --push-interval-ms=200 # numbers of metrics push interval in milliseconds, minimum 100
+        # - --push-ca-file="/path/to/ca/file" # Optional, CA certificate for pushing data
+        # - --push-tls-file="/path/to/tls/file" # Optional, TLS certificate for pushing data
+        # - --push-key-file="/path/to/key/file" # Optional, Key certificate for pushing data
         # - --cluster-name=zh-hqa-cluster01-2400 # cluster name, add cluster label for metrics push
         # - --xid-error-metric-name=xid_error # metric name, push to push gateway immediately when xid event occurs
         # - --xid-error-retry-times=10 # retry times for push xid error metric failed, default: 10
@@ -77,6 +80,8 @@ spec:
           name: dev
         - mountPath: /host/usr/lib
           name: cndev-lib
+        - mountPath: /host/usr/lib64
+          name: cndev-lib64
         - mountPath: /etc/mlu-exporter
           name: mlu-exporter
       # hostPID: true # need driver new than 5.10.26
@@ -92,6 +97,9 @@ spec:
       - name: cndev-lib
         hostPath:
           path: /usr/lib
+      - name: cndev-lib64
+        hostPath:
+          path: /usr/lib64
       - name: mlu-exporter
         configMap:
           defaultMode: 420

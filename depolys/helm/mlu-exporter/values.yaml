@@ -63,6 +63,9 @@ args:
 # - --virtual-mode # virtual mode for devices, choice: "env-share", default:""
 # - --push-gateway-url=http://vmagent-vmagent.monitoring:8429/api/v1/import/prometheus # If set, metrics will push to this server via prometheus push gateway protocol
 # - --push-interval-ms=200 # numbers of metrics push interval in milliseconds, minimum 100
+# - --push-ca-file="/path/to/ca/file" # Optional, CA certificate for pushing data
+# - --push-tls-file="/path/to/tls/file" # Optional, TLS certificate for pushing data
+# - --push-key-file="/path/to/key/file" # Optional, Key certificate for pushing data
 # - --cluster-name=zh-hqa-cluster01-2400 # cluster name, add cluster label for metrics push
 # - --xid-error-metric-name=xid_error # metric name, push to push gateway immediately when xid event occurs
 # - --xid-error-retry-times=10 # retry times for push xid error metric failed, default: 10

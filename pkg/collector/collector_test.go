@@ -104,117 +104,8 @@ func TestCollect(t *testing.T) {
 		uuid2 = "uuid2"
 		uuid3 = "uuid3"
 		uuid4 = "uuid4"
-		mst   = map[string]MLUStat{
-			uuid1: {
-				slot:       0,
-				model:      "MLU590",
-				uuid:       uuid1,
-				sn:         "sn1",
-				mcu:        "v1.1.1",
-				driver:     "v2.2.2",
-				mimEnabled: true,
-				mimInfos: []cndev.MimInfo{
-					{
-						InstanceInfo: cndev.MimInstanceInfo{
-							InstanceName: "instance-1",
-							InstanceID:   1,
-							UUID:         "test-uuid1",
-						},
-						ProfileInfo: cndev.MimProfileInfo{
-							GDMACount:    1,
-							JPUCount:     1,
-							MemorySize:   20,
-							MLUCoreCount: 3,
-							ProfileID:    1,
-							ProfileName:  "2m.16g",
-							VPUCount:     2,
-						},
-						PlacementStart: 0,
-						PlacementSize:  2,
-					},
-					{
-						InstanceInfo: cndev.MimInstanceInfo{
-							InstanceName: "instance-2",
-							InstanceID:   2,
-							UUID:         "test-uuid1",
-						},
-						ProfileInfo: cndev.MimProfileInfo{
-							GDMACount:    1,
-							JPUCount:     1,
-							MemorySize:   20,
-							MLUCoreCount: 3,
-							ProfileID:    1,
-							ProfileName:  "2m.16g",
-							VPUCount:     2,
-						},
-						PlacementStart: 0,
-						PlacementSize:  2,
-					},
-				},
-				link: 2,
-			},
-			uuid2: {
-				slot:        1,
-				model:       "MLU590",
-				uuid:        uuid2,
-				sn:          "sn2",
-				mcu:         "v1.1.1",
-				driver:      "v2.2.2",
-				smluEnabled: true,
-				smluInfos: []cndev.SmluInfo{
-					{
-						InstanceInfo: cndev.SmluInstanceInfo{
-							InstanceID:   1,
-							InstanceName: "instance-1",
-							UUID:         "test-uuid-1",
-						},
-						ProfileInfo: cndev.SmluProfileInfo{
-							IpuTotal:    20,
-							MemTotal:    100000000,
-							ProfileID:   1,
-							ProfileName: "12.000m.78.784gb",
-						},
-						IpuUtil: 10,
-						MemUsed: 3400000,
-					},
-					{
-						InstanceInfo: cndev.SmluInstanceInfo{
-							InstanceID:   2,
-							InstanceName: "instance-2",
-							UUID:         "test-uuid-2",
-						},
-						ProfileInfo: cndev.SmluProfileInfo{
-							IpuTotal:    20,
-							MemTotal:    100000000,
-							ProfileID:   1,
-							ProfileName: "12.000m.78.784gb",
-						},
-						IpuUtil: 10,
-						MemUsed: 3400000,
-					},
-				},
-				link: 2,
-			},
-			uuid3: {
-				slot:   2,
-				model:  "MLU590",
-				uuid:   uuid3,
-				sn:     "sn3",
-				mcu:    "v1.1.1",
-				driver: "v2.2.2",
-				link:   2,
-			},
-			uuid4: {
-				slot:                   3,
-				model:                  "MLU590",
-				uuid:                   uuid4,
-				sn:                     "sn4",
-				mcu:                    "v1.1.1",
-				driver:                 "v2.2.2",
-				link:                   2,
-				cndevInterfaceDisabled: map[string]bool{"crcDisabled": true},
-			},
-		}
+
+		mst = &MLUStatMap{}
 
 		mimProfileInfos = []cndev.MimProfileInfo{
 			{
@@ -254,6 +145,21 @@ func TestCollect(t *testing.T) {
 				Namespace: "namespace2",
 				Container: "container2",
 			},
+			"MLU-uuid3-_-0": {
+				Pod:       "pod0",
+				Namespace: "namespace0",
+				Container: "container0",
+			},
+			"MLU-uuid3-_-1": {
+				Pod:       "pod1",
+				Namespace: "namespace1",
+				Container: "container1",
+			},
+			"MLU-uuid4-_-0": {
+				Pod:       "pod1",
+				Namespace: "namespace1",
+				Container: "container1",
+			},
 		}
 
 		// fake metrics
@@ -269,12 +175,14 @@ func TestCollect(t *testing.T) {
 			{21, 21, 21, 21, 13, 13, 13, 13, 17, 17, 17, 17, 19, 19, 19, 19},
 			{31, 31, 31, 31, 33, 33, 33, 13, 35, 35, 35, 35, 17, 17, 17, 17},
 		}
+		activity = []int{11, 12, 13, 21}
 
 		// memory
 		memUsed         = []int64{20, 21, 22, 23}
 		memTotal        = int64(1000)
 		virtualMemUsed  = []int64{100, 101, 102, 103}
 		virtualMemTotal = int64(1000)
+		memReserved     = int64(10)
 
 		// vf
 		virtualFunctionMemUsed = [][]int64{
@@ -646,6 +554,117 @@ func TestCollect(t *testing.T) {
 		tensorUtil = []int{80, 81, 82, 102}
 	)
 
+	mst.StatMap.Store(uuid1, MLUStat{
+		slot:       0,
+		model:      "MLU590",
+		uuid:       uuid1,
+		sn:         "sn1",
+		mcu:        "v1.1.1",
+		driver:     "v2.2.2",
+		mimEnabled: true,
+		mimInfos: []cndev.MimInfo{
+			{
+				InstanceInfo: cndev.MimInstanceInfo{
+					InstanceName: "instance-1",
+					InstanceID:   1,
+					UUID:         "test-uuid1",
+				},
+				ProfileInfo: cndev.MimProfileInfo{
+					GDMACount:    1,
+					JPUCount:     1,
+					MemorySize:   20,
+					MLUCoreCount: 3,
+					ProfileID:    1,
+					ProfileName:  "2m.16g",
+					VPUCount:     2,
+				},
+				PlacementStart: 0,
+				PlacementSize:  2,
+			},
+			{
+				InstanceInfo: cndev.MimInstanceInfo{
+					InstanceName: "instance-2",
+					InstanceID:   2,
+					UUID:         "test-uuid1",
+				},
+				ProfileInfo: cndev.MimProfileInfo{
+					GDMACount:    1,
+					JPUCount:     1,
+					MemorySize:   20,
+					MLUCoreCount: 3,
+					ProfileID:    1,
+					ProfileName:  "2m.16g",
+					VPUCount:     2,
+				},
+				PlacementStart: 0,
+				PlacementSize:  2,
+			},
+		},
+		link: 2,
+	})
+
+	mst.StatMap.Store(uuid2, MLUStat{
+		slot:        1,
+		model:       "MLU590",
+		uuid:        uuid2,
+		sn:          "sn2",
+		mcu:         "v1.1.1",
+		driver:      "v2.2.2",
+		smluEnabled: true,
+		smluInfos: []cndev.SmluInfo{
+			{
+				InstanceInfo: cndev.SmluInstanceInfo{
+					InstanceID:   1,
+					InstanceName: "instance-1",
+					UUID:         "test-uuid-1",
+				},
+				ProfileInfo: cndev.SmluProfileInfo{
+					IpuTotal:    20,
+					MemTotal:    100000000,
+					ProfileID:   1,
+					ProfileName: "12.000m.78.784gb",
+				},
+				IpuUtil: 10,
+				MemUsed: 3400000,
+			},
+			{
+				InstanceInfo: cndev.SmluInstanceInfo{
+					InstanceID:   2,
+					InstanceName: "instance-2",
+					UUID:         "test-uuid-2",
+				},
+				ProfileInfo: cndev.SmluProfileInfo{
+					IpuTotal:    20,
+					MemTotal:    100000000,
+					ProfileID:   1,
+					ProfileName: "12.000m.78.784gb",
+				},
+				IpuUtil: 10,
+				MemUsed: 3400000,
+			},
+		},
+		link: 2,
+	})
+	mst.StatMap.Store(uuid3, MLUStat{
+		slot:   2,
+		model:  "MLU590",
+		uuid:   uuid3,
+		sn:     "sn3",
+		mcu:    "v1.1.1",
+		driver: "v2.2.2",
+		link:   2,
+	})
+	mst.StatMap.Store(uuid4, MLUStat{
+		slot:                   3,
+		model:                  "MLU590",
+		uuid:                   uuid4,
+		sn:                     "sn4",
+		mcu:                    "v1.1.1",
+		driver:                 "v2.2.2",
+		link:                   2,
+		cndevInterfaceDisabled: map[string]bool{"crcDisabled": true},
+	})
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -659,15 +678,15 @@ func TestCollect(t *testing.T) {
 	defer stub.Reset()
 
 	slots := []int{}
-	for _, stat := range mst {
+	for _, stat := range mst.Range {
 		mcndev.EXPECT().GetDeviceTemperature(stat.slot).Return(temperature[stat.slot], memTemperature[stat.slot], chipTemperature[stat.slot], clusterTemperatures[stat.slot], memDieTemperatures[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceHealth(stat.slot).Return(health[stat.slot], true, true, unhealth[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceVfState(stat.slot).Return(vfState[stat.slot], nil).AnyTimes()
 		for vf := 0; vf < len(virtualFunctionMemUsed[stat.slot]); vf++ {
-			mcndev.EXPECT().GetDeviceMemory(uint((vf+1)<<8|int(stat.slot))).Return(virtualFunctionMemUsed[stat.slot][vf], virtualFunctionMemTotal, virtualMemUsed[stat.slot], virtualMemTotal, nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceMemory(uint((vf+1)<<8|int(stat.slot))).Return(virtualFunctionMemUsed[stat.slot][vf], virtualFunctionMemTotal, virtualMemUsed[stat.slot], virtualMemTotal, memReserved, nil).AnyTimes()
 			mcndev.EXPECT().GetDevicePower(uint((vf+1)<<8|int(stat.slot))).Return(virtualFunctionPowerUsage[stat.slot], nil).AnyTimes()
 		}
-		mcndev.EXPECT().GetDeviceMemory(stat.slot).Return(memUsed[stat.slot], memTotal, virtualMemUsed[stat.slot], virtualMemTotal, nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceMemory(stat.slot).Return(memUsed[stat.slot], memTotal, virtualMemUsed[stat.slot], virtualMemTotal, memReserved, nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceUtil(stat.slot).Return(boardUtil[stat.slot], coreUtil[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceFanSpeed(stat.slot).Return(0, nil).AnyTimes()
 		mcndev.EXPECT().GetAllSMluInfo(stat.slot).Return(stat.smluInfos, nil).AnyTimes()
@@ -696,6 +715,7 @@ func TestCollect(t *testing.T) {
 		mcndev.EXPECT().GetDeviceHeartbeatCount(stat.slot).Return(heartbeatCount[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceCount().Return(deviceCount[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceTensorUtil(stat.slot).Return(tensorUtil[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceActivity(stat.slot).Return(activity[stat.slot], nil).AnyTimes()
 		for link := 0; link < mluLinkPortNumber; link++ {
 			mcndev.EXPECT().GetDeviceMLULinkCapability(stat.slot, uint(link)).Return(mluLinkCapabilityP2PTransfer[stat.slot][link], mluLinkCapabilityInterlakenSerdes[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkCounter(stat.slot, uint(link)).Return(mluLinkCounterCntrReadByte[stat.slot][link], mluLinkCounterCntrReadPackage[stat.slot][link], mluLinkCounterCntrWriteByte[stat.slot][link], mluLinkCounterCntrWritePackage[stat.slot][link],
@@ -785,7 +805,7 @@ func TestCollect(t *testing.T) {
 	}
 }
 
-func collectMetrics(node string, rdmaDevice []rdmaDevice, mst map[string]MLUStat, host *mock.Host, cndv *mock.Cndev, pres *mock.PodResources, m map[string]metrics.CollectorMetrics) []testMetrics {
+func collectMetrics(node string, rdmaDevice []rdmaDevice, mst *MLUStatMap, host *mock.Host, cndv *mock.Cndev, pres *mock.PodResources, m map[string]metrics.CollectorMetrics) []testMetrics {
 	bi := BaseInfo{
 		host:       node,
 		rdmaDevice: rdmaDevice,
@@ -830,8 +850,14 @@ func collectMetrics(node string, rdmaDevice []rdmaDevice, mst map[string]MLUStat
 			XIDBase10: 3155969,
 		}: 10,
 	}
+
+	bi.mode = "env-share"
+	bi.num = 2
 	podResourcesCollector := NewPodResourcesCollector(m[PodResources], bi).(*podResourcesCollector)
 	podResourcesCollector.client = pres
+
+	bi.mode = ""
+	bi.num = 0
 	hostCollector := NewHostCollector(m[Host], bi).(*hostCollector)
 	hostCollector.client = host
 	c := &Collectors{

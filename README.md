@@ -9,7 +9,9 @@ The prerequisites for running Cambricon MLU Exporter:
 - MLU270, MLU270-X5K, MLU220, MLU290, MLU370 devices
 - For MLU 2xx needs driver >= 4.9.13
 - For MLU 3xx needs driver >= 4.20.9
-- For MLU 2xx、3xx needs cntoolkit >= 2.8.2 on your building machine
+- For MLU 5xx needs driver >= 5.0.0
+- For MLU 2xx、3xx needs cndev >= 2.8.2 on your building machine
+- For MLU 5xx needs cndev >= 3.0.1 on your building machine
 
 For MLU driver version before 4.9.13, please use [release v1.5.3].
 
@@ -67,7 +69,7 @@ docker run -d \
 --privileged=true \
 --pid=host \
 -e ENV_NODE_NAME={nodeName} \
-cambricon-mlu-exporter:v2.0.20
+cambricon-mlu-exporter:v2.0.21
 ```
 
 Then use the following command to get the metrics.
@@ -84,7 +86,7 @@ docker run -d \
 -v examples/metrics.yaml:/etc/mlu-exporter/metrics.yaml \
 --privileged=true \
 --pid=host \
-cambricon-mlu-exporter:v2.0.20 \
+cambricon-mlu-exporter:v2.0.21 \
 mlu-exporter \
 --metrics-config=/etc/mlu-exporter/metrics.yaml \
 --metrics-path=/metrics \
@@ -111,6 +113,9 @@ Command Args Description
 | virtual-mode                   | virtual mode, default "", support env-share                                                                                                          |
 | push-gateway-url               | If set, metrics with push enabled will push to this server via prometheus push gateway protocol                                                      |
 | push-interval-ms               | numbers of metrics push interval in milliseconds, minimum 100, default 500                                                                           |
+| push-ca-file                   | Optional, CA certificate for pushing data                                                                                                            |
+| push-tls-file                  | Optional, TLS certificate for pushing data                                                                                                           |
+| push-key-file                  | Optional, Key certificate for pushing data                                                                                                           |
 | push-job-name                  | metrics push job name, default mlu-push-monitoring                                                                                                   |
 | cluster-name                   | cluster name, add cluster label for metrics push                                                                                                     |
 | xid-error-metric-name          | xid error metric name, push to push gateway immediately when xid event occurs                                                                        |

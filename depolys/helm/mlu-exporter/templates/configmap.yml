@@ -8,6 +8,18 @@ metadata:
 data:
   metrics.yaml: |
     cndev:
+      activity:
+        help: The activity of Cambricon MLU, unit is '%'
+        labels:
+          driver: driver
+          mcu: mcu
+          mlu: mlu
+          model: model
+          node: node
+          sn: sn
+          type: type
+          uuid: uuid
+        name: activity
       address_swaps_correct_count:
         help: The address swaps correct counts of Cambricon MLU
         labels:
@@ -800,6 +812,18 @@ data:
           type: type
           uuid: uuid
         name: memory_free
+      memory_reserved:
+        help: The reserved memory of Cambricon MLU, unit is 'B'
+        labels:
+          driver: driver
+          mcu: mcu
+          mlu: mlu
+          model: model
+          node: node
+          sn: sn
+          type: type
+          uuid: uuid
+        name: memory_reserved
       memory_temperature:
         help: The memory temperature of Cambricon MLU, unit is 'celsius'
         labels:
@@ -1989,7 +2013,7 @@ data:
           uuid: uuid
         name: temperature
       tensor_util:
-        help: "the tensor util of Cambircon MLU, unit is '%'"
+        help: The tensor util of Cambricon MLU, unit is '%'
         labels:
           driver: driver
           mcu: mcu
@@ -1999,7 +2023,7 @@ data:
           sn: sn
           type: type
           uuid: uuid
-        name: "tensor_util"
+        name: tensor_util
       thermal_slow_down:
         help: The thermal slowdown of Cambricon MLU, '0' means 'disable', '1' means 'enable'
         labels:
@@ -2259,3 +2283,15 @@ data:
           uuid: uuid
           vf: vf
         name: container
+      env_share_exhausted:
+        help: Indicate whether the envShare MLUs are exhausted for physical slot, '0' means not exhausted, '1' means exhausted
+        labels:
+          driver: driver
+          mcu: mcu
+          mlu: mlu
+          model: model
+          node: node
+          sn: sn
+          type: type
+          uuid: uuid
+        name: env_share_exhausted

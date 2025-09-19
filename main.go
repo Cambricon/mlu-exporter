@@ -15,6 +15,8 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net/http"
 	"os"
@@ -53,6 +55,9 @@ type Options struct {
 	PushIntervalMS uint   `long:"push-interval-ms" description:"numbers of metrics push interval in milliseconds, minimum 100" default:"500" env:"PUSH_INTERVAL_MS"`
 	PushJobName    string `long:"push-job-name" description:"metrics push job name" default:"mlu-push-monitoring" env:"PUSH_JOB_NAME"`
 	ClusterName    string `long:"cluster-name" description:"cluster name, add cluster label for metrics push" env:"CLUSTER_NAME"`
+	PushCAFile     string `long:"push-ca-file" description:"Optional,CA certificate for pushing data" env:"PUSH_CA_FILE"`
+	PushTLSFile    string `long:"push-tls-file" description:"Optional,TLS certificate for pushing data" env:"PUSH_TLS_FILE"`
+	PushKeyFile    string `long:"push-key-file" description:"Optional,Key certificate for pushing data" env:"PUSH_KEY_FILE"`
 
 	XIDErrorMetricName        string `long:"xid-error-metric-name" description:"xid error metric name in config, if not set, not push this metric data" env:"XID_ERROR_METRIC_NAME"`
 	XIDErrorRetryTimes        int    `long:"xid-error-retry-times" description:"retry times when push xid error metric failed" default:"10" env:"XID_ERROR_RETRY_TIMES"`
@@ -106,18 +111,30 @@ func main() {
 	if err := collector.EnsureCndevLib(); err != nil {
 		log.Panicf("Failed to ensure CNDEV lib %v", err)
 	}
-	collector.EnsureMLUAllOk(cndevcli)
+
+	mluInfo := &collector.MLUStatMap{}
+	collector.EnsureMLUAllOK(cndevcli, mluInfo, true)
+	if mluInfo.InProblem.Load() {
+		log.Warn("MLU is in problem state")
+		go collector.EnsureMLUAllOK(cndevcli, mluInfo, false)
+	}
 	defer func() { log.Println("Shutdown of CNDEV returned:", cndevcli.Release()) }()
-	log.Debug("Start collectMLUInfo")
-	mluInfo := collector.CollectMLUInfo(cndevcli)
-	log.Debug("Finished collectMLUInfo")
+
 	metricConfig := metrics.GetMetrics(options.MetricsConfig, options.MetricsPrefix)
 	log.Debug("Start WatchMetrics")
 	go metrics.WatchMetrics(options.MetricsConfig, options.MetricsPrefix)
 
 	if options.PushGatewayURL != "" {
-		startPushMode(options, metricConfig, mluInfo)
-		startCallbackMode(options, metricConfig, mluInfo)
+		client := &http.Client{}
+		var err error
+		if options.PushCAFile != "" {
+			client, err = buildClient(options)
+			if err != nil {
+				log.Panicf("Build push client %v", err)
+			}
+		}
+		startPushMode(client, options, metricConfig, mluInfo)
+		startCallbackMode(client, options, metricConfig, mluInfo)
 	}
 
 	c := collector.NewCollectors(
@@ -167,7 +184,7 @@ func main() {
 	log.Fatal(server.ListenAndServe())
 }
 
-func startPushMode(options Options, metricConfig map[string]metrics.CollectorMetrics, mluInfo map[string]collector.MLUStat) {
+func startPushMode(client *http.Client, options Options, metricConfig map[string]metrics.CollectorMetrics, mluInfo *collector.MLUStatMap) {
 	if options.PushIntervalMS < 100 {
 		log.Fatal("Minimum of push-interval-ms is 100")
 	}
@@ -185,7 +202,10 @@ func startPushMode(options Options, metricConfig map[string]metrics.CollectorMet
 	metrics.RegisterWatcher(pushc.UpdateMetrics)
 	pushr := prometheus.NewRegistry()
 	pushr.MustRegister(pushc)
-	pusher := push.New(options.PushGatewayURL, options.PushJobName).Format(expfmt.FmtText).Collector(pushr)
+	pusher := push.New(options.PushGatewayURL, options.PushJobName).
+		Client(client).
+		Format(expfmt.FmtText).
+		Collector(pushr)
 
 	if options.ClusterName != "" {
 		pusher = pusher.Grouping("cluster", options.ClusterName)
@@ -205,8 +225,9 @@ func startPushMode(options Options, metricConfig map[string]metrics.CollectorMet
 	}()
 }
 
-func startCallbackMode(options Options, metricConfig map[string]metrics.CollectorMetrics, mluInfo map[string]collector.MLUStat) {
+func startCallbackMode(client *http.Client, options Options, metricConfig map[string]metrics.CollectorMetrics, mluInfo *collector.MLUStatMap) {
 	cb, err := collector.NewCallback(
+		client,
 		options.PushGatewayURL,
 		metricConfig,
 		mluInfo,
@@ -224,4 +245,32 @@ func startCallbackMode(options Options, metricConfig map[string]metrics.Collecto
 	if cb != nil {
 		go cb.Start()
 	}
+}
+
+func buildClient(options Options) (*http.Client, error) {
+	caCert, err := os.ReadFile(options.PushCAFile)
+	if err != nil {
+		return nil, err
+	}
+
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+	tlsConfig := &tls.Config{
+		RootCAs:    caCertPool,
+		MinVersion: tls.VersionTLS12,
+	}
+
+	if options.PushTLSFile != "" && options.PushKeyFile != "" {
+		cert, err := tls.LoadX509KeyPair(options.PushTLSFile, options.PushKeyFile)
+		if err != nil {
+			return nil, err
+		}
+		tlsConfig.Certificates = []tls.Certificate{cert}
+	}
+
+	return &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: tlsConfig,
+		},
+	}, nil
 }

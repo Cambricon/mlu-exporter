@@ -27,7 +27,7 @@ import (
 
 type Collector interface {
 	collect(ch chan<- prometheus.Metric)
-	init(info map[string]MLUStat) error
+	init(info *MLUStatMap) error
 	updateMetrics(m metrics.CollectorMetrics)
 }
 
@@ -47,12 +47,13 @@ type Collectors struct {
 type rdmaDevice struct {
 	name        string
 	pcieAddress string
-	domain      uint
-	bus         uint
-	device      uint
-	function    uint
 	nicName     string
 	ipAddress   string
+
+	domain   uint
+	bus      uint
+	device   uint
+	function uint
 }
 
 type BaseInfo struct {
@@ -63,7 +64,7 @@ type BaseInfo struct {
 	rdmaDevice []rdmaDevice
 }
 
-func NewCollectors(enabled []string, metricConfig map[string]metrics.CollectorMetrics, num uint, host string, mode string, shareInfo map[string]MLUStat, filterPush bool) *Collectors {
+func NewCollectors(enabled []string, metricConfig map[string]metrics.CollectorMetrics, num uint, host string, mode string, shareInfo *MLUStatMap, filterPush bool) *Collectors {
 	m := filter(metricConfig, filterPush)
 	cs := make(map[string]Collector)
 	bi := BaseInfo{
@@ -75,6 +76,11 @@ func NewCollectors(enabled []string, metricConfig map[string]metrics.CollectorMe
 		bi.num = num
 	}
 	if mode == "dynamic-smlu" {
+		for _, stat := range shareInfo.Range {
+			if !stat.smluEnabled {
+				log.Panicf("MLU %d is not in smlu mode", stat.slot)
+			}
+		}
 		bi.client = initClientSet()
 	}
 	for _, name := range enabled {
@@ -126,7 +132,7 @@ func (c *Collectors) UpdateMetrics(metricConfig map[string]metrics.CollectorMetr
 	}
 }
 
-func (c *Collectors) init(info map[string]MLUStat) {
+func (c *Collectors) init(info *MLUStatMap) {
 	for name, collector := range c.collectors {
 		if err := collector.init(info); err != nil {
 			log.Error(errors.Wrapf(err, "init collector %s", name))

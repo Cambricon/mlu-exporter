@@ -38,7 +38,7 @@ type cndevCollector struct {
 	client        cndev.Cndev
 	fnMap         map[string]interface{}
 	metrics       metrics.CollectorMetrics
-	sharedInfo    map[string]MLUStat
+	sharedInfo    *MLUStatMap
 	mluXIDCounter map[cndev.XIDInfo]int
 	lastXID       map[cndev.DeviceInfo]cndev.XIDInfo
 }
@@ -53,6 +53,7 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 	}
 
 	c.fnMap = map[string]interface{}{
+		Activity:                          c.collectActivity,
 		AddressSwapsCorrectCount:          c.collectAddressSwapsCorrectCount,
 		AddressSwapsMax:                   c.collectAddressSwapsMax,
 		AddressSwapsNone:                  c.collectAddressSwapsNone,
@@ -114,6 +115,7 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 		MachineMLUNums:                    c.collectMachineMLUNums,
 		MemCurrent:                        c.collectMemCurrent,
 		MemFree:                           c.collectMemFree,
+		MemReserved:                       c.collectMemReserved,
 		MemTemperature:                    c.collectMemTemperature,
 		MemTotal:                          c.collectMemTotal,
 		MemUsed:                           c.collectMemUsed,
@@ -223,7 +225,7 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 	return c
 }
 
-func (c *cndevCollector) init(info map[string]MLUStat) error {
+func (c *cndevCollector) init(info *MLUStatMap) error {
 	c.sharedInfo = info
 	if err := c.client.Init(true); err != nil {
 		return err
@@ -251,8 +253,27 @@ func (c *cndevCollector) collect(ch chan<- prometheus.Metric) {
 	}
 }
 
+func (c *cndevCollector) collectActivity(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo.Range {
+		if stat.cndevInterfaceDisabled["activityDisabled"] {
+			continue
+		}
+		activity, err := c.client.GetDeviceActivity(stat.slot)
+		if err != nil {
+			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceActivity", stat.slot))
+			continue
+		}
+		if activity < 0 || activity > 100 {
+			log.Debugf("Slot %d activity %d is abnormal", stat.slot, activity)
+			continue
+		}
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(activity), labelValues...)
+	}
+}
+
 func (c *cndevCollector) collectAddressSwapsCorrectCount(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["addressSwapsDisabled"] {
 			continue
 		}
@@ -267,7 +288,7 @@ func (c *cndevCollector) collectAddressSwapsCorrectCount(ch chan<- prometheus.Me
 }
 
 func (c *cndevCollector) collectAddressSwapsMax(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["addressSwapsDisabled"] {
 			continue
 		}
@@ -282,7 +303,7 @@ func (c *cndevCollector) collectAddressSwapsMax(ch chan<- prometheus.Metric, m m
 }
 
 func (c *cndevCollector) collectAddressSwapsNone(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["addressSwapsDisabled"] {
 			continue
 		}
@@ -297,7 +318,7 @@ func (c *cndevCollector) collectAddressSwapsNone(ch chan<- prometheus.Metric, m 
 }
 
 func (c *cndevCollector) collectAddressSwapsPartial(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["addressSwapsDisabled"] {
 			continue
 		}
@@ -312,7 +333,7 @@ func (c *cndevCollector) collectAddressSwapsPartial(ch chan<- prometheus.Metric,
 }
 
 func (c *cndevCollector) collectAddressSwapsUncorrectCount(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["addressSwapsDisabled"] {
 			continue
 		}
@@ -327,7 +348,7 @@ func (c *cndevCollector) collectAddressSwapsUncorrectCount(ch chan<- prometheus.
 }
 
 func (c *cndevCollector) collectAggregateDramEccDbeCount(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["memEccDisabled"] {
 			continue
 		}
@@ -342,7 +363,7 @@ func (c *cndevCollector) collectAggregateDramEccDbeCount(ch chan<- prometheus.Me
 }
 
 func (c *cndevCollector) collectAggregateDramEccSbeCount(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["memEccDisabled"] {
 			continue
 		}
@@ -357,7 +378,7 @@ func (c *cndevCollector) collectAggregateDramEccSbeCount(ch chan<- prometheus.Me
 }
 
 func (c *cndevCollector) collectAggregateSramEccDbeCount(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["memEccDisabled"] {
 			continue
 		}
@@ -372,7 +393,7 @@ func (c *cndevCollector) collectAggregateSramEccDbeCount(ch chan<- prometheus.Me
 }
 
 func (c *cndevCollector) collectAggregateSramEccParityCount(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["memEccDisabled"] {
 			continue
 		}
@@ -387,7 +408,7 @@ func (c *cndevCollector) collectAggregateSramEccParityCount(ch chan<- prometheus
 }
 
 func (c *cndevCollector) collectAggregateSramEccSbeCount(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["memEccDisabled"] {
 			continue
 		}
@@ -402,7 +423,7 @@ func (c *cndevCollector) collectAggregateSramEccSbeCount(ch chan<- prometheus.Me
 }
 
 func (c *cndevCollector) collectAggregateSramEccThresholdExceed(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["memEccDisabled"] {
 			continue
 		}
@@ -417,7 +438,7 @@ func (c *cndevCollector) collectAggregateSramEccThresholdExceed(ch chan<- promet
 }
 
 func (c *cndevCollector) collectBAR4MemoryTotal(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["bar4MemoryInfoDisabled"] {
 			continue
 		}
@@ -432,7 +453,7 @@ func (c *cndevCollector) collectBAR4MemoryTotal(ch chan<- prometheus.Metric, m m
 }
 
 func (c *cndevCollector) collectBAR4MemoryUsed(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["bar4MemoryInfoDisabled"] {
 			continue
 		}
@@ -447,7 +468,7 @@ func (c *cndevCollector) collectBAR4MemoryUsed(ch chan<- prometheus.Metric, m me
 }
 
 func (c *cndevCollector) collectBAR4MemoryFree(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["bar4MemoryInfoDisabled"] {
 			continue
 		}
@@ -462,7 +483,7 @@ func (c *cndevCollector) collectBAR4MemoryFree(ch chan<- prometheus.Metric, m me
 }
 
 func (c *cndevCollector) collectChassisIbInfo(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["chassisInfo"] {
 			continue
 		}
@@ -490,7 +511,7 @@ func (c *cndevCollector) collectChassisIbInfo(ch chan<- prometheus.Metric, m met
 }
 
 func (c *cndevCollector) collectChassisInfo(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["chassisInfo"] {
 			continue
 		}
@@ -516,7 +537,7 @@ func (c *cndevCollector) collectChassisInfo(ch chan<- prometheus.Metric, m metri
 }
 
 func (c *cndevCollector) collectChassisNvmeInfo(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["chassisInfo"] {
 			continue
 		}
@@ -544,7 +565,7 @@ func (c *cndevCollector) collectChassisNvmeInfo(ch chan<- prometheus.Metric, m m
 }
 
 func (c *cndevCollector) collectChassisPsuInfo(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["chassisInfo"] {
 			continue
 		}
@@ -572,7 +593,7 @@ func (c *cndevCollector) collectChassisPsuInfo(ch chan<- prometheus.Metric, m me
 }
 
 func (c *cndevCollector) collectChipCPUUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["cpuUtilDisabled"] {
 			continue
 		}
@@ -591,7 +612,7 @@ func (c *cndevCollector) collectChipCPUUtil(ch chan<- prometheus.Metric, m metri
 }
 
 func (c *cndevCollector) collectChipCPUHi(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["cpuUtilDisabled"] {
 			continue
 		}
@@ -608,7 +629,7 @@ func (c *cndevCollector) collectChipCPUHi(ch chan<- prometheus.Metric, m metrics
 }
 
 func (c *cndevCollector) collectChipCPUNice(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["cpuUtilDisabled"] {
 			continue
 		}
@@ -625,7 +646,7 @@ func (c *cndevCollector) collectChipCPUNice(ch chan<- prometheus.Metric, m metri
 }
 
 func (c *cndevCollector) collectChipCPUSi(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["cpuUtilDisabled"] {
 			continue
 		}
@@ -642,7 +663,7 @@ func (c *cndevCollector) collectChipCPUSi(ch chan<- prometheus.Metric, m metrics
 }
 
 func (c *cndevCollector) collectChipCPUSys(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["cpuUtilDisabled"] {
 			continue
 		}
@@ -659,7 +680,7 @@ func (c *cndevCollector) collectChipCPUSys(ch chan<- prometheus.Metric, m metric
 }
 
 func (c *cndevCollector) collectChipCPUUser(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["cpuUtilDisabled"] {
 			continue
 		}
@@ -676,7 +697,7 @@ func (c *cndevCollector) collectChipCPUUser(ch chan<- prometheus.Metric, m metri
 }
 
 func (c *cndevCollector) collectChipTemperature(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["temperatureDisabled"] {
 			continue
 		}
@@ -695,7 +716,7 @@ func (c *cndevCollector) collectChipTemperature(ch chan<- prometheus.Metric, m m
 }
 
 func (c *cndevCollector) collectClusterTemperature(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["temperatureDisabled"] {
 			continue
 		}
@@ -716,7 +737,7 @@ func (c *cndevCollector) collectClusterTemperature(ch chan<- prometheus.Metric, 
 }
 
 func (c *cndevCollector) collectComputeMode(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["computeModeDisabled"] {
 			continue
 		}
@@ -731,7 +752,7 @@ func (c *cndevCollector) collectComputeMode(ch chan<- prometheus.Metric, m metri
 }
 
 func (c *cndevCollector) collectCoreCurrent(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["currentInfoDisabled"] {
 			continue
 		}
@@ -750,7 +771,7 @@ func (c *cndevCollector) collectCoreCurrent(ch chan<- prometheus.Metric, m metri
 }
 
 func (c *cndevCollector) collectCoreUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["deviceUtilDisabled"] {
 			continue
 		}
@@ -767,7 +788,7 @@ func (c *cndevCollector) collectCoreUtil(ch chan<- prometheus.Metric, m metrics.
 }
 
 func (c *cndevCollector) collectCoreVoltage(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["voltageInfoDisabled"] {
 			continue
 		}
@@ -786,7 +807,7 @@ func (c *cndevCollector) collectCoreVoltage(ch chan<- prometheus.Metric, m metri
 }
 
 func (c *cndevCollector) collectD2DCRCError(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["crcDisabled"] {
 			continue
 		}
@@ -801,7 +822,7 @@ func (c *cndevCollector) collectD2DCRCError(ch chan<- prometheus.Metric, m metri
 }
 
 func (c *cndevCollector) collectD2DCRCErrorOverflow(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["crcDisabled"] {
 			continue
 		}
@@ -816,7 +837,7 @@ func (c *cndevCollector) collectD2DCRCErrorOverflow(ch chan<- prometheus.Metric,
 }
 
 func (c *cndevCollector) collectDDRBandWidth(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["ddrInfoDisabled"] {
 			continue
 		}
@@ -831,7 +852,7 @@ func (c *cndevCollector) collectDDRBandWidth(ch chan<- prometheus.Metric, m metr
 }
 
 func (c *cndevCollector) collectDDRDataWidth(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["ddrInfoDisabled"] {
 			continue
 		}
@@ -846,7 +867,7 @@ func (c *cndevCollector) collectDDRDataWidth(ch chan<- prometheus.Metric, m metr
 }
 
 func (c *cndevCollector) collectDDRFrequency(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["frequencyDisabled"] {
 			continue
 		}
@@ -861,7 +882,7 @@ func (c *cndevCollector) collectDDRFrequency(ch chan<- prometheus.Metric, m metr
 }
 
 func (c *cndevCollector) collectDefaultFrequency(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["frequencyDisabled"] {
 			continue
 		}
@@ -876,7 +897,7 @@ func (c *cndevCollector) collectDefaultFrequency(ch chan<- prometheus.Metric, m 
 }
 
 func (c *cndevCollector) collectDeviceOsMemTotal(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["osMemoryDisabled"] {
 			continue
 		}
@@ -891,7 +912,7 @@ func (c *cndevCollector) collectDeviceOsMemTotal(ch chan<- prometheus.Metric, m 
 }
 
 func (c *cndevCollector) collectDeviceOsMemUsed(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["osMemoryDisabled"] {
 			continue
 		}
@@ -906,7 +927,7 @@ func (c *cndevCollector) collectDeviceOsMemUsed(ch chan<- prometheus.Metric, m m
 }
 
 func (c *cndevCollector) collectDoubleBitRetiredPageCount(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["retiredPageDisabled"] {
 			continue
 		}
@@ -921,7 +942,7 @@ func (c *cndevCollector) collectDoubleBitRetiredPageCount(ch chan<- prometheus.M
 }
 
 func (c *cndevCollector) collectDramEccDbeCount(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["memEccDisabled"] {
 			continue
 		}
@@ -936,7 +957,7 @@ func (c *cndevCollector) collectDramEccDbeCount(ch chan<- prometheus.Metric, m m
 }
 
 func (c *cndevCollector) collectDramEccSbeCount(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["memEccDisabled"] {
 			continue
 		}
@@ -951,7 +972,7 @@ func (c *cndevCollector) collectDramEccSbeCount(ch chan<- prometheus.Metric, m m
 }
 
 func (c *cndevCollector) collectDriverState(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["healthDisabled"] {
 			continue
 		}
@@ -970,7 +991,7 @@ func (c *cndevCollector) collectDriverState(ch chan<- prometheus.Metric, m metri
 }
 
 func (c *cndevCollector) collectECCAddressForbiddenError(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["eccDisabled"] {
 			continue
 		}
@@ -985,7 +1006,7 @@ func (c *cndevCollector) collectECCAddressForbiddenError(ch chan<- prometheus.Me
 }
 
 func (c *cndevCollector) collectECCCorrectedError(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["eccDisabled"] {
 			continue
 		}
@@ -1000,7 +1021,7 @@ func (c *cndevCollector) collectECCCorrectedError(ch chan<- prometheus.Metric, m
 }
 
 func (c *cndevCollector) collectECCCurrentMode(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["eccModeDisabled"] {
 			continue
 		}
@@ -1015,7 +1036,7 @@ func (c *cndevCollector) collectECCCurrentMode(ch chan<- prometheus.Metric, m me
 }
 
 func (c *cndevCollector) collectECCMultipleError(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["eccDisabled"] {
 			continue
 		}
@@ -1030,7 +1051,7 @@ func (c *cndevCollector) collectECCMultipleError(ch chan<- prometheus.Metric, m 
 }
 
 func (c *cndevCollector) collectECCMultipleMultipleError(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["eccDisabled"] {
 			continue
 		}
@@ -1045,7 +1066,7 @@ func (c *cndevCollector) collectECCMultipleMultipleError(ch chan<- prometheus.Me
 }
 
 func (c *cndevCollector) collectECCMultipleOneError(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["eccDisabled"] {
 			continue
 		}
@@ -1060,7 +1081,7 @@ func (c *cndevCollector) collectECCMultipleOneError(ch chan<- prometheus.Metric,
 }
 
 func (c *cndevCollector) collectECCOneBitError(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["eccDisabled"] {
 			continue
 		}
@@ -1075,7 +1096,7 @@ func (c *cndevCollector) collectECCOneBitError(ch chan<- prometheus.Metric, m me
 }
 
 func (c *cndevCollector) collectECCPendingMode(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["eccModeDisabled"] {
 			continue
 		}
@@ -1090,7 +1111,7 @@ func (c *cndevCollector) collectECCPendingMode(ch chan<- prometheus.Metric, m me
 }
 
 func (c *cndevCollector) collectECCTotalError(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["eccDisabled"] {
 			continue
 		}
@@ -1105,7 +1126,7 @@ func (c *cndevCollector) collectECCTotalError(ch chan<- prometheus.Metric, m met
 }
 
 func (c *cndevCollector) collectECCUncorrectedError(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["eccDisabled"] {
 			continue
 		}
@@ -1120,7 +1141,7 @@ func (c *cndevCollector) collectECCUncorrectedError(ch chan<- prometheus.Metric,
 }
 
 func (c *cndevCollector) collectFanSpeed(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["fanSpeedDisabled"] {
 			continue
 		}
@@ -1141,7 +1162,7 @@ func (c *cndevCollector) collectFanSpeed(ch chan<- prometheus.Metric, m metrics.
 }
 
 func (c *cndevCollector) collectFrequency(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["frequencyDisabled"] {
 			continue
 		}
@@ -1156,7 +1177,7 @@ func (c *cndevCollector) collectFrequency(ch chan<- prometheus.Metric, m metrics
 }
 
 func (c *cndevCollector) collectFrequencyStatus(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["frequencyStatusDisabled"] {
 			continue
 		}
@@ -1171,7 +1192,7 @@ func (c *cndevCollector) collectFrequencyStatus(ch chan<- prometheus.Metric, m m
 }
 
 func (c *cndevCollector) collectHealth(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["healthDisabled"] {
 			continue
 		}
@@ -1187,7 +1208,7 @@ func (c *cndevCollector) collectHealth(ch chan<- prometheus.Metric, m metrics.Me
 }
 
 func (c *cndevCollector) collectHeartbeatCount(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["heartBeatDisabled"] {
 			continue
 		}
@@ -1202,7 +1223,7 @@ func (c *cndevCollector) collectHeartbeatCount(ch chan<- prometheus.Metric, m me
 }
 
 func (c *cndevCollector) collectImageCodecUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["imageCodecUtilDisabled"] {
 			continue
 		}
@@ -1219,7 +1240,7 @@ func (c *cndevCollector) collectImageCodecUtil(ch chan<- prometheus.Metric, m me
 }
 
 func (c *cndevCollector) collectMachineMLUNums(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		num, err := fetchMLUCounts()
 		if err != nil {
 			log.Error(errors.Wrap(err, "fetchMLUCounts"))
@@ -1232,7 +1253,7 @@ func (c *cndevCollector) collectMachineMLUNums(ch chan<- prometheus.Metric, m me
 }
 
 func (c *cndevCollector) collectMemCurrent(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["currentInfoDisabled"] {
 			continue
 		}
@@ -1251,22 +1272,37 @@ func (c *cndevCollector) collectMemCurrent(ch chan<- prometheus.Metric, m metric
 }
 
 func (c *cndevCollector) collectMemFree(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["deviceMemoryDisabled"] {
 			continue
 		}
-		used, total, _, _, err := c.client.GetDeviceMemory(stat.slot)
+		used, total, _, _, reserved, err := c.client.GetDeviceMemory(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
 			continue
 		}
 		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
-		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64((total-used)*1024*1024), labelValues...)
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64((total-used-reserved)*1024*1024), labelValues...)
+	}
+}
+
+func (c *cndevCollector) collectMemReserved(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo.Range {
+		if stat.cndevInterfaceDisabled["deviceMemoryDisabled"] {
+			continue
+		}
+		_, _, _, _, reserved, err := c.client.GetDeviceMemory(stat.slot)
+		if err != nil {
+			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
+			continue
+		}
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64((reserved)*1024*1024), labelValues...)
 	}
 }
 
 func (c *cndevCollector) collectMemTemperature(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["temperatureDisabled"] {
 			continue
 		}
@@ -1289,11 +1325,11 @@ func (c *cndevCollector) collectMemTemperature(ch chan<- prometheus.Metric, m me
 }
 
 func (c *cndevCollector) collectMemTotal(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["deviceMemoryDisabled"] {
 			continue
 		}
-		_, total, _, _, err := c.client.GetDeviceMemory(stat.slot)
+		_, total, _, _, _, err := c.client.GetDeviceMemory(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
 			continue
@@ -1304,11 +1340,11 @@ func (c *cndevCollector) collectMemTotal(ch chan<- prometheus.Metric, m metrics.
 }
 
 func (c *cndevCollector) collectMemUsed(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["deviceMemoryDisabled"] {
 			continue
 		}
-		used, _, _, _, err := c.client.GetDeviceMemory(stat.slot)
+		used, _, _, _, _, err := c.client.GetDeviceMemory(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
 			continue
@@ -1319,11 +1355,11 @@ func (c *cndevCollector) collectMemUsed(ch chan<- prometheus.Metric, m metrics.M
 }
 
 func (c *cndevCollector) collectMemUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["deviceMemoryDisabled"] {
 			continue
 		}
-		used, total, _, _, err := c.client.GetDeviceMemory(stat.slot)
+		used, total, _, _, _, err := c.client.GetDeviceMemory(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
 			continue
@@ -1369,7 +1405,7 @@ func (c *cndevCollector) collectMemUtil(ch chan<- prometheus.Metric, m metrics.M
 		for state != 0 {
 			vf++
 			if (state & 0x1) != 0 {
-				used, total, _, _, err := c.client.GetDeviceMemory(uint(vf<<8 | int(stat.slot)))
+				used, total, _, _, _, err := c.client.GetDeviceMemory(uint(vf<<8 | int(stat.slot)))
 				if err != nil {
 					log.Errorln(errors.Wrapf(err, "Slot %d VF %d GetDeviceMemory", stat.slot, vf))
 					continue
@@ -1384,7 +1420,7 @@ func (c *cndevCollector) collectMemUtil(ch chan<- prometheus.Metric, m metrics.M
 }
 
 func (c *cndevCollector) collectMemVoltage(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["voltageInfoDisabled"] {
 			continue
 		}
@@ -1403,7 +1439,7 @@ func (c *cndevCollector) collectMemVoltage(ch chan<- prometheus.Metric, m metric
 }
 
 func (c *cndevCollector) collectMimInstanceInfo(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.mimEnabled {
 			mimInfos, err := c.client.GetAllMLUInstanceInfo(stat.slot)
 			if err != nil {
@@ -1433,7 +1469,7 @@ func (c *cndevCollector) collectMimInstanceInfo(ch chan<- prometheus.Metric, m m
 }
 
 func (c *cndevCollector) collectMimProfileInfo(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.mimEnabled {
 			infos, err := c.client.GetDeviceMimProfileInfo(stat.slot)
 			if err != nil {
@@ -1449,7 +1485,7 @@ func (c *cndevCollector) collectMimProfileInfo(ch chan<- prometheus.Metric, m me
 }
 
 func (c *cndevCollector) collectMimProfileTotalCapacity(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.smluEnabled {
 			infos, err := c.client.GetDeviceMimProfileInfo(stat.slot)
 			if err != nil {
@@ -1473,7 +1509,7 @@ func (c *cndevCollector) collectMLURDMADeviceInfo(ch chan<- prometheus.Metric, m
 	if len(c.baseInfo.rdmaDevice) == 0 {
 		return
 	}
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["pcieInfoDisabled"] {
 			continue
 		}
@@ -1498,11 +1534,11 @@ func (c *cndevCollector) collectMLURDMADeviceInfo(ch chan<- prometheus.Metric, m
 }
 
 func (c *cndevCollector) collectMLULinkCapabilityP2PTransfer(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkCapabilityDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkCapabilityDisabled"] {
+				continue
+			}
 			p2p, _, err := c.client.GetDeviceMLULinkCapability(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCapability", stat.slot, i))
@@ -1515,11 +1551,11 @@ func (c *cndevCollector) collectMLULinkCapabilityP2PTransfer(ch chan<- prometheu
 }
 
 func (c *cndevCollector) collectMLULinkCapabilityInterlakenSerdes(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkCapabilityDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkCapabilityDisabled"] {
+				continue
+			}
 			_, interlakenSerdes, err := c.client.GetDeviceMLULinkCapability(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCapability", stat.slot, i))
@@ -1532,11 +1568,11 @@ func (c *cndevCollector) collectMLULinkCapabilityInterlakenSerdes(ch chan<- prom
 }
 
 func (c *cndevCollector) collectMLULinkConnectType(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkRemoteInfoDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkRemoteInfoDisabled"] {
+				continue
+			}
 			_, _, _, _, connectType, _, _, _, _, _, err := c.client.GetDeviceMLULinkRemoteInfo(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMLULinkRemoteInfo", stat.slot))
@@ -1549,11 +1585,11 @@ func (c *cndevCollector) collectMLULinkConnectType(ch chan<- prometheus.Metric, 
 }
 
 func (c *cndevCollector) collectMLULinkCounterCntrCnpPackage(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkCounterDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkCounterDisabled"] {
+				continue
+			}
 			_, _, _, _, _, _, _, _, _, _, _, cntrCnpPackage, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
@@ -1566,11 +1602,11 @@ func (c *cndevCollector) collectMLULinkCounterCntrCnpPackage(ch chan<- prometheu
 }
 
 func (c *cndevCollector) collectMLULinkCounterCntrPfcPackage(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkCounterDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkCounterDisabled"] {
+				continue
+			}
 			_, _, _, _, _, _, _, _, _, _, _, _, cntrPfcPackage, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
@@ -1583,11 +1619,11 @@ func (c *cndevCollector) collectMLULinkCounterCntrPfcPackage(ch chan<- prometheu
 }
 
 func (c *cndevCollector) collectMLULinkCounterCntrReadByte(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkCounterDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkCounterDisabled"] {
+				continue
+			}
 			cntrReadByte, _, _, _, _, _, _, _, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
@@ -1600,11 +1636,11 @@ func (c *cndevCollector) collectMLULinkCounterCntrReadByte(ch chan<- prometheus.
 }
 
 func (c *cndevCollector) collectMLULinkCounterCntrReadPackage(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkCounterDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkCounterDisabled"] {
+				continue
+			}
 			_, cntrReadPackage, _, _, _, _, _, _, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
@@ -1617,11 +1653,11 @@ func (c *cndevCollector) collectMLULinkCounterCntrReadPackage(ch chan<- promethe
 }
 
 func (c *cndevCollector) collectMLULinkCounterCntrWriteByte(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkCounterDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkCounterDisabled"] {
+				continue
+			}
 			_, _, cntrWriteByte, _, _, _, _, _, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
@@ -1634,11 +1670,11 @@ func (c *cndevCollector) collectMLULinkCounterCntrWriteByte(ch chan<- prometheus
 }
 
 func (c *cndevCollector) collectMLULinkCounterCntrWritePackage(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkCounterDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkCounterDisabled"] {
+				continue
+			}
 			_, _, _, cntrWritePackage, _, _, _, _, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
@@ -1651,11 +1687,11 @@ func (c *cndevCollector) collectMLULinkCounterCntrWritePackage(ch chan<- prometh
 }
 
 func (c *cndevCollector) collectMLULinkCounterErrCorrected(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkErrorCounterDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkErrorCounterDisabled"] {
+				continue
+			}
 			_, errCorrected, _, err := c.client.GetDeviceMLULinkErrorCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkErrorCounter", stat.slot, i))
@@ -1668,11 +1704,11 @@ func (c *cndevCollector) collectMLULinkCounterErrCorrected(ch chan<- prometheus.
 }
 
 func (c *cndevCollector) collectMLULinkCounterErrCRC24(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkCounterDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkCounterDisabled"] {
+				continue
+			}
 			_, _, _, _, _, errCRC24, _, _, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
@@ -1685,11 +1721,11 @@ func (c *cndevCollector) collectMLULinkCounterErrCRC24(ch chan<- prometheus.Metr
 }
 
 func (c *cndevCollector) collectMLULinkCounterErrCRC32(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkCounterDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkCounterDisabled"] {
+				continue
+			}
 			_, _, _, _, _, _, errCRC32, _, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
@@ -1702,11 +1738,11 @@ func (c *cndevCollector) collectMLULinkCounterErrCRC32(ch chan<- prometheus.Metr
 }
 
 func (c *cndevCollector) collectMLULinkCounterErrEccDouble(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkCounterDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkCounterDisabled"] {
+				continue
+			}
 			_, _, _, _, _, _, _, errEccDouble, _, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
@@ -1719,11 +1755,11 @@ func (c *cndevCollector) collectMLULinkCounterErrEccDouble(ch chan<- prometheus.
 }
 
 func (c *cndevCollector) collectMLULinkCounterErrFatal(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkCounterDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkCounterDisabled"] {
+				continue
+			}
 			_, _, _, _, _, _, _, _, errFatal, _, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
@@ -1736,11 +1772,11 @@ func (c *cndevCollector) collectMLULinkCounterErrFatal(ch chan<- prometheus.Metr
 }
 
 func (c *cndevCollector) collectMLULinkCounterErrReplay(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkCounterDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkCounterDisabled"] {
+				continue
+			}
 			_, _, _, _, _, _, _, _, _, errReplay, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
@@ -1753,11 +1789,11 @@ func (c *cndevCollector) collectMLULinkCounterErrReplay(ch chan<- prometheus.Met
 }
 
 func (c *cndevCollector) collectMLULinkCounterErrUncorrected(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkErrorCounterDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkErrorCounterDisabled"] {
+				continue
+			}
 			_, _, errUncorrected, err := c.client.GetDeviceMLULinkErrorCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkErrorCounter", stat.slot, i))
@@ -1770,11 +1806,11 @@ func (c *cndevCollector) collectMLULinkCounterErrUncorrected(ch chan<- prometheu
 }
 
 func (c *cndevCollector) collectMLULinkCounterIllegalAccess(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkErrorCounterDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkErrorCounterDisabled"] {
+				continue
+			}
 			counter, _, _, err := c.client.GetDeviceMLULinkErrorCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkErrorCounter", stat.slot, i))
@@ -1787,11 +1823,11 @@ func (c *cndevCollector) collectMLULinkCounterIllegalAccess(ch chan<- prometheus
 }
 
 func (c *cndevCollector) collectMLULinkCounterLinkDown(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkEventCounterDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkEventCounterDisabled"] {
+				continue
+			}
 			counter, err := c.client.GetDeviceMLULinkEventCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkEventCounter", stat.slot, i))
@@ -1804,11 +1840,11 @@ func (c *cndevCollector) collectMLULinkCounterLinkDown(ch chan<- prometheus.Metr
 }
 
 func (c *cndevCollector) collectMLULinkInboundState(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkStateDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkStateDisabled"] {
+				continue
+			}
 			inbound, _, err := c.client.GetDeviceMLULinkState(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkState", stat.slot, i))
@@ -1821,11 +1857,11 @@ func (c *cndevCollector) collectMLULinkInboundState(ch chan<- prometheus.Metric,
 }
 
 func (c *cndevCollector) collectMLULinkOutboundState(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkStateDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkStateDisabled"] {
+				continue
+			}
 			_, outbound, err := c.client.GetDeviceMLULinkState(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkState", stat.slot, i))
@@ -1838,11 +1874,11 @@ func (c *cndevCollector) collectMLULinkOutboundState(ch chan<- prometheus.Metric
 }
 
 func (c *cndevCollector) collectMLULinkPortMode(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkPortModeDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkPortModeDisabled"] {
+				continue
+			}
 			mode, err := c.client.GetDeviceMLULinkPortMode(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkPortMode", stat.slot, i))
@@ -1855,7 +1891,7 @@ func (c *cndevCollector) collectMLULinkPortMode(ch chan<- prometheus.Metric, m m
 }
 
 func (c *cndevCollector) collectMLULinkPortNumber(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["mluLinkPortNumberDisabled"] {
 			continue
 		}
@@ -1866,11 +1902,11 @@ func (c *cndevCollector) collectMLULinkPortNumber(ch chan<- prometheus.Metric, m
 }
 
 func (c *cndevCollector) collectMLULinkSpeedFormat(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkSpeedInfoDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkSpeedInfoDisabled"] {
+				continue
+			}
 			_, speedFormat, err := c.client.GetDeviceMLULinkSpeedInfo(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkSpeedInfo", stat.slot, i))
@@ -1883,11 +1919,11 @@ func (c *cndevCollector) collectMLULinkSpeedFormat(ch chan<- prometheus.Metric, 
 }
 
 func (c *cndevCollector) collectMLULinkRemoteInfo(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkRemoteInfoDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkRemoteInfoDisabled"] {
+				continue
+			}
 			mcSn, baSn, slotID, portID, connectType, ncsUUID64, ip, mac, uuid, portName, err := c.client.GetDeviceMLULinkRemoteInfo(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMLULinkRemoteInfo", stat.slot))
@@ -1913,11 +1949,11 @@ func (c *cndevCollector) collectMLULinkRemoteInfo(ch chan<- prometheus.Metric, m
 }
 
 func (c *cndevCollector) collectMLULinkSpeedValue(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkSpeedInfoDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkSpeedInfoDisabled"] {
+				continue
+			}
 			speedValue, _, err := c.client.GetDeviceMLULinkSpeedInfo(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkSpeedInfo", stat.slot, i))
@@ -1930,11 +1966,11 @@ func (c *cndevCollector) collectMLULinkSpeedValue(ch chan<- prometheus.Metric, m
 }
 
 func (c *cndevCollector) collectMLULinkStatusCableState(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkStatusDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkStatusDisabled"] {
+				continue
+			}
 			_, _, cable, err := c.client.GetDeviceMLULinkStatus(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkStatus", stat.slot, i))
@@ -1947,11 +1983,11 @@ func (c *cndevCollector) collectMLULinkStatusCableState(ch chan<- prometheus.Met
 }
 
 func (c *cndevCollector) collectMLULinkStatusMACState(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkStatusDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkStatusDisabled"] {
+				continue
+			}
 			active, _, _, err := c.client.GetDeviceMLULinkStatus(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkStatus", stat.slot, i))
@@ -1964,11 +2000,11 @@ func (c *cndevCollector) collectMLULinkStatusMACState(ch chan<- prometheus.Metri
 }
 
 func (c *cndevCollector) collectMLULinkStatusSerdesState(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkStatusDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkStatusDisabled"] {
+				continue
+			}
 			_, serdes, _, err := c.client.GetDeviceMLULinkStatus(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkStatus", stat.slot, i))
@@ -1981,11 +2017,11 @@ func (c *cndevCollector) collectMLULinkStatusSerdesState(ch chan<- prometheus.Me
 }
 
 func (c *cndevCollector) collectMLULinkVersion(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
-		if stat.cndevInterfaceDisabled["mluLinkVersionDisabled"] {
-			continue
-		}
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkVersionDisabled"] {
+				continue
+			}
 			major, minor, build, err := c.client.GetDeviceMLULinkVersion(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkVersion", stat.slot, i))
@@ -1999,7 +2035,7 @@ func (c *cndevCollector) collectMLULinkVersion(ch chan<- prometheus.Metric, m me
 }
 
 func (c *cndevCollector) collectMLUMode(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		var mluMode int
 		if stat.mimEnabled {
 			mluMode = 1
@@ -2016,7 +2052,7 @@ func (c *cndevCollector) collectMLUMode(ch chan<- prometheus.Metric, m metrics.M
 }
 
 func (c *cndevCollector) collectNUMANodeID(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["numaDisabled"] {
 			continue
 		}
@@ -2031,7 +2067,7 @@ func (c *cndevCollector) collectNUMANodeID(ch chan<- prometheus.Metric, m metric
 }
 
 func (c *cndevCollector) collectOpticalIsPresent(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
 			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(stat.opticalPresent[i]), labelValues...)
@@ -2040,7 +2076,7 @@ func (c *cndevCollector) collectOpticalIsPresent(ch chan<- prometheus.Metric, m 
 }
 
 func (c *cndevCollector) collectOpticalRxpwr(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		for i, present := range stat.opticalPresent {
 			if present != uint8(1) {
 				continue
@@ -2060,7 +2096,7 @@ func (c *cndevCollector) collectOpticalRxpwr(ch chan<- prometheus.Metric, m metr
 }
 
 func (c *cndevCollector) collectOpticalTemp(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		for i, present := range stat.opticalPresent {
 			if present != uint8(1) {
 				continue
@@ -2081,7 +2117,7 @@ func (c *cndevCollector) collectOpticalTemp(ch chan<- prometheus.Metric, m metri
 }
 
 func (c *cndevCollector) collectOpticalTxpwr(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		for i, present := range stat.opticalPresent {
 			if present != uint8(1) {
 				continue
@@ -2101,7 +2137,7 @@ func (c *cndevCollector) collectOpticalTxpwr(ch chan<- prometheus.Metric, m metr
 }
 
 func (c *cndevCollector) collectOpticalVolt(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		for i, present := range stat.opticalPresent {
 			if present != uint8(1) {
 				continue
@@ -2118,7 +2154,7 @@ func (c *cndevCollector) collectOpticalVolt(ch chan<- prometheus.Metric, m metri
 }
 
 func (c *cndevCollector) collectOverTempPowerOffCounter(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["overTemperatureInfoDisabled"] {
 			continue
 		}
@@ -2133,7 +2169,7 @@ func (c *cndevCollector) collectOverTempPowerOffCounter(ch chan<- prometheus.Met
 }
 
 func (c *cndevCollector) collectOverTempPowerOffThreshold(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["overTemperatureThresholdDisabled"] {
 			continue
 		}
@@ -2148,7 +2184,7 @@ func (c *cndevCollector) collectOverTempPowerOffThreshold(ch chan<- prometheus.M
 }
 
 func (c *cndevCollector) collectOverTempUnderClockCounter(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["overTemperatureInfoDisabled"] {
 			continue
 		}
@@ -2163,7 +2199,7 @@ func (c *cndevCollector) collectOverTempUnderClockCounter(ch chan<- prometheus.M
 }
 
 func (c *cndevCollector) collectOverTempUnderClockThreshold(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["overTemperatureThresholdDisabled"] {
 			continue
 		}
@@ -2178,7 +2214,7 @@ func (c *cndevCollector) collectOverTempUnderClockThreshold(ch chan<- prometheus
 }
 
 func (c *cndevCollector) collectParityError(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["parityErrorDisabled"] {
 			continue
 		}
@@ -2197,7 +2233,7 @@ func (c *cndevCollector) collectParityError(ch chan<- prometheus.Metric, m metri
 }
 
 func (c *cndevCollector) collectPCIeCurrentSpeed(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["currentPCIeInfoDisabled"] {
 			continue
 		}
@@ -2212,7 +2248,7 @@ func (c *cndevCollector) collectPCIeCurrentSpeed(ch chan<- prometheus.Metric, m 
 }
 
 func (c *cndevCollector) collectPCIeCurrentWidth(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["currentPCIeInfoDisabled"] {
 			continue
 		}
@@ -2227,7 +2263,7 @@ func (c *cndevCollector) collectPCIeCurrentWidth(ch chan<- prometheus.Metric, m 
 }
 
 func (c *cndevCollector) collectPCIeInfo(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["pcieInfoDisabled"] {
 			continue
 		}
@@ -2260,7 +2296,7 @@ func (c *cndevCollector) collectPCIeInfo(ch chan<- prometheus.Metric, m metrics.
 }
 
 func (c *cndevCollector) collectePCIeMaxSpeed(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["maxPCIeInfoDisabled"] {
 			continue
 		}
@@ -2275,7 +2311,7 @@ func (c *cndevCollector) collectePCIeMaxSpeed(ch chan<- prometheus.Metric, m met
 }
 
 func (c *cndevCollector) collectePCIeMaxWidth(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["maxPCIeInfoDisabled"] {
 			continue
 		}
@@ -2290,7 +2326,7 @@ func (c *cndevCollector) collectePCIeMaxWidth(ch chan<- prometheus.Metric, m met
 }
 
 func (c *cndevCollector) collectPCIeReadThroughput(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["pcieThroughputDisabled"] {
 			continue
 		}
@@ -2305,7 +2341,7 @@ func (c *cndevCollector) collectPCIeReadThroughput(ch chan<- prometheus.Metric, 
 }
 
 func (c *cndevCollector) collectPCIeReplayCount(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["pcieRelayCountDisabled"] {
 			continue
 		}
@@ -2320,7 +2356,7 @@ func (c *cndevCollector) collectPCIeReplayCount(ch chan<- prometheus.Metric, m m
 }
 
 func (c *cndevCollector) collectPCIeWriteThroughput(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["pcieThroughputDisabled"] {
 			continue
 		}
@@ -2335,7 +2371,7 @@ func (c *cndevCollector) collectPCIeWriteThroughput(ch chan<- prometheus.Metric,
 }
 
 func (c *cndevCollector) collectPowerCurrentLimit(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["powerCurrentLimitDisabled"] {
 			continue
 		}
@@ -2350,7 +2386,7 @@ func (c *cndevCollector) collectPowerCurrentLimit(ch chan<- prometheus.Metric, m
 }
 
 func (c *cndevCollector) collectPowerDefaultLimit(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["powerDefaultLimitDisabled"] {
 			continue
 		}
@@ -2365,7 +2401,7 @@ func (c *cndevCollector) collectPowerDefaultLimit(ch chan<- prometheus.Metric, m
 }
 
 func (c *cndevCollector) collectPowerMaxLimit(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["powerLimitRangeDisabled"] {
 			continue
 		}
@@ -2380,7 +2416,7 @@ func (c *cndevCollector) collectPowerMaxLimit(ch chan<- prometheus.Metric, m met
 }
 
 func (c *cndevCollector) collectPowerMinLimit(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["powerLimitRangeDisabled"] {
 			continue
 		}
@@ -2395,7 +2431,7 @@ func (c *cndevCollector) collectPowerMinLimit(ch chan<- prometheus.Metric, m met
 }
 
 func (c *cndevCollector) collectPowerUsage(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["devicePowerDisabled"] {
 			continue
 		}
@@ -2466,7 +2502,7 @@ func (c *cndevCollector) collectPowerUsage(ch chan<- prometheus.Metric, m metric
 }
 
 func (c *cndevCollector) collectProcessIpuUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["processUtilDisabled"] {
 			continue
 		}
@@ -2483,7 +2519,7 @@ func (c *cndevCollector) collectProcessIpuUtil(ch chan<- prometheus.Metric, m me
 }
 
 func (c *cndevCollector) collectProcessJpuUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["processUtilDisabled"] {
 			continue
 		}
@@ -2500,7 +2536,7 @@ func (c *cndevCollector) collectProcessJpuUtil(ch chan<- prometheus.Metric, m me
 }
 
 func (c *cndevCollector) collectProcessMemoryUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["processUtilDisabled"] {
 			continue
 		}
@@ -2517,7 +2553,7 @@ func (c *cndevCollector) collectProcessMemoryUtil(ch chan<- prometheus.Metric, m
 }
 
 func (c *cndevCollector) collectProcessPhysicalMemUsed(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["processInfoDisabled"] {
 			continue
 		}
@@ -2534,7 +2570,7 @@ func (c *cndevCollector) collectProcessPhysicalMemUsed(ch chan<- prometheus.Metr
 }
 
 func (c *cndevCollector) collectProcessVirtualMemUsed(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["processInfoDisabled"] {
 			continue
 		}
@@ -2551,7 +2587,7 @@ func (c *cndevCollector) collectProcessVirtualMemUsed(ch chan<- prometheus.Metri
 }
 
 func (c *cndevCollector) collectProcessVpuDecodeUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["processUtilDisabled"] {
 			continue
 		}
@@ -2568,7 +2604,7 @@ func (c *cndevCollector) collectProcessVpuDecodeUtil(ch chan<- prometheus.Metric
 }
 
 func (c *cndevCollector) collectProcessVpuEncodeUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["processUtilDisabled"] {
 			continue
 		}
@@ -2585,7 +2621,7 @@ func (c *cndevCollector) collectProcessVpuEncodeUtil(ch chan<- prometheus.Metric
 }
 
 func (c *cndevCollector) collectRemappedCorrectRows(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["remappedRowsDisabled"] {
 			continue
 		}
@@ -2600,7 +2636,7 @@ func (c *cndevCollector) collectRemappedCorrectRows(ch chan<- prometheus.Metric,
 }
 
 func (c *cndevCollector) collectRemappedFailedRows(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["remappedRowsDisabled"] {
 			continue
 		}
@@ -2615,7 +2651,7 @@ func (c *cndevCollector) collectRemappedFailedRows(ch chan<- prometheus.Metric, 
 }
 
 func (c *cndevCollector) collectRemappedPendingRows(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["remappedRowsDisabled"] {
 			continue
 		}
@@ -2630,7 +2666,7 @@ func (c *cndevCollector) collectRemappedPendingRows(ch chan<- prometheus.Metric,
 }
 
 func (c *cndevCollector) collectRemappedUncorrectRows(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["remappedRowsDisabled"] {
 			continue
 		}
@@ -2645,7 +2681,7 @@ func (c *cndevCollector) collectRemappedUncorrectRows(ch chan<- prometheus.Metri
 }
 
 func (c *cndevCollector) collectRepairFailureStatus(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["repairStatusDisabled"] {
 			continue
 		}
@@ -2666,7 +2702,7 @@ func (c *cndevCollector) collectRepairFailureStatus(ch chan<- prometheus.Metric,
 }
 
 func (c *cndevCollector) collectRepairPendingStatus(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["repairStatusDisabled"] {
 			continue
 		}
@@ -2687,7 +2723,7 @@ func (c *cndevCollector) collectRepairPendingStatus(ch chan<- prometheus.Metric,
 }
 
 func (c *cndevCollector) collectRepairRetireStatus(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["repairStatusDisabled"] {
 			continue
 		}
@@ -2708,7 +2744,7 @@ func (c *cndevCollector) collectRepairRetireStatus(ch chan<- prometheus.Metric, 
 }
 
 func (c *cndevCollector) collectRetiredPagesOperationStatus(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["retiredPagesOperationDisabled"] {
 			continue
 		}
@@ -2723,7 +2759,7 @@ func (c *cndevCollector) collectRetiredPagesOperationStatus(ch chan<- prometheus
 }
 
 func (c *cndevCollector) collectSingleBitRetiredPageCount(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["retiredPageDisabled"] {
 			continue
 		}
@@ -2738,7 +2774,7 @@ func (c *cndevCollector) collectSingleBitRetiredPageCount(ch chan<- prometheus.M
 }
 
 func (c *cndevCollector) collectSmluInstanceInfo(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.smluEnabled {
 			smluInfos, err := c.client.GetAllSMluInfo(stat.slot)
 			if err != nil {
@@ -2765,7 +2801,7 @@ func (c *cndevCollector) collectSmluInstanceInfo(ch chan<- prometheus.Metric, m 
 }
 
 func (c *cndevCollector) collectSmluProfileInfo(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.smluEnabled {
 			info, err := c.client.GetDeviceSMluProfileIDInfo(stat.slot)
 			if err != nil {
@@ -2786,7 +2822,7 @@ func (c *cndevCollector) collectSmluProfileInfo(ch chan<- prometheus.Metric, m m
 }
 
 func (c *cndevCollector) collectSmluProfileTotalCapacity(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.smluEnabled {
 			info, err := c.client.GetDeviceSMluProfileIDInfo(stat.slot)
 			if err != nil {
@@ -2807,7 +2843,7 @@ func (c *cndevCollector) collectSmluProfileTotalCapacity(ch chan<- prometheus.Me
 }
 
 func (c *cndevCollector) collectSocCurrent(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["currentInfoDisabled"] {
 			continue
 		}
@@ -2826,7 +2862,7 @@ func (c *cndevCollector) collectSocCurrent(ch chan<- prometheus.Metric, m metric
 }
 
 func (c *cndevCollector) collectSocVoltage(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["voltageInfoDisabled"] {
 			continue
 		}
@@ -2845,7 +2881,7 @@ func (c *cndevCollector) collectSocVoltage(ch chan<- prometheus.Metric, m metric
 }
 
 func (c *cndevCollector) collectSramEccDbeCount(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["memEccDisabled"] {
 			continue
 		}
@@ -2860,7 +2896,7 @@ func (c *cndevCollector) collectSramEccDbeCount(ch chan<- prometheus.Metric, m m
 }
 
 func (c *cndevCollector) collectSramEccParityCount(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["memEccDisabled"] {
 			continue
 		}
@@ -2875,7 +2911,7 @@ func (c *cndevCollector) collectSramEccParityCount(ch chan<- prometheus.Metric, 
 }
 
 func (c *cndevCollector) collectSramEccSbeCount(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["memEccDisabled"] {
 			continue
 		}
@@ -2890,7 +2926,7 @@ func (c *cndevCollector) collectSramEccSbeCount(ch chan<- prometheus.Metric, m m
 }
 
 func (c *cndevCollector) collectTemperature(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["temperatureDisabled"] {
 			continue
 		}
@@ -2905,7 +2941,7 @@ func (c *cndevCollector) collectTemperature(ch chan<- prometheus.Metric, m metri
 }
 
 func (c *cndevCollector) collectTensorUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["tensorUtilDisabled"] {
 			continue
 		}
@@ -2924,7 +2960,7 @@ func (c *cndevCollector) collectTensorUtil(ch chan<- prometheus.Metric, m metric
 }
 
 func (c *cndevCollector) collectThermalSlowdown(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["performanceThrottleDisabled"] {
 			continue
 		}
@@ -2944,7 +2980,7 @@ func (c *cndevCollector) collectThermalSlowdown(ch chan<- prometheus.Metric, m m
 }
 
 func (c *cndevCollector) collectTinyCoreUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["tinyCoreDisabled"] {
 			continue
 		}
@@ -2961,7 +2997,7 @@ func (c *cndevCollector) collectTinyCoreUtil(ch chan<- prometheus.Metric, m metr
 }
 
 func (c *cndevCollector) collectUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["deviceUtilDisabled"] {
 			continue
 		}
@@ -3033,7 +3069,7 @@ func (c *cndevCollector) collectUtil(ch chan<- prometheus.Metric, m metrics.Metr
 }
 
 func (c *cndevCollector) collectVersion(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["cndevVersionDisabled"] {
 			continue
 		}
@@ -3060,7 +3096,7 @@ func (c *cndevCollector) collectVersion(ch chan<- prometheus.Metric, m metrics.M
 }
 
 func (c *cndevCollector) collectVideoCodecUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["videoCodecUtilDisabled"] {
 			continue
 		}
@@ -3077,7 +3113,7 @@ func (c *cndevCollector) collectVideoCodecUtil(ch chan<- prometheus.Metric, m me
 }
 
 func (c *cndevCollector) collectVideoDecoderUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["videoCodecUtilDisabled"] {
 			continue
 		}
@@ -3094,7 +3130,7 @@ func (c *cndevCollector) collectVideoDecoderUtil(ch chan<- prometheus.Metric, m 
 }
 
 func (c *cndevCollector) collectVirtualFunctionMemUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["vfStateDisabled"] {
 			continue
 		}
@@ -3107,7 +3143,7 @@ func (c *cndevCollector) collectVirtualFunctionMemUtil(ch chan<- prometheus.Metr
 		for state != 0 {
 			vf++
 			if (state & 0x1) != 0 {
-				used, total, _, _, err := c.client.GetDeviceMemory(uint(vf<<8 | int(stat.slot)))
+				used, total, _, _, _, err := c.client.GetDeviceMemory(uint(vf<<8 | int(stat.slot)))
 				if err != nil {
 					log.Errorln(errors.Wrapf(err, "Slot %d VF %d GetDeviceMemory", stat.slot, vf))
 					continue
@@ -3122,7 +3158,7 @@ func (c *cndevCollector) collectVirtualFunctionMemUtil(ch chan<- prometheus.Metr
 }
 
 func (c *cndevCollector) collectVirtualFunctionPowerUsage(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["vfStateDisabled"] {
 			continue
 		}
@@ -3149,7 +3185,7 @@ func (c *cndevCollector) collectVirtualFunctionPowerUsage(ch chan<- prometheus.M
 }
 
 func (c *cndevCollector) collectVirtualFunctionUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["deviceUtilDisabled"] {
 			continue
 		}
@@ -3190,11 +3226,11 @@ func (c *cndevCollector) collectVirtualFunctionUtil(ch chan<- prometheus.Metric,
 }
 
 func (c *cndevCollector) collectVirtualMemFree(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["deviceMemoryDisabled"] {
 			continue
 		}
-		_, _, used, total, err := c.client.GetDeviceMemory(stat.slot)
+		_, _, used, total, _, err := c.client.GetDeviceMemory(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
 			continue
@@ -3205,11 +3241,11 @@ func (c *cndevCollector) collectVirtualMemFree(ch chan<- prometheus.Metric, m me
 }
 
 func (c *cndevCollector) collectVirtualMemTotal(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["deviceMemoryDisabled"] {
 			continue
 		}
-		_, _, _, total, err := c.client.GetDeviceMemory(stat.slot)
+		_, _, _, total, _, err := c.client.GetDeviceMemory(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
 			continue
@@ -3220,11 +3256,11 @@ func (c *cndevCollector) collectVirtualMemTotal(ch chan<- prometheus.Metric, m m
 }
 
 func (c *cndevCollector) collectVirtualMemUsed(ch chan<- prometheus.Metric, m metrics.Metric) {
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["deviceMemoryDisabled"] {
 			continue
 		}
-		_, _, used, _, err := c.client.GetDeviceMemory(stat.slot)
+		_, _, used, _, _, err := c.client.GetDeviceMemory(stat.slot)
 		if err != nil {
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
 			continue
@@ -3236,7 +3272,7 @@ func (c *cndevCollector) collectVirtualMemUsed(ch chan<- prometheus.Metric, m me
 
 func (c *cndevCollector) collectLastXIDError(ch chan<- prometheus.Metric, m metrics.Metric) {
 	slotInfo := map[uint]MLUStat{}
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		slotInfo[stat.slot] = stat
 	}
 
@@ -3257,7 +3293,7 @@ func (c *cndevCollector) collectLastXIDError(ch chan<- prometheus.Metric, m metr
 
 func (c *cndevCollector) collectXIDErrorCount(ch chan<- prometheus.Metric, m metrics.Metric) {
 	slotInfo := map[uint]MLUStat{}
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		slotInfo[stat.slot] = stat
 	}
 
@@ -3275,7 +3311,7 @@ func (c *cndevCollector) collectXIDErrorCount(ch chan<- prometheus.Metric, m met
 
 func (c *cndevCollector) waitXIDEvents() error {
 	slots := []int{}
-	for _, stat := range c.sharedInfo {
+	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["xidCallbackDisabled"] {
 			continue
 		}
