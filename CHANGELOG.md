@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.0.22
+
+- Add support for node IP labels
+- Refactor XID event handling
+- Format mlu remote sn as hex strings
+
 ## v2.0.21
 
 - Support tls when pushing metrics to PushGateway:

@@ -79,6 +79,7 @@ type labelInfo struct {
 	core              int
 	cpuCore           string
 	host              string
+	hostIP            string
 	rdmaDevice        rdmaDevice
 	lane              int
 	link              int
@@ -210,6 +211,8 @@ func getLabelValues(labels []string, info labelInfo) []string {
 			values = append(values, info.stat.uuid)
 		case Node:
 			values = append(values, info.host)
+		case NodeIP:
+			values = append(values, info.hostIP)
 		case Cluster:
 			values = append(values, info.cluster)
 		case CndevVersion:

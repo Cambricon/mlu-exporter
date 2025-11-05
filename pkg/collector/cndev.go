@@ -230,7 +230,22 @@ func (c *cndevCollector) init(info *MLUStatMap) error {
 	if err := c.client.Init(true); err != nil {
 		return err
 	}
-	go c.waitXIDEvents()
+
+	slots := []int{}
+	for _, stat := range c.sharedInfo.Range {
+		if stat.cndevInterfaceDisabled["xidCallbackDisabled"] {
+			continue
+		}
+		slots = append(slots, int(stat.slot))
+	}
+	sort.Ints(slots)
+	if len(slots) > 0 {
+		manager := GetXIDEventManager(c.client)
+		manager.RegisterHandler(c)
+		manager.SetSlots(slots)
+		go manager.Start()
+	}
+
 	return nil
 }
 
@@ -267,7 +282,7 @@ func (c *cndevCollector) collectActivity(ch chan<- prometheus.Metric, m metrics.
 			log.Debugf("Slot %d activity %d is abnormal", stat.slot, activity)
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(activity), labelValues...)
 	}
 }
@@ -282,7 +297,7 @@ func (c *cndevCollector) collectAddressSwapsCorrectCount(ch chan<- prometheus.Me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRetiredPageInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(correctCount), labelValues...)
 	}
 }
@@ -297,7 +312,7 @@ func (c *cndevCollector) collectAddressSwapsMax(ch chan<- prometheus.Metric, m m
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRetiredPageInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(maxAddressSwaps), labelValues...)
 	}
 }
@@ -312,7 +327,7 @@ func (c *cndevCollector) collectAddressSwapsNone(ch chan<- prometheus.Metric, m 
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRetiredPageInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(none), labelValues...)
 	}
 }
@@ -327,7 +342,7 @@ func (c *cndevCollector) collectAddressSwapsPartial(ch chan<- prometheus.Metric,
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRetiredPageInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(partial), labelValues...)
 	}
 }
@@ -342,7 +357,7 @@ func (c *cndevCollector) collectAddressSwapsUncorrectCount(ch chan<- prometheus.
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRetiredPageInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(uncorrectCount), labelValues...)
 	}
 }
@@ -357,7 +372,7 @@ func (c *cndevCollector) collectAggregateDramEccDbeCount(ch chan<- prometheus.Me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemEccCounter", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(aggregate[1]), labelValues...)
 	}
 }
@@ -372,7 +387,7 @@ func (c *cndevCollector) collectAggregateDramEccSbeCount(ch chan<- prometheus.Me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemEccCounter", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(aggregate[0]), labelValues...)
 	}
 }
@@ -387,7 +402,7 @@ func (c *cndevCollector) collectAggregateSramEccDbeCount(ch chan<- prometheus.Me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemEccCounter", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(aggregate[3]), labelValues...)
 	}
 }
@@ -402,7 +417,7 @@ func (c *cndevCollector) collectAggregateSramEccParityCount(ch chan<- prometheus
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemEccCounter", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(aggregate[4]), labelValues...)
 	}
 }
@@ -417,7 +432,7 @@ func (c *cndevCollector) collectAggregateSramEccSbeCount(ch chan<- prometheus.Me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemEccCounter", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(aggregate[2]), labelValues...)
 	}
 }
@@ -432,7 +447,7 @@ func (c *cndevCollector) collectAggregateSramEccThresholdExceed(ch chan<- promet
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemEccCounter", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(aggregate[5]), labelValues...)
 	}
 }
@@ -447,7 +462,7 @@ func (c *cndevCollector) collectBAR4MemoryTotal(ch chan<- prometheus.Metric, m m
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceBAR4MemoryInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(total), labelValues...)
 	}
 }
@@ -462,7 +477,7 @@ func (c *cndevCollector) collectBAR4MemoryUsed(ch chan<- prometheus.Metric, m me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceBAR4MemoryInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(used), labelValues...)
 	}
 }
@@ -477,7 +492,7 @@ func (c *cndevCollector) collectBAR4MemoryFree(ch chan<- prometheus.Metric, m me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceBAR4MemoryInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(free), labelValues...)
 	}
 }
@@ -504,7 +519,7 @@ func (c *cndevCollector) collectChassisIbInfo(ch chan<- prometheus.Metric, m met
 			psuNum:             len(psu),
 		}
 		for i, info := range ib {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, chassisInfo: chassisInfo, chassisDev: i, chassisDevInfo: info})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, chassisInfo: chassisInfo, chassisDev: i, chassisDevInfo: info})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(1), labelValues...)
 		}
 	}
@@ -531,7 +546,7 @@ func (c *cndevCollector) collectChassisInfo(ch chan<- prometheus.Metric, m metri
 			ibNum:              len(ib),
 			psuNum:             len(psu),
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, chassisInfo: chassisInfo})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, chassisInfo: chassisInfo})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(1), labelValues...)
 	}
 }
@@ -558,7 +573,7 @@ func (c *cndevCollector) collectChassisNvmeInfo(ch chan<- prometheus.Metric, m m
 			psuNum:             len(psu),
 		}
 		for i, info := range nvme {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, chassisInfo: chassisInfo, chassisDev: i, chassisDevInfo: info})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, chassisInfo: chassisInfo, chassisDev: i, chassisDevInfo: info})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(1), labelValues...)
 		}
 	}
@@ -586,7 +601,7 @@ func (c *cndevCollector) collectChassisPsuInfo(ch chan<- prometheus.Metric, m me
 			psuNum:             len(psu),
 		}
 		for i, info := range psu {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, chassisInfo: chassisInfo, chassisDev: i, chassisDevInfo: info})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, chassisInfo: chassisInfo, chassisDev: i, chassisDevInfo: info})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(1), labelValues...)
 		}
 	}
@@ -602,10 +617,10 @@ func (c *cndevCollector) collectChipCPUUtil(ch chan<- prometheus.Metric, m metri
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceCPUUtil", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, cpuCore: ""})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, cpuCore: ""})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(board), labelValues...)
 		for core, util := range coreUtil {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, cpuCore: fmt.Sprintf("%d", core)})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, cpuCore: fmt.Sprintf("%d", core)})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
@@ -622,7 +637,7 @@ func (c *cndevCollector) collectChipCPUHi(ch chan<- prometheus.Metric, m metrics
 			continue
 		}
 		for core, util := range hi {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, cpuCore: fmt.Sprintf("%d", core)})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, cpuCore: fmt.Sprintf("%d", core)})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
@@ -639,7 +654,7 @@ func (c *cndevCollector) collectChipCPUNice(ch chan<- prometheus.Metric, m metri
 			continue
 		}
 		for core, util := range nice {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, cpuCore: fmt.Sprintf("%d", core)})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, cpuCore: fmt.Sprintf("%d", core)})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
@@ -656,7 +671,7 @@ func (c *cndevCollector) collectChipCPUSi(ch chan<- prometheus.Metric, m metrics
 			continue
 		}
 		for core, util := range si {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, cpuCore: fmt.Sprintf("%d", core)})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, cpuCore: fmt.Sprintf("%d", core)})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
@@ -673,7 +688,7 @@ func (c *cndevCollector) collectChipCPUSys(ch chan<- prometheus.Metric, m metric
 			continue
 		}
 		for core, util := range sys {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, cpuCore: fmt.Sprintf("%d", core)})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, cpuCore: fmt.Sprintf("%d", core)})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
@@ -690,7 +705,7 @@ func (c *cndevCollector) collectChipCPUUser(ch chan<- prometheus.Metric, m metri
 			continue
 		}
 		for core, util := range user {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, cpuCore: fmt.Sprintf("%d", core)})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, cpuCore: fmt.Sprintf("%d", core)})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
@@ -710,7 +725,7 @@ func (c *cndevCollector) collectChipTemperature(ch chan<- prometheus.Metric, m m
 			log.Debugf("Slot %d chip temperature %d is invalid", stat.slot, chip)
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(chip), labelValues...)
 	}
 }
@@ -730,7 +745,7 @@ func (c *cndevCollector) collectClusterTemperature(ch chan<- prometheus.Metric, 
 				log.Debugf("Slot %d, cluster index %d, temperature %d is invalid", stat.slot, index, cluster)
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, cluster: fmt.Sprintf("%d", index)})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, cluster: fmt.Sprintf("%d", index)})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(cluster), labelValues...)
 		}
 	}
@@ -746,7 +761,7 @@ func (c *cndevCollector) collectComputeMode(ch chan<- prometheus.Metric, m metri
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceComputeMode", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(mode), labelValues...)
 	}
 }
@@ -765,7 +780,7 @@ func (c *cndevCollector) collectCoreCurrent(ch chan<- prometheus.Metric, m metri
 			log.Debugf("Slot %d core current %d is invalid", stat.slot, core)
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(core), labelValues...)
 	}
 }
@@ -781,7 +796,7 @@ func (c *cndevCollector) collectCoreUtil(ch chan<- prometheus.Metric, m metrics.
 			continue
 		}
 		for core, util := range coreUtil {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, core: core})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, core: core})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
@@ -801,7 +816,7 @@ func (c *cndevCollector) collectCoreVoltage(ch chan<- prometheus.Metric, m metri
 			log.Debugf("Slot %d core voltage %d is invalid", stat.slot, core)
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(core), labelValues...)
 	}
 }
@@ -816,7 +831,7 @@ func (c *cndevCollector) collectD2DCRCError(ch chan<- prometheus.Metric, m metri
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceCRCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(d2dCRCError), labelValues...)
 	}
 }
@@ -831,7 +846,7 @@ func (c *cndevCollector) collectD2DCRCErrorOverflow(ch chan<- prometheus.Metric,
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceCRCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(d2dCRCErrorOverflow), labelValues...)
 	}
 }
@@ -846,7 +861,7 @@ func (c *cndevCollector) collectDDRBandWidth(ch chan<- prometheus.Metric, m metr
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceDDRInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, bandWidth, labelValues...)
 	}
 }
@@ -861,7 +876,7 @@ func (c *cndevCollector) collectDDRDataWidth(ch chan<- prometheus.Metric, m metr
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceDDRInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(dataWidth), labelValues...)
 	}
 }
@@ -876,7 +891,7 @@ func (c *cndevCollector) collectDDRFrequency(ch chan<- prometheus.Metric, m metr
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceFrequency", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(ddrFrequency), labelValues...)
 	}
 }
@@ -891,7 +906,7 @@ func (c *cndevCollector) collectDefaultFrequency(ch chan<- prometheus.Metric, m 
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceFrequency", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(defaultFrequency), labelValues...)
 	}
 }
@@ -906,7 +921,7 @@ func (c *cndevCollector) collectDeviceOsMemTotal(ch chan<- prometheus.Metric, m 
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceArmOsMemory", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(total*1024), labelValues...)
 	}
 }
@@ -921,7 +936,7 @@ func (c *cndevCollector) collectDeviceOsMemUsed(ch chan<- prometheus.Metric, m m
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceArmOsMemory", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(used*1024), labelValues...)
 	}
 }
@@ -936,7 +951,7 @@ func (c *cndevCollector) collectDoubleBitRetiredPageCount(ch chan<- prometheus.M
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRetiredPageInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(pageCount), labelValues...)
 	}
 }
@@ -951,7 +966,7 @@ func (c *cndevCollector) collectDramEccDbeCount(ch chan<- prometheus.Metric, m m
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemEccCounter", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(volatile[4]), labelValues...)
 	}
 }
@@ -966,7 +981,7 @@ func (c *cndevCollector) collectDramEccSbeCount(ch chan<- prometheus.Metric, m m
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemEccCounter", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(volatile[3]), labelValues...)
 	}
 }
@@ -985,7 +1000,7 @@ func (c *cndevCollector) collectDriverState(ch chan<- prometheus.Metric, m metri
 		if isRunning {
 			state = 1
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(state), labelValues...)
 	}
 }
@@ -1000,7 +1015,7 @@ func (c *cndevCollector) collectECCAddressForbiddenError(ch chan<- prometheus.Me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(addressForbiddenError), labelValues...)
 	}
 }
@@ -1015,7 +1030,7 @@ func (c *cndevCollector) collectECCCorrectedError(ch chan<- prometheus.Metric, m
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(correctedError), labelValues...)
 	}
 }
@@ -1030,7 +1045,7 @@ func (c *cndevCollector) collectECCCurrentMode(ch chan<- prometheus.Metric, m me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceEccMode", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(currentMode), labelValues...)
 	}
 }
@@ -1045,7 +1060,7 @@ func (c *cndevCollector) collectECCMultipleError(ch chan<- prometheus.Metric, m 
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(multipleError), labelValues...)
 	}
 }
@@ -1060,7 +1075,7 @@ func (c *cndevCollector) collectECCMultipleMultipleError(ch chan<- prometheus.Me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(multipleMultipleError), labelValues...)
 	}
 }
@@ -1075,7 +1090,7 @@ func (c *cndevCollector) collectECCMultipleOneError(ch chan<- prometheus.Metric,
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(multipleOneError), labelValues...)
 	}
 }
@@ -1090,7 +1105,7 @@ func (c *cndevCollector) collectECCOneBitError(ch chan<- prometheus.Metric, m me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(oneBitError), labelValues...)
 	}
 }
@@ -1105,7 +1120,7 @@ func (c *cndevCollector) collectECCPendingMode(ch chan<- prometheus.Metric, m me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceEccMode", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(pendingMode), labelValues...)
 	}
 }
@@ -1120,7 +1135,7 @@ func (c *cndevCollector) collectECCTotalError(ch chan<- prometheus.Metric, m met
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(totalError), labelValues...)
 	}
 }
@@ -1135,7 +1150,7 @@ func (c *cndevCollector) collectECCUncorrectedError(ch chan<- prometheus.Metric,
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceECCInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(uncorrectedError), labelValues...)
 	}
 }
@@ -1156,7 +1171,7 @@ func (c *cndevCollector) collectFanSpeed(ch chan<- prometheus.Metric, m metrics.
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceFanSpeed", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, speed, labelValues...)
 	}
 }
@@ -1171,7 +1186,7 @@ func (c *cndevCollector) collectFrequency(ch chan<- prometheus.Metric, m metrics
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceFrequency", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(frequency), labelValues...)
 	}
 }
@@ -1186,7 +1201,7 @@ func (c *cndevCollector) collectFrequencyStatus(ch chan<- prometheus.Metric, m m
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceFrequencyStatus", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(stats), labelValues...)
 	}
 }
@@ -1202,7 +1217,7 @@ func (c *cndevCollector) collectHealth(ch chan<- prometheus.Metric, m metrics.Me
 			continue
 		}
 		unhealthString := strings.Join(unhealth, ",")
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, unhealthReason: unhealthString})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, unhealthReason: unhealthString})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(health), labelValues...)
 	}
 }
@@ -1217,7 +1232,7 @@ func (c *cndevCollector) collectHeartbeatCount(ch chan<- prometheus.Metric, m me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceHeartbeatCount", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(heartbeatCount), labelValues...)
 	}
 }
@@ -1233,7 +1248,7 @@ func (c *cndevCollector) collectImageCodecUtil(ch chan<- prometheus.Metric, m me
 			continue
 		}
 		for core, util := range vpuUtil {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, core: core})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, core: core})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
@@ -1246,7 +1261,7 @@ func (c *cndevCollector) collectMachineMLUNums(ch chan<- prometheus.Metric, m me
 			log.Error(errors.Wrap(err, "fetchMLUCounts"))
 			return
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: MLUStat{model: stat.model, driver: stat.driver}, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: MLUStat{model: stat.model, driver: stat.driver}, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(num), labelValues...)
 		return
 	}
@@ -1266,7 +1281,7 @@ func (c *cndevCollector) collectMemCurrent(ch chan<- prometheus.Metric, m metric
 			log.Debugf("Slot %d memory current %d is invalid", stat.slot, mem)
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(mem), labelValues...)
 	}
 }
@@ -1281,7 +1296,7 @@ func (c *cndevCollector) collectMemFree(ch chan<- prometheus.Metric, m metrics.M
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64((total-used-reserved)*1024*1024), labelValues...)
 	}
 }
@@ -1296,7 +1311,7 @@ func (c *cndevCollector) collectMemReserved(ch chan<- prometheus.Metric, m metri
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64((reserved)*1024*1024), labelValues...)
 	}
 }
@@ -1311,14 +1326,14 @@ func (c *cndevCollector) collectMemTemperature(ch chan<- prometheus.Metric, m me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceTemperature", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, memoryDie: ""})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, memoryDie: ""})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(mem), labelValues...)
 		for index, memDie := range memDies {
 			if memDie < 0 {
 				log.Debugf("Slot %d, cluster index %d, temperature %d is invalid", stat.slot, index, memDie)
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, memoryDie: fmt.Sprintf("%d", index)})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, memoryDie: fmt.Sprintf("%d", index)})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(memDie), labelValues...)
 		}
 	}
@@ -1334,7 +1349,7 @@ func (c *cndevCollector) collectMemTotal(ch chan<- prometheus.Metric, m metrics.
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(total*1024*1024), labelValues...)
 	}
 }
@@ -1349,7 +1364,7 @@ func (c *cndevCollector) collectMemUsed(ch chan<- prometheus.Metric, m metrics.M
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(used*1024*1024), labelValues...)
 	}
 }
@@ -1365,7 +1380,7 @@ func (c *cndevCollector) collectMemUtil(ch chan<- prometheus.Metric, m metrics.M
 			continue
 		}
 		util := float64(used) / float64(total) * 100
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: ""})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, vf: ""})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, util, labelValues...)
 
 		if stat.smluEnabled {
@@ -1378,9 +1393,9 @@ func (c *cndevCollector) collectMemUtil(ch chan<- prometheus.Metric, m metrics.M
 			for _, info := range smluInfos {
 				var labelValues []string
 				if c.baseInfo.mode == "dynamic-smlu" {
-					labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, typ: "vmemory", vf: fmt.Sprintf("%d", info.InstanceInfo.InstanceID)})
+					labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, typ: "vmemory", vf: fmt.Sprintf("%d", info.InstanceInfo.InstanceID)})
 				} else {
-					labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", info.InstanceInfo.InstanceID)})
+					labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, vf: fmt.Sprintf("%d", info.InstanceInfo.InstanceID)})
 				}
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(info.MemUsed)/float64(info.ProfileInfo.MemTotal)*100, labelValues...)
 			}
@@ -1389,7 +1404,7 @@ func (c *cndevCollector) collectMemUtil(ch chan<- prometheus.Metric, m metrics.M
 
 		if c.baseInfo.num > 0 {
 			for i := uint(0); i < c.baseInfo.num; i++ {
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", i+1)})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, vf: fmt.Sprintf("%d", i+1)})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, util, labelValues...)
 			}
 			continue
@@ -1411,7 +1426,7 @@ func (c *cndevCollector) collectMemUtil(ch chan<- prometheus.Metric, m metrics.M
 					continue
 				}
 				util := float64(used) / float64(total) * 100
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", vf)})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, vf: fmt.Sprintf("%d", vf)})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, util, labelValues...)
 			}
 			state >>= 1
@@ -1433,7 +1448,7 @@ func (c *cndevCollector) collectMemVoltage(ch chan<- prometheus.Metric, m metric
 			log.Debugf("Slot %d memory voltage %d is invalid", stat.slot, mem)
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(mem), labelValues...)
 	}
 }
@@ -1461,7 +1476,7 @@ func (c *cndevCollector) collectMimInstanceInfo(ch chan<- prometheus.Metric, m m
 					ProfileName:  info.ProfileInfo.ProfileName,
 					VPUCount:     info.ProfileInfo.VPUCount,
 				}
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, mimInstanceInfo: mimInstanceInfo, mimProfileInfo: mimProfileInfo})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, mimInstanceInfo: mimInstanceInfo, mimProfileInfo: mimProfileInfo})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(1), labelValues...)
 			}
 		}
@@ -1477,7 +1492,7 @@ func (c *cndevCollector) collectMimProfileInfo(ch chan<- prometheus.Metric, m me
 				continue
 			}
 			for _, info := range infos {
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, mimProfileInfo: info})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, mimProfileInfo: info})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(1), labelValues...)
 			}
 		}
@@ -1498,7 +1513,7 @@ func (c *cndevCollector) collectMimProfileTotalCapacity(ch chan<- prometheus.Met
 					log.Errorln(errors.Wrapf(err, "Slot %d ProfileID %d GetDeviceMimProfileMaxInstanceCount", stat.slot, info.ProfileID))
 					continue
 				}
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, mimProfileInfo: info})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, mimProfileInfo: info})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(count), labelValues...)
 			}
 		}
@@ -1526,7 +1541,7 @@ func (c *cndevCollector) collectMLURDMADeviceInfo(ch chan<- prometheus.Metric, m
 			}
 			// 2 indicates all devices that only need to traverse a single PCIe switch.
 			if relation == 2 {
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, rdmaDevice: rdmaDevice})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, rdmaDevice: rdmaDevice})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, 1, labelValues...)
 			}
 		}
@@ -1544,7 +1559,7 @@ func (c *cndevCollector) collectMLULinkCapabilityP2PTransfer(ch chan<- prometheu
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCapability", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(p2p), labelValues...)
 		}
 	}
@@ -1561,7 +1576,7 @@ func (c *cndevCollector) collectMLULinkCapabilityInterlakenSerdes(ch chan<- prom
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCapability", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(interlakenSerdes), labelValues...)
 		}
 	}
@@ -1578,7 +1593,7 @@ func (c *cndevCollector) collectMLULinkConnectType(ch chan<- prometheus.Metric, 
 				log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMLULinkRemoteInfo", stat.slot))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(connectType), labelValues...)
 		}
 	}
@@ -1595,7 +1610,7 @@ func (c *cndevCollector) collectMLULinkCounterCntrCnpPackage(ch chan<- prometheu
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(cntrCnpPackage), labelValues...)
 		}
 	}
@@ -1612,7 +1627,7 @@ func (c *cndevCollector) collectMLULinkCounterCntrPfcPackage(ch chan<- prometheu
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(cntrPfcPackage), labelValues...)
 		}
 	}
@@ -1629,7 +1644,7 @@ func (c *cndevCollector) collectMLULinkCounterCntrReadByte(ch chan<- prometheus.
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(cntrReadByte), labelValues...)
 		}
 	}
@@ -1646,7 +1661,7 @@ func (c *cndevCollector) collectMLULinkCounterCntrReadPackage(ch chan<- promethe
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(cntrReadPackage), labelValues...)
 		}
 	}
@@ -1663,7 +1678,7 @@ func (c *cndevCollector) collectMLULinkCounterCntrWriteByte(ch chan<- prometheus
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(cntrWriteByte), labelValues...)
 		}
 	}
@@ -1680,7 +1695,7 @@ func (c *cndevCollector) collectMLULinkCounterCntrWritePackage(ch chan<- prometh
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(cntrWritePackage), labelValues...)
 		}
 	}
@@ -1697,7 +1712,7 @@ func (c *cndevCollector) collectMLULinkCounterErrCorrected(ch chan<- prometheus.
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkErrorCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(errCorrected), labelValues...)
 		}
 	}
@@ -1714,7 +1729,7 @@ func (c *cndevCollector) collectMLULinkCounterErrCRC24(ch chan<- prometheus.Metr
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(errCRC24), labelValues...)
 		}
 	}
@@ -1731,7 +1746,7 @@ func (c *cndevCollector) collectMLULinkCounterErrCRC32(ch chan<- prometheus.Metr
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(errCRC32), labelValues...)
 		}
 	}
@@ -1748,7 +1763,7 @@ func (c *cndevCollector) collectMLULinkCounterErrEccDouble(ch chan<- prometheus.
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(errEccDouble), labelValues...)
 		}
 	}
@@ -1765,7 +1780,7 @@ func (c *cndevCollector) collectMLULinkCounterErrFatal(ch chan<- prometheus.Metr
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(errFatal), labelValues...)
 		}
 	}
@@ -1782,7 +1797,7 @@ func (c *cndevCollector) collectMLULinkCounterErrReplay(ch chan<- prometheus.Met
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(errReplay), labelValues...)
 		}
 	}
@@ -1799,7 +1814,7 @@ func (c *cndevCollector) collectMLULinkCounterErrUncorrected(ch chan<- prometheu
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkErrorCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(errUncorrected), labelValues...)
 		}
 	}
@@ -1816,7 +1831,7 @@ func (c *cndevCollector) collectMLULinkCounterIllegalAccess(ch chan<- prometheus
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkErrorCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(counter), labelValues...)
 		}
 	}
@@ -1833,7 +1848,7 @@ func (c *cndevCollector) collectMLULinkCounterLinkDown(ch chan<- prometheus.Metr
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkEventCounter", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(counter), labelValues...)
 		}
 	}
@@ -1850,7 +1865,7 @@ func (c *cndevCollector) collectMLULinkInboundState(ch chan<- prometheus.Metric,
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkState", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(inbound), labelValues...)
 		}
 	}
@@ -1867,7 +1882,7 @@ func (c *cndevCollector) collectMLULinkOutboundState(ch chan<- prometheus.Metric
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkState", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(outbound), labelValues...)
 		}
 	}
@@ -1884,7 +1899,7 @@ func (c *cndevCollector) collectMLULinkPortMode(ch chan<- prometheus.Metric, m m
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkPortMode", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(mode), labelValues...)
 		}
 	}
@@ -1896,7 +1911,7 @@ func (c *cndevCollector) collectMLULinkPortNumber(ch chan<- prometheus.Metric, m
 			continue
 		}
 		number := c.client.GetDeviceMLULinkPortNumber(stat.slot)
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(number), labelValues...)
 	}
 }
@@ -1912,7 +1927,7 @@ func (c *cndevCollector) collectMLULinkSpeedFormat(ch chan<- prometheus.Metric, 
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkSpeedInfo", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(speedFormat), labelValues...)
 		}
 	}
@@ -1934,15 +1949,15 @@ func (c *cndevCollector) collectMLULinkRemoteInfo(ch chan<- prometheus.Metric, m
 				remotePortName: portName,
 			}
 			if connectType == 0 {
-				mluLinkRemoteInfo.remoteMcSn = fmt.Sprintf("%d", mcSn)
-				mluLinkRemoteInfo.remoteBaSn = fmt.Sprintf("%d", baSn)
+				mluLinkRemoteInfo.remoteMcSn = fmt.Sprintf("%x", mcSn)
+				mluLinkRemoteInfo.remoteBaSn = fmt.Sprintf("%x", baSn)
 				mluLinkRemoteInfo.remoteSlotID = fmt.Sprintf("%d", slotID)
 				mluLinkRemoteInfo.remotePortID = fmt.Sprintf("%d", portID)
 				mluLinkRemoteInfo.remoteNcsUUID64 = fmt.Sprintf("%d", ncsUUID64)
 				mluLinkRemoteInfo.remoteIP = ip
 				mluLinkRemoteInfo.remoteUUID = uuid
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i], mluLinkRemoteInfo: mluLinkRemoteInfo})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i], mluLinkRemoteInfo: mluLinkRemoteInfo})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, 1, labelValues...)
 		}
 	}
@@ -1959,7 +1974,7 @@ func (c *cndevCollector) collectMLULinkSpeedValue(ch chan<- prometheus.Metric, m
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkSpeedInfo", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(speedValue), labelValues...)
 		}
 	}
@@ -1976,7 +1991,7 @@ func (c *cndevCollector) collectMLULinkStatusCableState(ch chan<- prometheus.Met
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkStatus", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(cable), labelValues...)
 		}
 	}
@@ -1993,7 +2008,7 @@ func (c *cndevCollector) collectMLULinkStatusMACState(ch chan<- prometheus.Metri
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkStatus", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(active), labelValues...)
 		}
 	}
@@ -2010,7 +2025,7 @@ func (c *cndevCollector) collectMLULinkStatusSerdesState(ch chan<- prometheus.Me
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkStatus", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(serdes), labelValues...)
 		}
 	}
@@ -2028,7 +2043,7 @@ func (c *cndevCollector) collectMLULinkVersion(ch chan<- prometheus.Metric, m me
 				continue
 			}
 			v := calcVersion(major, minor, build)
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, ppi: stat.linkPPI[i], linkVersion: v})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i], linkVersion: v})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(1), labelValues...)
 		}
 	}
@@ -2046,7 +2061,7 @@ func (c *cndevCollector) collectMLUMode(ch chan<- prometheus.Metric, m metrics.M
 		} else {
 			mluMode = 0
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(mluMode), labelValues...)
 	}
 }
@@ -2061,7 +2076,7 @@ func (c *cndevCollector) collectNUMANodeID(ch chan<- prometheus.Metric, m metric
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceNUMANodeId", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(numaNodeID), labelValues...)
 	}
 }
@@ -2069,7 +2084,7 @@ func (c *cndevCollector) collectNUMANodeID(ch chan<- prometheus.Metric, m metric
 func (c *cndevCollector) collectOpticalIsPresent(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(stat.opticalPresent[i]), labelValues...)
 		}
 	}
@@ -2088,7 +2103,7 @@ func (c *cndevCollector) collectOpticalRxpwr(ch chan<- prometheus.Metric, m metr
 			}
 
 			for index, rxpwr := range rxpwrs {
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, lane: index})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, lane: index})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(rxpwr), labelValues...)
 			}
 		}
@@ -2110,7 +2125,7 @@ func (c *cndevCollector) collectOpticalTemp(ch chan<- prometheus.Metric, m metri
 				log.Debugf("Slot %d, link %d optical temperature %f is invalid", stat.slot, i, temp)
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(temp), labelValues...)
 		}
 	}
@@ -2129,7 +2144,7 @@ func (c *cndevCollector) collectOpticalTxpwr(ch chan<- prometheus.Metric, m metr
 			}
 
 			for index, txpwr := range txpwrs {
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i, lane: index})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, lane: index})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(txpwr), labelValues...)
 			}
 		}
@@ -2147,7 +2162,7 @@ func (c *cndevCollector) collectOpticalVolt(ch chan<- prometheus.Metric, m metri
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceOpticalInfo", stat.slot, i))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, link: i})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(volt), labelValues...)
 		}
 	}
@@ -2163,7 +2178,7 @@ func (c *cndevCollector) collectOverTempPowerOffCounter(ch chan<- prometheus.Met
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceOverTemperatureInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(counter), labelValues...)
 	}
 }
@@ -2178,7 +2193,7 @@ func (c *cndevCollector) collectOverTempPowerOffThreshold(ch chan<- prometheus.M
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceOverTemperatureShutdownThreshold", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(threshold), labelValues...)
 	}
 }
@@ -2193,7 +2208,7 @@ func (c *cndevCollector) collectOverTempUnderClockCounter(ch chan<- prometheus.M
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceOverTemperatureInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(counter), labelValues...)
 	}
 }
@@ -2208,7 +2223,7 @@ func (c *cndevCollector) collectOverTempUnderClockThreshold(ch chan<- prometheus
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceOverTemperatureSlowdownThreshold", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(threshold), labelValues...)
 	}
 }
@@ -2227,7 +2242,7 @@ func (c *cndevCollector) collectParityError(ch chan<- prometheus.Metric, m metri
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceParityError", stat.slot))
 			break
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(parityError), labelValues...)
 	}
 }
@@ -2242,7 +2257,7 @@ func (c *cndevCollector) collectPCIeCurrentSpeed(ch chan<- prometheus.Metric, m 
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceCurrentPCIeInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(speed), labelValues...)
 	}
 }
@@ -2257,7 +2272,7 @@ func (c *cndevCollector) collectPCIeCurrentWidth(ch chan<- prometheus.Metric, m 
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceCurrentPCIeInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(width), labelValues...)
 	}
 }
@@ -2290,7 +2305,7 @@ func (c *cndevCollector) collectPCIeInfo(ch chan<- prometheus.Metric, m metrics.
 			pcieSpeed:           calcPCIeSpeed(speed),
 			pcieWidth:           fmt.Sprintf("%d", width),
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, moduleID: moduleID, pcieInfo: pcieInfo})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, moduleID: moduleID, pcieInfo: pcieInfo})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, 1, labelValues...)
 	}
 }
@@ -2305,7 +2320,7 @@ func (c *cndevCollector) collectePCIeMaxSpeed(ch chan<- prometheus.Metric, m met
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMaxPCIeInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(speed), labelValues...)
 	}
 }
@@ -2320,7 +2335,7 @@ func (c *cndevCollector) collectePCIeMaxWidth(ch chan<- prometheus.Metric, m met
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMaxPCIeInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(width), labelValues...)
 	}
 }
@@ -2335,7 +2350,7 @@ func (c *cndevCollector) collectPCIeReadThroughput(ch chan<- prometheus.Metric, 
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDevicePCIeThroughput", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(read), labelValues...)
 	}
 }
@@ -2350,7 +2365,7 @@ func (c *cndevCollector) collectPCIeReplayCount(ch chan<- prometheus.Metric, m m
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDevicePCIeReplayCount", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(count), labelValues...)
 	}
 }
@@ -2365,7 +2380,7 @@ func (c *cndevCollector) collectPCIeWriteThroughput(ch chan<- prometheus.Metric,
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDevicePCIeThroughput", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(write), labelValues...)
 	}
 }
@@ -2380,7 +2395,7 @@ func (c *cndevCollector) collectPowerCurrentLimit(ch chan<- prometheus.Metric, m
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDevicePowerManagementDefaultLimitation", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(currentLimit), labelValues...)
 	}
 }
@@ -2395,7 +2410,7 @@ func (c *cndevCollector) collectPowerDefaultLimit(ch chan<- prometheus.Metric, m
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDevicePowerManagementDefaultLimitation", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(defaultLimit), labelValues...)
 	}
 }
@@ -2410,7 +2425,7 @@ func (c *cndevCollector) collectPowerMaxLimit(ch chan<- prometheus.Metric, m met
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDevicePowerManagementLimitRange", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(maxLimit), labelValues...)
 	}
 }
@@ -2425,7 +2440,7 @@ func (c *cndevCollector) collectPowerMinLimit(ch chan<- prometheus.Metric, m met
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDevicePowerManagementLimitRange", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(minLimit), labelValues...)
 	}
 }
@@ -2440,12 +2455,12 @@ func (c *cndevCollector) collectPowerUsage(ch chan<- prometheus.Metric, m metric
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDevicePower", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: ""})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, vf: ""})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(power), labelValues...)
 
 		if c.baseInfo.num > 0 {
 			for i := uint(0); i < c.baseInfo.num; i++ {
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", i+1)})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, vf: fmt.Sprintf("%d", i+1)})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(power), labelValues...)
 			}
 			continue
@@ -2453,7 +2468,7 @@ func (c *cndevCollector) collectPowerUsage(ch chan<- prometheus.Metric, m metric
 
 		if stat.mimEnabled {
 			for _, info := range stat.mimInfos {
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", info.InstanceInfo.InstanceID)})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, vf: fmt.Sprintf("%d", info.InstanceInfo.InstanceID)})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(power), labelValues...)
 			}
 			continue
@@ -2470,9 +2485,9 @@ func (c *cndevCollector) collectPowerUsage(ch chan<- prometheus.Metric, m metric
 			for _, info := range smluInfos {
 				var labelValues []string
 				if c.baseInfo.mode == "dynamic-smlu" {
-					labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, typ: "vcore", vf: fmt.Sprintf("%d", info.InstanceInfo.InstanceID)})
+					labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, typ: "vcore", vf: fmt.Sprintf("%d", info.InstanceInfo.InstanceID)})
 				} else {
-					labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", info.InstanceInfo.InstanceID)})
+					labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, vf: fmt.Sprintf("%d", info.InstanceInfo.InstanceID)})
 				}
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(power), labelValues...)
 			}
@@ -2493,7 +2508,7 @@ func (c *cndevCollector) collectPowerUsage(ch chan<- prometheus.Metric, m metric
 					log.Errorln(errors.Wrapf(err, "Slot %d VF %d GetDevicePower", stat.slot, vf))
 					continue
 				}
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", vf)})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, vf: fmt.Sprintf("%d", vf)})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(power), labelValues...)
 			}
 			state >>= 1
@@ -2512,7 +2527,7 @@ func (c *cndevCollector) collectProcessIpuUtil(ch chan<- prometheus.Metric, m me
 			continue
 		}
 		for i, util := range ipu {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, pid: pid[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, pid: pid[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
@@ -2529,7 +2544,7 @@ func (c *cndevCollector) collectProcessJpuUtil(ch chan<- prometheus.Metric, m me
 			continue
 		}
 		for i, util := range jpu {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, pid: pid[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, pid: pid[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
@@ -2546,7 +2561,7 @@ func (c *cndevCollector) collectProcessMemoryUtil(ch chan<- prometheus.Metric, m
 			continue
 		}
 		for i, util := range mem {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, pid: pid[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, pid: pid[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
@@ -2563,7 +2578,7 @@ func (c *cndevCollector) collectProcessPhysicalMemUsed(ch chan<- prometheus.Metr
 			continue
 		}
 		for i, used := range physicalMemUsed {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, pid: pid[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, pid: pid[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(used*1024), labelValues...)
 		}
 	}
@@ -2580,7 +2595,7 @@ func (c *cndevCollector) collectProcessVirtualMemUsed(ch chan<- prometheus.Metri
 			continue
 		}
 		for i, used := range virtualMemUsed {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, pid: pid[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, pid: pid[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(used*1024), labelValues...)
 		}
 	}
@@ -2597,7 +2612,7 @@ func (c *cndevCollector) collectProcessVpuDecodeUtil(ch chan<- prometheus.Metric
 			continue
 		}
 		for i, util := range vpuDecode {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, pid: pid[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, pid: pid[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
@@ -2614,7 +2629,7 @@ func (c *cndevCollector) collectProcessVpuEncodeUtil(ch chan<- prometheus.Metric
 			continue
 		}
 		for i, util := range vpuEncode {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, pid: pid[i]})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, pid: pid[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
@@ -2630,7 +2645,7 @@ func (c *cndevCollector) collectRemappedCorrectRows(ch chan<- prometheus.Metric,
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRemappedRows", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(correctRows), labelValues...)
 	}
 }
@@ -2645,7 +2660,7 @@ func (c *cndevCollector) collectRemappedFailedRows(ch chan<- prometheus.Metric, 
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRemappedRows", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(failedRows), labelValues...)
 	}
 }
@@ -2660,7 +2675,7 @@ func (c *cndevCollector) collectRemappedPendingRows(ch chan<- prometheus.Metric,
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRemappedRows", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(pendingRows), labelValues...)
 	}
 }
@@ -2675,7 +2690,7 @@ func (c *cndevCollector) collectRemappedUncorrectRows(ch chan<- prometheus.Metri
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRemappedRows", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(uncorrectRows), labelValues...)
 	}
 }
@@ -2696,7 +2711,7 @@ func (c *cndevCollector) collectRepairFailureStatus(ch chan<- prometheus.Metric,
 		} else {
 			repairStatus = 0
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(repairStatus), labelValues...)
 	}
 }
@@ -2717,7 +2732,7 @@ func (c *cndevCollector) collectRepairPendingStatus(ch chan<- prometheus.Metric,
 		} else {
 			repairStatus = 0
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(repairStatus), labelValues...)
 	}
 }
@@ -2738,7 +2753,7 @@ func (c *cndevCollector) collectRepairRetireStatus(ch chan<- prometheus.Metric, 
 		} else {
 			repairStatus = 0
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(repairStatus), labelValues...)
 	}
 }
@@ -2753,7 +2768,7 @@ func (c *cndevCollector) collectRetiredPagesOperationStatus(ch chan<- prometheus
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRetiredPagesOperation", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(retirement), labelValues...)
 	}
 }
@@ -2768,7 +2783,7 @@ func (c *cndevCollector) collectSingleBitRetiredPageCount(ch chan<- prometheus.M
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceRetiredPageInfo", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(pageCount), labelValues...)
 	}
 }
@@ -2793,7 +2808,7 @@ func (c *cndevCollector) collectSmluInstanceInfo(ch chan<- prometheus.Metric, m 
 					ProfileID:   info.ProfileInfo.ProfileID,
 					ProfileName: info.ProfileInfo.ProfileName,
 				}
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, smluInstanceInfo: smluInstanceInfo, smluProfileInfo: smluProfileInfo})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, smluInstanceInfo: smluInstanceInfo, smluProfileInfo: smluProfileInfo})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(1), labelValues...)
 			}
 		}
@@ -2814,7 +2829,7 @@ func (c *cndevCollector) collectSmluProfileInfo(ch chan<- prometheus.Metric, m m
 					log.Errorln(errors.Wrapf(err, "Slot %d profileId %d GetDeviceSMluProfileInfo", stat.slot, profileID))
 					continue
 				}
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, smluProfileInfo: smluProfileInfo})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, smluProfileInfo: smluProfileInfo})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(1), labelValues...)
 			}
 		}
@@ -2835,7 +2850,7 @@ func (c *cndevCollector) collectSmluProfileTotalCapacity(ch chan<- prometheus.Me
 					log.Errorln(errors.Wrapf(err, "Slot %d profileId %d GetDeviceSMluProfileInfo", stat.slot, profileID))
 					continue
 				}
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, smluProfileInfo: smluProfileInfo})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, smluProfileInfo: smluProfileInfo})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(total), labelValues...)
 			}
 		}
@@ -2856,7 +2871,7 @@ func (c *cndevCollector) collectSocCurrent(ch chan<- prometheus.Metric, m metric
 			log.Debugf("Slot %d soc current %d is invalid", stat.slot, soc)
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(soc), labelValues...)
 	}
 }
@@ -2875,7 +2890,7 @@ func (c *cndevCollector) collectSocVoltage(ch chan<- prometheus.Metric, m metric
 			log.Debugf("Slot %d soc voltage %d is invalid", stat.slot, soc)
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(soc), labelValues...)
 	}
 }
@@ -2890,7 +2905,7 @@ func (c *cndevCollector) collectSramEccDbeCount(ch chan<- prometheus.Metric, m m
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemEccCounter", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(volatile[1]), labelValues...)
 	}
 }
@@ -2905,7 +2920,7 @@ func (c *cndevCollector) collectSramEccParityCount(ch chan<- prometheus.Metric, 
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemEccCounter", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(volatile[2]), labelValues...)
 	}
 }
@@ -2920,7 +2935,7 @@ func (c *cndevCollector) collectSramEccSbeCount(ch chan<- prometheus.Metric, m m
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemEccCounter", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(volatile[0]), labelValues...)
 	}
 }
@@ -2935,7 +2950,7 @@ func (c *cndevCollector) collectTemperature(ch chan<- prometheus.Metric, m metri
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceTemperature", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(board), labelValues...)
 	}
 }
@@ -2954,7 +2969,7 @@ func (c *cndevCollector) collectTensorUtil(ch chan<- prometheus.Metric, m metric
 			log.Debugf("Slot %d tensor util %d is abnormal", stat.slot, util)
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 	}
 }
@@ -2970,10 +2985,10 @@ func (c *cndevCollector) collectThermalSlowdown(ch chan<- prometheus.Metric, m m
 			continue
 		}
 		if thermal {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(1), labelValues...)
 		} else {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(0), labelValues...)
 		}
 	}
@@ -2990,7 +3005,7 @@ func (c *cndevCollector) collectTinyCoreUtil(ch chan<- prometheus.Metric, m metr
 			continue
 		}
 		for core, util := range vpuUtil {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, core: core})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, core: core})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
@@ -3006,12 +3021,12 @@ func (c *cndevCollector) collectUtil(ch chan<- prometheus.Metric, m metrics.Metr
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceUtil", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: ""})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, vf: ""})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(board), labelValues...)
 
 		if c.baseInfo.num > 0 {
 			for i := uint(0); i < c.baseInfo.num; i++ {
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", i+1)})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, vf: fmt.Sprintf("%d", i+1)})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(board), labelValues...)
 			}
 			continue
@@ -3020,7 +3035,7 @@ func (c *cndevCollector) collectUtil(ch chan<- prometheus.Metric, m metrics.Metr
 		if stat.mimEnabled {
 			for _, info := range stat.mimInfos {
 				util := calcMimUtil(info, coreUtil)
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", info.InstanceInfo.InstanceID)})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, vf: fmt.Sprintf("%d", info.InstanceInfo.InstanceID)})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 			}
 			continue
@@ -3037,9 +3052,9 @@ func (c *cndevCollector) collectUtil(ch chan<- prometheus.Metric, m metrics.Metr
 			for _, info := range smluInfos {
 				var labelValues []string
 				if c.baseInfo.mode == "dynamic-smlu" {
-					labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, typ: "vcore", vf: fmt.Sprintf("%d", info.InstanceInfo.InstanceID)})
+					labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, typ: "vcore", vf: fmt.Sprintf("%d", info.InstanceInfo.InstanceID)})
 				} else {
-					labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", info.InstanceInfo.InstanceID)})
+					labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, vf: fmt.Sprintf("%d", info.InstanceInfo.InstanceID)})
 				}
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(info.IpuUtil), labelValues...)
 			}
@@ -3062,7 +3077,7 @@ func (c *cndevCollector) collectUtil(ch chan<- prometheus.Metric, m metrics.Metr
 				log.Errorln(errors.Wrapf(err, "vf %d calcVFUtil, util %v, vfNum: %d", vfID, coreUtil, vfNum))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", vfID)})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, vf: fmt.Sprintf("%d", vfID)})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, util, labelValues...)
 		}
 	}
@@ -3080,7 +3095,7 @@ func (c *cndevCollector) collectVersion(ch chan<- prometheus.Metric, m metrics.M
 		}
 		cndevVersion := calcVersion(major, minor, build)
 		if stat.cndevInterfaceDisabled["computeCapabilityDisabled"] {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, cndevVersion: cndevVersion, computeCapability: ""})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, cndevVersion: cndevVersion, computeCapability: ""})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, 1, labelValues...)
 			continue
 		}
@@ -3090,7 +3105,7 @@ func (c *cndevCollector) collectVersion(ch chan<- prometheus.Metric, m metrics.M
 			continue
 		}
 		computeCapability := fmt.Sprintf("v%d.%d", capMajor, capMinor)
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, cndevVersion: cndevVersion, computeCapability: computeCapability})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, cndevVersion: cndevVersion, computeCapability: computeCapability})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, 1, labelValues...)
 	}
 }
@@ -3106,7 +3121,7 @@ func (c *cndevCollector) collectVideoCodecUtil(ch chan<- prometheus.Metric, m me
 			continue
 		}
 		for core, util := range vpuUtil {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, core: core})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, core: core})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
@@ -3123,7 +3138,7 @@ func (c *cndevCollector) collectVideoDecoderUtil(ch chan<- prometheus.Metric, m 
 			continue
 		}
 		for core, util := range decoderUtil {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, core: core})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, core: core})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 		}
 	}
@@ -3149,7 +3164,7 @@ func (c *cndevCollector) collectVirtualFunctionMemUtil(ch chan<- prometheus.Metr
 					continue
 				}
 				util := float64(used) / float64(total) * 100
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", vf)})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, vf: fmt.Sprintf("%d", vf)})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, util, labelValues...)
 			}
 			state >>= 1
@@ -3176,7 +3191,7 @@ func (c *cndevCollector) collectVirtualFunctionPowerUsage(ch chan<- prometheus.M
 					log.Errorln(errors.Wrapf(err, "Slot %d VF %d GetDevicePower", stat.slot, vf))
 					continue
 				}
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", vf)})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, vf: fmt.Sprintf("%d", vf)})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(power), labelValues...)
 			}
 			state >>= 1
@@ -3197,7 +3212,7 @@ func (c *cndevCollector) collectVirtualFunctionUtil(ch chan<- prometheus.Metric,
 		if stat.mimEnabled {
 			for _, info := range stat.mimInfos {
 				util := calcMimUtil(info, coreUtil)
-				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", info.InstanceInfo.InstanceID)})
+				labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, vf: fmt.Sprintf("%d", info.InstanceInfo.InstanceID)})
 				ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
 			}
 			continue
@@ -3219,7 +3234,7 @@ func (c *cndevCollector) collectVirtualFunctionUtil(ch chan<- prometheus.Metric,
 				log.Errorln(errors.Wrapf(err, "vf %d calcVFUtil, util %v, vfNum: %d", vfID, coreUtil, vfNum))
 				continue
 			}
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, vf: fmt.Sprintf("%d", vfID)})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, vf: fmt.Sprintf("%d", vfID)})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, util, labelValues...)
 		}
 	}
@@ -3235,7 +3250,7 @@ func (c *cndevCollector) collectVirtualMemFree(ch chan<- prometheus.Metric, m me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64((total-used)*1024*1024), labelValues...)
 	}
 }
@@ -3250,7 +3265,7 @@ func (c *cndevCollector) collectVirtualMemTotal(ch chan<- prometheus.Metric, m m
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(total*1024*1024), labelValues...)
 	}
 }
@@ -3265,7 +3280,7 @@ func (c *cndevCollector) collectVirtualMemUsed(ch chan<- prometheus.Metric, m me
 			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceMemory", stat.slot))
 			continue
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(used*1024*1024), labelValues...)
 	}
 }
@@ -3278,8 +3293,9 @@ func (c *cndevCollector) collectLastXIDError(ch chan<- prometheus.Metric, m metr
 
 	for info, xid := range c.lastXID {
 		labelValues := getLabelValues(m.Labels, labelInfo{
-			stat: slotInfo[info.Device],
-			host: c.baseInfo.host,
+			stat:   slotInfo[info.Device],
+			host:   c.baseInfo.host,
+			hostIP: c.baseInfo.hostIP,
 			xidInfo: cndev.XIDInfoWithTimestamp{
 				XIDInfo: cndev.XIDInfo{
 					DeviceInfo: info,
@@ -3299,8 +3315,9 @@ func (c *cndevCollector) collectXIDErrorCount(ch chan<- prometheus.Metric, m met
 
 	for info, count := range c.mluXIDCounter {
 		labelValues := getLabelValues(m.Labels, labelInfo{
-			stat: slotInfo[info.Device],
-			host: c.baseInfo.host,
+			stat:   slotInfo[info.Device],
+			host:   c.baseInfo.host,
+			hostIP: c.baseInfo.hostIP,
 			xidInfo: cndev.XIDInfoWithTimestamp{
 				XIDInfo: info,
 			},
@@ -3309,31 +3326,9 @@ func (c *cndevCollector) collectXIDErrorCount(ch chan<- prometheus.Metric, m met
 	}
 }
 
-func (c *cndevCollector) waitXIDEvents() error {
-	slots := []int{}
-	for _, stat := range c.sharedInfo.Range {
-		if stat.cndevInterfaceDisabled["xidCallbackDisabled"] {
-			continue
-		}
-		slots = append(slots, int(stat.slot))
-	}
-	if len(slots) == 0 {
-		return nil
-	}
-	sort.Ints(slots)
-
-	ch := make(chan cndev.XIDInfoWithTimestamp, 10)
-	if err := c.client.RegisterEventsHandleAndWait(slots, ch); err != nil {
-		log.Errorln(errors.Wrap(err, "register event handle"))
-		return err
-	}
-
-	for event := range ch {
-		c.mluXIDCounter[event.XIDInfo]++
-		c.lastXID[event.DeviceInfo] = event.XIDInfo
-	}
-
-	return nil
+func (c *cndevCollector) HandleXIDEvent(event cndev.XIDInfoWithTimestamp) {
+	c.mluXIDCounter[event.XIDInfo]++
+	c.lastXID[event.DeviceInfo] = event.XIDInfo
 }
 
 func calcVFUtil(utils []int, vfNum int, vfID int) (float64, error) {

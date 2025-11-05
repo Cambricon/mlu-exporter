@@ -221,6 +221,7 @@ const (
 	SN                     = "sn"
 	UUID                   = "uuid"
 	Node                   = "node"
+	NodeIP                 = "node_ip"
 	ChassisDev             = "chassis_dev"
 	ChassisSN              = "chassis_sn"
 	ChassisProductDate     = "chassis_product_date"

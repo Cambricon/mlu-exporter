@@ -29,6 +29,7 @@ func init() {
 type hostCollector struct {
 	metrics    metrics.CollectorMetrics
 	host       string
+	hostIP     string
 	client     host.Host
 	sharedInfo *MLUStatMap
 	fnMap      map[string]interface{}
@@ -38,6 +39,7 @@ func NewHostCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 	c := &hostCollector{
 		metrics: m,
 		host:    bi.host,
+		hostIP:  bi.hostIP,
 		client:  host.NewHostClient(),
 	}
 	c.fnMap = map[string]interface{}{
@@ -80,7 +82,7 @@ func (c *hostCollector) collectCPUIdle(ch chan<- prometheus.Metric, m metrics.Me
 		log.Errorln(errors.Wrap(err, "GetCPUStats"))
 		return
 	}
-	ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, idle, c.host)
+	ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, idle, c.host, c.hostIP)
 }
 
 func (c *hostCollector) collectCPUTotal(ch chan<- prometheus.Metric, m metrics.Metric) {
@@ -89,7 +91,7 @@ func (c *hostCollector) collectCPUTotal(ch chan<- prometheus.Metric, m metrics.M
 		log.Errorln(errors.Wrap(err, "GetCPUStats"))
 		return
 	}
-	ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, total, c.host)
+	ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, total, c.host, c.hostIP)
 }
 
 func (c *hostCollector) collectMemoryTotal(ch chan<- prometheus.Metric, m metrics.Metric) {
@@ -98,7 +100,7 @@ func (c *hostCollector) collectMemoryTotal(ch chan<- prometheus.Metric, m metric
 		log.Errorln(errors.Wrap(err, "GetMemoryStats"))
 		return
 	}
-	ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, total/1024/1024, c.host)
+	ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, total/1024/1024, c.host, c.hostIP)
 }
 
 func (c *hostCollector) collectMemoryFree(ch chan<- prometheus.Metric, m metrics.Metric) {
@@ -107,5 +109,5 @@ func (c *hostCollector) collectMemoryFree(ch chan<- prometheus.Metric, m metrics
 		log.Errorln(errors.Wrap(err, "GetMemoryStats"))
 		return
 	}
-	ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, free/1024/1024, c.host)
+	ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, free/1024/1024, c.host, c.hostIP)
 }

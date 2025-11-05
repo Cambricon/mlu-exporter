@@ -20,11 +20,12 @@ type HTTPClient struct {
 	sharedInfo *MLUStatMap
 	labels     []string
 	host       string
+	hostIP     string
 	metricName string
 	jobName    string
 }
 
-func NewClient(httpC *http.Client, ur string, sharedInfo *MLUStatMap, labels []string, host, metricName, jobName string) (c *HTTPClient, err error) {
+func NewClient(httpC *http.Client, ur string, sharedInfo *MLUStatMap, labels []string, host, hostIP, metricName, jobName string) (c *HTTPClient, err error) {
 	u, err := url.Parse(ur)
 	if err != nil {
 		return
@@ -35,6 +36,7 @@ func NewClient(httpC *http.Client, ur string, sharedInfo *MLUStatMap, labels []s
 		sharedInfo: sharedInfo,
 		labels:     labels,
 		host:       host,
+		hostIP:     hostIP,
 		metricName: metricName,
 		jobName:    jobName,
 	}
@@ -51,6 +53,7 @@ func (c *HTTPClient) PushWithRetries(event cndev.XIDInfoWithTimestamp, retries i
 	labelValues := getLabelValues(c.labels, labelInfo{
 		stat:    slotInfo[event.Device],
 		host:    c.host,
+		hostIP:  c.hostIP,
 		xidInfo: event,
 	})
 

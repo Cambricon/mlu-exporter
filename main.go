@@ -43,6 +43,7 @@ type Options struct {
 	Collector     []string `long:"collector" description:"enabled collectors" choice:"cndev" choice:"podresources" choice:"host" default:"cndev"`
 	EnvShareNum   uint     `long:"env-share-num" description:"numbers of vfs under env share mode, 0 means env share disabled" default:"0"`
 	Hostname      string   `long:"hostname" description:"machine hostname" env:"ENV_NODE_NAME"`
+	HostIP        string   `long:"host-ip" description:"machine host ip" env:"ENV_NODE_IP"`
 	LogLevel      string   `long:"log-level" description:"set log level: trace/debug/info/warn/error/fatal/panic" default:"info"`
 	MetricsConfig string   `long:"metrics-config" description:"configuration file of MLU exporter metrics" default:"/etc/mlu-exporter/metrics.yaml"`
 	MetricsPath   string   `long:"metrics-path" description:"metrics path of the exporter service" default:"/metrics"`
@@ -142,6 +143,7 @@ func main() {
 		metricConfig,
 		options.EnvShareNum,
 		options.Hostname,
+		options.HostIP,
 		options.VirtualMode,
 		mluInfo,
 		false,
@@ -194,6 +196,7 @@ func startPushMode(client *http.Client, options Options, metricConfig map[string
 		metricConfig,
 		options.EnvShareNum,
 		options.Hostname,
+		options.HostIP,
 		options.VirtualMode,
 		mluInfo,
 		true,
@@ -234,6 +237,7 @@ func startCallbackMode(client *http.Client, options Options, metricConfig map[st
 		options.XIDErrorMetricName,
 		options.MetricsPrefix,
 		options.Hostname,
+		options.HostIP,
 		options.LogFileForXIDMetricFailed,
 		options.XIDErrorRetryTimes,
 		options.PushJobName,

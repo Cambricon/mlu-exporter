@@ -94,6 +94,7 @@ func TestCollect(t *testing.T) {
 
 		// fake node info
 		node         = "machine1"
+		nodeIP       = "machineip1"
 		hostCPUTotal = float64(6185912)
 		hostCPUIdle  = float64(34459)
 		hostMemTotal = float64(24421820)
@@ -765,7 +766,7 @@ func TestCollect(t *testing.T) {
 	mcndev.EXPECT().GetTopologyRelationship(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(2, nil).AnyTimes()
 	mcndev.EXPECT().GetDeviceCndevVersion().Return(cndevVersion[0], cndevVersion[1], cndevVersion[2], nil).AnyTimes()
 	sort.Ints(slots)
-	mcndev.EXPECT().RegisterEventsHandleAndWait(slots, gomock.Any()).Return(nil).Times(2)
+	mcndev.EXPECT().RegisterEventsHandleAndWait(slots, gomock.Any()).Return(nil).Times(1)
 
 	// pres mock response
 	pres := mock.NewPodResources(ctrl)
@@ -778,7 +779,7 @@ func TestCollect(t *testing.T) {
 
 	metricConfig := metrics.GetMetrics("../../examples/metrics.yaml", "")
 	// collect metrics
-	expectedMetrics := collectMetrics(node, rdmaDevice, mst, host, mcndev, pres, metricConfig)
+	expectedMetrics := collectMetrics(node, nodeIP, rdmaDevice, mst, host, mcndev, pres, metricConfig)
 	goldFile := "testdata/collect_metrics.json"
 	out, err := json.MarshalIndent(expectedMetrics, "", "  ")
 	assert.NoError(t, err)
@@ -792,7 +793,7 @@ func TestCollect(t *testing.T) {
 
 	// collect push metrics
 	metricConfig = metrics.GetMetrics("../../examples/metrics-push.yaml", "")
-	expectedMetrics = collectMetrics(node, rdmaDevice, mst, host, mcndev, pres, metricConfig)
+	expectedMetrics = collectMetrics(node, nodeIP, rdmaDevice, mst, host, mcndev, pres, metricConfig)
 	goldFile = "testdata/collect_push_metrics.json"
 	out, err = json.MarshalIndent(expectedMetrics, "", "  ")
 	assert.NoError(t, err)
@@ -805,9 +806,10 @@ func TestCollect(t *testing.T) {
 	}
 }
 
-func collectMetrics(node string, rdmaDevice []rdmaDevice, mst *MLUStatMap, host *mock.Host, cndv *mock.Cndev, pres *mock.PodResources, m map[string]metrics.CollectorMetrics) []testMetrics {
+func collectMetrics(node, nodeIP string, rdmaDevice []rdmaDevice, mst *MLUStatMap, host *mock.Host, cndv *mock.Cndev, pres *mock.PodResources, m map[string]metrics.CollectorMetrics) []testMetrics {
 	bi := BaseInfo{
 		host:       node,
+		hostIP:     nodeIP,
 		rdmaDevice: rdmaDevice,
 	}
 	cndevCollector := NewCndevCollector(m[Cndev], bi).(*cndevCollector)

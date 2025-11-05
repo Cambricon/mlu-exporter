@@ -45,7 +45,7 @@ func NewCallback(
 	importURL string,
 	metricConfig map[string]metrics.CollectorMetrics,
 	info *MLUStatMap,
-	metricName, metricPrefix, host, logFile string,
+	metricName, metricPrefix, host, hostIP, logFile string,
 	retryTimes int,
 	jobName string,
 ) (*Callback, error) {
@@ -70,7 +70,7 @@ func NewCallback(
 	if metricPrefix != "" {
 		fqName = fmt.Sprintf("%s_%s", metricPrefix, fqName)
 	}
-	client, err := NewClient(pushClient, importURL, info, m.Labels, host, fqName, jobName)
+	client, err := NewClient(pushClient, importURL, info, m.Labels, host, hostIP, fqName, jobName)
 	if err != nil {
 		return nil, err
 	}
@@ -108,22 +108,22 @@ func filterMetric(cfg map[string]metrics.CollectorMetrics, metricName string) *m
 func (c *Callback) Start() {
 	slots := []int{}
 	for _, stat := range c.sharedInfo.Range {
+		if stat.cndevInterfaceDisabled["xidCallbackDisabled"] {
+			continue
+		}
 		slots = append(slots, int(stat.slot))
 	}
 	sort.Ints(slots)
 
-	ch := make(chan cndev.XIDInfoWithTimestamp, 10)
-	if err := c.cndevcli.RegisterEventsHandleAndWait(slots, ch); err != nil {
-		log.Errorln(errors.Wrap(err, "register event handle"))
-		return
-	}
-
-	for event := range ch {
-		c.work(event)
+	if len(slots) > 0 {
+		manager := GetXIDEventManager(c.cndevcli)
+		manager.RegisterHandler(c)
+		manager.SetSlots(slots)
+		go manager.Start()
 	}
 }
 
-func (c *Callback) work(event cndev.XIDInfoWithTimestamp) {
+func (c *Callback) HandleXIDEvent(event cndev.XIDInfoWithTimestamp) {
 	err := c.client.PushWithRetries(event, c.retryTimes)
 	if err == nil {
 		return

@@ -110,7 +110,7 @@ func (c *podResourcesCollector) collectBoardAllocated(ch chan<- prometheus.Metri
 		driver = info.driver
 		break
 	}
-	labelValues := getLabelValues(m.Labels, labelInfo{stat: MLUStat{model: model, driver: driver}, host: c.baseInfo.host})
+	labelValues := getLabelValues(m.Labels, labelInfo{stat: MLUStat{model: model, driver: driver}, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 	ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(len(c.devicePodInfo)), labelValues...)
 }
 
@@ -136,7 +136,7 @@ func (c *podResourcesCollector) collectEnvShareExhausted(ch chan<- prometheus.Me
 			log.Debugf("Env-share mlus for slot %d is exhausted, num: %d", info.slot, sharedMlus[info.uuid])
 			exhausted = 1
 		}
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: info, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: info, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(exhausted), labelValues...)
 	}
 }
@@ -202,18 +202,18 @@ func (c *podResourcesCollector) collectMLUContainer(ch chan<- prometheus.Metric,
 		delete(devs, uuid)
 		stat := c.sharedInfo.Load(uuid)
 		if c.baseInfo.mode == "dynamic-smlu" {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, podInfo: podInfo, typ: "vcore", vf: vf})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, podInfo: podInfo, typ: "vcore", vf: vf})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, 1, labelValues...)
-			labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, podInfo: podInfo, typ: "vmemory", vf: vf})
+			labelValues = getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, podInfo: podInfo, typ: "vmemory", vf: vf})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, 1, labelValues...)
 		} else {
-			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, podInfo: podInfo, vf: vf})
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, podInfo: podInfo, vf: vf})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, 1, labelValues...)
 		}
 	}
 	for dev := range devs {
 		stat := c.sharedInfo.Load(dev)
-		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host})
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, 0, labelValues...)
 	}
 }

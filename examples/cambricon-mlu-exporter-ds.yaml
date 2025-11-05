@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: cambricon-mlu-monitor
-        image: cambricon-mlu-exporter:v2.0.21
+        image: cambricon-mlu-exporter:v2.0.22
         imagePullPolicy: IfNotPresent
         command:
         - /usr/bin/mlu-exporter
@@ -71,6 +71,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+        - name: ENV_NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
         securityContext:
           privileged: true
         volumeMounts:

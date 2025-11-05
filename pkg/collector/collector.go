@@ -59,16 +59,18 @@ type rdmaDevice struct {
 type BaseInfo struct {
 	client     kubernetes.Interface
 	host       string
+	hostIP     string
 	mode       string
 	num        uint
 	rdmaDevice []rdmaDevice
 }
 
-func NewCollectors(enabled []string, metricConfig map[string]metrics.CollectorMetrics, num uint, host string, mode string, shareInfo *MLUStatMap, filterPush bool) *Collectors {
+func NewCollectors(enabled []string, metricConfig map[string]metrics.CollectorMetrics, num uint, host string, hostIP string, mode string, shareInfo *MLUStatMap, filterPush bool) *Collectors {
 	m := filter(metricConfig, filterPush)
 	cs := make(map[string]Collector)
 	bi := BaseInfo{
 		host:       host,
+		hostIP:     hostIP,
 		mode:       mode,
 		rdmaDevice: getRDMAPCIeInfo(),
 	}

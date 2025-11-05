@@ -76,6 +76,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: "spec.nodeName"
+        - name: ENV_NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: "status.hostIP"
         {{- with .Values.volumeMounts }}
         volumeMounts:
           {{- toYaml . | nindent 8 }}

@@ -7,6 +7,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -19,6 +20,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -31,6 +33,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -43,6 +46,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -55,6 +59,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -67,6 +72,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -79,6 +85,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -91,6 +98,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -103,6 +111,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -115,6 +124,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -127,6 +137,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -139,6 +150,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -151,6 +163,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -163,6 +176,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -175,6 +189,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -187,6 +202,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -199,6 +215,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -211,6 +228,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -237,6 +255,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -258,6 +277,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -284,6 +304,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -311,6 +332,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -324,6 +346,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -337,6 +360,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -350,6 +374,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -363,6 +388,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -376,6 +402,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -388,6 +415,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -401,6 +429,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -413,6 +442,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -426,6 +456,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -439,6 +470,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -452,6 +484,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -464,6 +497,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -476,6 +510,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -488,6 +523,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -500,6 +536,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -512,6 +549,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -524,6 +562,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -536,6 +575,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -548,6 +588,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -560,6 +601,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -572,6 +614,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -584,6 +627,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -596,6 +640,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -608,6 +653,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -620,6 +666,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -632,6 +679,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -644,6 +692,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -656,6 +705,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -668,6 +718,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -680,6 +731,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -692,6 +744,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -704,6 +757,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -716,6 +770,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -728,6 +783,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -740,6 +796,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       unhealth_reason: unhealth_reason
@@ -753,6 +810,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -766,6 +824,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -776,6 +835,7 @@ cndev:
       driver: driver
       model: model
       node: node
+      node_ip: node_ip
       type: type
     name: machine_mlu_nums
   memory_current:
@@ -787,6 +847,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -799,6 +860,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -811,6 +873,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -824,6 +887,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -836,6 +900,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -848,6 +913,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -861,6 +927,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -876,6 +943,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -889,6 +957,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -912,6 +981,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -932,6 +1002,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -952,6 +1023,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -966,6 +1038,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -980,6 +1053,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -994,6 +1068,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1008,6 +1083,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1022,6 +1098,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1036,6 +1113,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1050,6 +1128,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1064,6 +1143,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1078,6 +1158,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1092,6 +1173,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1106,6 +1188,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1120,6 +1203,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1134,6 +1218,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1148,6 +1233,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1162,6 +1248,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1176,6 +1263,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1190,6 +1278,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1204,6 +1293,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1218,6 +1308,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1232,6 +1323,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1246,6 +1338,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1259,6 +1352,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1272,6 +1366,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1295,6 +1390,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1309,6 +1405,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1323,6 +1420,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1337,6 +1435,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1352,6 +1451,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       ppi: ppi
       sn: sn
       type: type
@@ -1365,6 +1465,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1378,6 +1479,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1392,6 +1494,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1405,6 +1508,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1419,6 +1523,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1432,6 +1537,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1444,6 +1550,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1456,6 +1563,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1468,6 +1576,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1480,6 +1589,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1492,6 +1602,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1504,6 +1615,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1516,6 +1628,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1528,6 +1641,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1540,6 +1654,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1552,6 +1667,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       module_id: module_id
       pcie_device_id: pcie_device_id
       pcie_id: pcie_id
@@ -1573,6 +1689,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1585,6 +1702,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1597,6 +1715,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1609,6 +1728,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1621,6 +1741,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1633,6 +1754,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1645,6 +1767,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1657,6 +1780,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1670,6 +1794,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       pid: pid
       sn: sn
       type: type
@@ -1683,6 +1808,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       pid: pid
       sn: sn
       type: type
@@ -1696,6 +1822,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       pid: pid
       sn: sn
       type: type
@@ -1709,6 +1836,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       pid: pid
       sn: sn
       type: type
@@ -1722,6 +1850,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       pid: pid
       sn: sn
       type: type
@@ -1735,6 +1864,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       pid: pid
       sn: sn
       type: type
@@ -1748,6 +1878,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       pid: pid
       sn: sn
       type: type
@@ -1761,6 +1892,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1777,6 +1909,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1789,6 +1922,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1801,6 +1935,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1813,6 +1948,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1825,6 +1961,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1837,6 +1974,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1849,6 +1987,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1861,6 +2000,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1873,6 +2013,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1886,6 +2027,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1906,6 +2048,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1923,6 +2066,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1940,6 +2084,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1953,6 +2098,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1965,6 +2111,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1977,6 +2124,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -1989,6 +2137,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2001,6 +2150,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2013,6 +2163,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2025,6 +2176,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2038,6 +2190,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2050,6 +2203,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2066,6 +2220,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2079,6 +2234,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2092,6 +2248,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2104,6 +2261,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2118,6 +2276,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2131,6 +2290,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2145,6 +2305,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2157,6 +2318,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2169,6 +2331,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2182,6 +2345,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2195,6 +2359,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2212,6 +2377,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2228,6 +2394,7 @@ cndev:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
@@ -2240,21 +2407,25 @@ host:
     help: The cpu idle metric of host machine, unit is the same as which in /proc/stat
     labels:
       node: node
+      node_ip: node_ip
     name: host_cpu_idle
   host_cpu_total:
     help: The cpu total metric of host machine, unit is the same as which in /proc/stat
     labels:
       node: node
+      node_ip: node_ip
     name: host_cpu_total
   host_memory_free:
     help: The memory idle metric of host machine, unit is 'GB'
     labels:
       node: node
+      node_ip: node_ip
     name: host_memory_free
   host_memory_total:
     help: The memory total metric of host machine, unit is 'GB'
     labels:
       node: node
+      node_ip: node_ip
     name: host_memory_total
 podresources:
   allocated:
@@ -2263,6 +2434,7 @@ podresources:
       driver: driver
       model: model
       node: node
+      node_ip: node_ip
       type: type
     name: allocated
     push: true
@@ -2276,6 +2448,7 @@ podresources:
       model: model
       namespace: namespace
       node: node
+      node_ip: node_ip
       pod: pod
       sn: sn
       type: type
@@ -2291,6 +2464,7 @@ podresources:
       mlu: mlu
       model: model
       node: node
+      node_ip: node_ip
       sn: sn
       type: type
       uuid: uuid
