@@ -1222,6 +1222,51 @@ cndev:
       type: type
       uuid: uuid
     name: mlulink_err_replay_total
+  mlulink_err_replay_fail_total:
+    help: The replay error fail counts of Cambricon MLU MLULink
+    labels:
+      driver: driver
+      link: link
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      node_ip: node_ip
+      ppi: ppi
+      sn: sn
+      type: type
+      uuid: uuid
+    name: mlulink_err_replay_fail_total
+  mlulink_rx_bad_fcs_packet_total:
+    help: The received bad fcs packets of Cambricon MLU MLULink
+    labels:
+      driver: driver
+      link: link
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      node_ip: node_ip
+      ppi: ppi
+      sn: sn
+      type: type
+      uuid: uuid
+    name: mlulink_rx_bad_fcs_packet_total
+  mlulink_tx_bad_fcs_packet_total:
+    help: The transmitted bad fcs packets of Cambricon MLU MLULink
+    labels:
+      driver: driver
+      link: link
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      node_ip: node_ip
+      ppi: ppi
+      sn: sn
+      type: type
+      uuid: uuid
+    name: mlulink_tx_bad_fcs_packet_total
   mlulink_err_uncorrected_total:
     help: The uncorrected error counts of Cambricon MLU MLULink
     labels:
@@ -1897,7 +1942,7 @@ cndev:
       rdma_device_name: rdma_device_name
       rdma_device_pcie_address: rdma_device_pcie_address
       rdma_device_nic_name: rdma_device_nic_name
-      rdma_device_ip_addess: rdma_device_ip_addess
+      rdma_device_ip_address: rdma_device_ip_address
     name: rdma_device_info
   remapped_correct_rows:
     help: The remapped correct rows counts of Cambricon MLU

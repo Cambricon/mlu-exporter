@@ -215,9 +215,9 @@ func startPushMode(client *http.Client, options Options, metricConfig map[string
 	}
 
 	ticker := time.NewTicker(time.Duration(options.PushIntervalMS) * time.Millisecond)
-	defer ticker.Stop()
 
 	go func() {
+		defer ticker.Stop()
 		for range ticker.C {
 			if err := pusher.Push(); err != nil {
 				log.Errorln("Could not push to Pushgateway:", err)

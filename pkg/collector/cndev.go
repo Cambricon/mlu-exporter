@@ -140,9 +140,12 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 		MLULinkCounterErrEccDouble:        c.collectMLULinkCounterErrEccDouble,
 		MLULinkCounterErrFatal:            c.collectMLULinkCounterErrFatal,
 		MLULinkCounterErrReplay:           c.collectMLULinkCounterErrReplay,
+		MLULinkCounterErrReplayFail:       c.collectMLULinkCounterErrReplayFail,
 		MLULinkCounterErrUncorrected:      c.collectMLULinkCounterErrUncorrected,
 		MLULinkCounterIllegalAccess:       c.collectMLULinkCounterIllegalAccess,
 		MLULinkCounterLinkDown:            c.collectMLULinkCounterLinkDown,
+		MLULinkCounterRxBadFcs:            c.collectMLULinkCounterRxBadFcs,
+		MLULinkCounterTxBadFcs:            c.collectMLULinkCounterTxBadFcs,
 		MLULinkInboundState:               c.collectMLULinkInboundState,
 		MLULinkOutboundState:              c.collectMLULinkOutboundState,
 		MLULinkPortMode:                   c.collectMLULinkPortMode,
@@ -1707,7 +1710,7 @@ func (c *cndevCollector) collectMLULinkCounterErrCorrected(ch chan<- prometheus.
 			if stat.mlulinkInterfaceDisabled[i]["mluLinkErrorCounterDisabled"] {
 				continue
 			}
-			_, errCorrected, _, err := c.client.GetDeviceMLULinkErrorCounter(stat.slot, uint(i))
+			_, errCorrected, _, _, _, err := c.client.GetDeviceMLULinkErrorCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkErrorCounter", stat.slot, i))
 				continue
@@ -1789,16 +1792,33 @@ func (c *cndevCollector) collectMLULinkCounterErrFatal(ch chan<- prometheus.Metr
 func (c *cndevCollector) collectMLULinkCounterErrReplay(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
-			if stat.mlulinkInterfaceDisabled[i]["mluLinkCounterDisabled"] {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkEventCounterDisabled"] {
 				continue
 			}
-			_, _, _, _, _, _, _, _, _, errReplay, _, _, _, err := c.client.GetDeviceMLULinkCounter(stat.slot, uint(i))
+			_, replay, _, err := c.client.GetDeviceMLULinkEventCounter(stat.slot, uint(i))
 			if err != nil {
-				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkCounter", stat.slot, i))
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkEventCounter", stat.slot, i))
 				continue
 			}
 			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
-			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(errReplay), labelValues...)
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(replay), labelValues...)
+		}
+	}
+}
+
+func (c *cndevCollector) collectMLULinkCounterErrReplayFail(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo.Range {
+		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkEventCounterDisabled"] {
+				continue
+			}
+			_, _, replayFail, err := c.client.GetDeviceMLULinkEventCounter(stat.slot, uint(i))
+			if err != nil {
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkEventCounter", stat.slot, i))
+				continue
+			}
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(replayFail), labelValues...)
 		}
 	}
 }
@@ -1809,7 +1829,7 @@ func (c *cndevCollector) collectMLULinkCounterErrUncorrected(ch chan<- prometheu
 			if stat.mlulinkInterfaceDisabled[i]["mluLinkErrorCounterDisabled"] {
 				continue
 			}
-			_, _, errUncorrected, err := c.client.GetDeviceMLULinkErrorCounter(stat.slot, uint(i))
+			_, _, errUncorrected, _, _, err := c.client.GetDeviceMLULinkErrorCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkErrorCounter", stat.slot, i))
 				continue
@@ -1826,7 +1846,7 @@ func (c *cndevCollector) collectMLULinkCounterIllegalAccess(ch chan<- prometheus
 			if stat.mlulinkInterfaceDisabled[i]["mluLinkErrorCounterDisabled"] {
 				continue
 			}
-			counter, _, _, err := c.client.GetDeviceMLULinkErrorCounter(stat.slot, uint(i))
+			counter, _, _, _, _, err := c.client.GetDeviceMLULinkErrorCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkErrorCounter", stat.slot, i))
 				continue
@@ -1843,9 +1863,43 @@ func (c *cndevCollector) collectMLULinkCounterLinkDown(ch chan<- prometheus.Metr
 			if stat.mlulinkInterfaceDisabled[i]["mluLinkEventCounterDisabled"] {
 				continue
 			}
-			counter, err := c.client.GetDeviceMLULinkEventCounter(stat.slot, uint(i))
+			counter, _, _, err := c.client.GetDeviceMLULinkEventCounter(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkEventCounter", stat.slot, i))
+				continue
+			}
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(counter), labelValues...)
+		}
+	}
+}
+
+func (c *cndevCollector) collectMLULinkCounterRxBadFcs(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo.Range {
+		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkErrorCounterDisabled"] {
+				continue
+			}
+			_, _, _, counter, _, err := c.client.GetDeviceMLULinkErrorCounter(stat.slot, uint(i))
+			if err != nil {
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkErrorCounter", stat.slot, i))
+				continue
+			}
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(counter), labelValues...)
+		}
+	}
+}
+
+func (c *cndevCollector) collectMLULinkCounterTxBadFcs(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo.Range {
+		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkErrorCounterDisabled"] {
+				continue
+			}
+			_, _, _, _, counter, err := c.client.GetDeviceMLULinkErrorCounter(stat.slot, uint(i))
+			if err != nil {
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkErrorCounter", stat.slot, i))
 				continue
 			}
 			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})

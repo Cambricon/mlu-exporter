@@ -435,7 +435,10 @@ func TestCollect(t *testing.T) {
 			{1, 3},
 			{2, 1},
 		}
-		mluLinkPortMode = [][]int{
+		mluLinkEventCounterLinkDown   = mluLinkEventCounter
+		mluLinkEventCounterReplay     = mluLinkEventCounter
+		mluLinkEventCounterReplayFail = mluLinkEventCounter
+		mluLinkPortMode               = [][]int{
 			{1, 1},
 			{1, 1},
 			{1, 1},
@@ -521,6 +524,8 @@ func TestCollect(t *testing.T) {
 		mluLinkErrorCounter               = mluLinkEventCounter
 		mluLinkCorrectFecCounter          = mluLinkEventCounter
 		mluLinkUncorrectFecCounter        = mluLinkEventCounter
+		mluLinkRxBadFcsCounter            = mluLinkEventCounter
+		mluLinkTxBadFcsCounter            = mluLinkEventCounter
 		mluLinkSpeedFormat                = mluLinkPortMode
 		mluLinkStatusIsActive             = mluLinkPortMode
 		mluLinkStatusSerdesState          = mluLinkPortMode
@@ -557,7 +562,7 @@ func TestCollect(t *testing.T) {
 
 	mst.StatMap.Store(uuid1, MLUStat{
 		slot:       0,
-		model:      "MLU590",
+		model:      "MLU370",
 		uuid:       uuid1,
 		sn:         "sn1",
 		mcu:        "v1.1.1",
@@ -606,7 +611,7 @@ func TestCollect(t *testing.T) {
 
 	mst.StatMap.Store(uuid2, MLUStat{
 		slot:        1,
-		model:       "MLU590",
+		model:       "MLU370",
 		uuid:        uuid2,
 		sn:          "sn2",
 		mcu:         "v1.1.1",
@@ -648,7 +653,7 @@ func TestCollect(t *testing.T) {
 	})
 	mst.StatMap.Store(uuid3, MLUStat{
 		slot:   2,
-		model:  "MLU590",
+		model:  "MLU370",
 		uuid:   uuid3,
 		sn:     "sn3",
 		mcu:    "v1.1.1",
@@ -657,7 +662,7 @@ func TestCollect(t *testing.T) {
 	})
 	mst.StatMap.Store(uuid4, MLUStat{
 		slot:                   3,
-		model:                  "MLU590",
+		model:                  "MLU370",
 		uuid:                   uuid4,
 		sn:                     "sn4",
 		mcu:                    "v1.1.1",
@@ -722,8 +727,8 @@ func TestCollect(t *testing.T) {
 			mcndev.EXPECT().GetDeviceMLULinkCounter(stat.slot, uint(link)).Return(mluLinkCounterCntrReadByte[stat.slot][link], mluLinkCounterCntrReadPackage[stat.slot][link], mluLinkCounterCntrWriteByte[stat.slot][link], mluLinkCounterCntrWritePackage[stat.slot][link],
 				mluLinkCounterErrCorrected[stat.slot][link], mluLinkCounterErrCRC24[stat.slot][link], mluLinkCounterErrCRC32[stat.slot][link], mluLinkCounterErrEccDouble[stat.slot][link], mluLinkCounterErrFatal[stat.slot][link], mluLinkCounterErrReplay[stat.slot][link],
 				mluLinkCounterErrUncorrected[stat.slot][link], mluLinkCounterCntrCnpPackage[stat.slot][link], mluLinkCounterCntrPfcPackage[stat.slot][link], nil).AnyTimes()
-			mcndev.EXPECT().GetDeviceMLULinkErrorCounter(stat.slot, uint(link)).Return(mluLinkErrorCounter[stat.slot][link], mluLinkCorrectFecCounter[stat.slot][link], mluLinkUncorrectFecCounter[stat.slot][link], nil).AnyTimes()
-			mcndev.EXPECT().GetDeviceMLULinkEventCounter(stat.slot, uint(link)).Return(mluLinkEventCounter[stat.slot][link], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceMLULinkErrorCounter(stat.slot, uint(link)).Return(mluLinkErrorCounter[stat.slot][link], mluLinkCorrectFecCounter[stat.slot][link], mluLinkUncorrectFecCounter[stat.slot][link], mluLinkRxBadFcsCounter[stat.slot][link], mluLinkTxBadFcsCounter[stat.slot][link], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceMLULinkEventCounter(stat.slot, uint(link)).Return(mluLinkEventCounterLinkDown[stat.slot][link], mluLinkEventCounterReplay[stat.slot][link], mluLinkEventCounterReplayFail[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceOpticalInfo(stat.slot, uint(link)).Return(mluLinkOpticalPresent[stat.slot][link], mluLinkOpticalTemp[stat.slot][link], mluLinkOpticalVolt[stat.slot][link], mluLinkOpticalTxpwr[stat.slot][link], mluLinkOpticalRxpwr[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkPortMode(stat.slot, uint(link)).Return(mluLinkPortMode[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkPPI(stat.slot, uint(link)).Return(mluLinkPortPPI[stat.slot][link], nil).AnyTimes()

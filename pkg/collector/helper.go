@@ -483,9 +483,14 @@ func collectMLUInfo(mluInfo *MLUStatMap, cli cndev.Cndev, count uint) {
 		for j := 0; j < link; j++ {
 			mlulinkDis[j] = make(map[string]bool)
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkStatus", i, j)
-			if _, _, _, err = cli.GetDeviceMLULinkStatus(i, uint(j)); err != nil {
+			macState, _, cable, err := cli.GetDeviceMLULinkStatus(i, uint(j))
+			if err != nil {
 				log.Debug(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkStatus", i, j))
 				mlulinkDis[j]["mluLinkStatusDisabled"] = true
+			}
+			if cable == 1 && macState != 3 { // CNDEV_MLULINK_PRESENCE_STATE_PRESENT && !CNDEV_MLULINK_MAC_STATE_READY
+				log.Debugf("Start slot %d link %d MLULink State is not ready", i, j)
+				mluInfo.InProblem.Store(true)
 			}
 
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkState", i, j)
@@ -513,13 +518,13 @@ func collectMLUInfo(mluInfo *MLUStatMap, cli cndev.Cndev, count uint) {
 			}
 
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkEventCounter", i, j)
-			if _, err = cli.GetDeviceMLULinkEventCounter(i, uint(j)); err != nil {
+			if _, _, _, err = cli.GetDeviceMLULinkEventCounter(i, uint(j)); err != nil {
 				log.Debug(errors.Wrapf(err, "Slot %d GetDeviceMLULinkEventCounter", i))
 				mlulinkDis[j]["mluLinkEventCounterDisabled"] = true
 			}
 
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkErrorCounter", i, j)
-			if _, _, _, err = cli.GetDeviceMLULinkErrorCounter(i, uint(j)); err != nil {
+			if _, _, _, _, _, err = cli.GetDeviceMLULinkErrorCounter(i, uint(j)); err != nil {
 				log.Warn(errors.Wrapf(err, "Slot %d GetDeviceMLULinkErrorCounter", i))
 				mlulinkDis[j]["mluLinkErrorCounterDisabled"] = true
 			}
@@ -1164,9 +1169,9 @@ func EnsureMLUAllOK(cli cndev.Cndev, mluInfo *MLUStatMap, ignoreMissingLabels bo
 		collectMLUInfo(mluInfo, cli, counts)
 
 		if mluInfo.InProblem.Load() {
-			log.Warn("MLU labels are missing, will try to get them again")
+			log.Warn("MLU labels or MLULinks are missing, will try to get them again")
 			if !ignoreMissingLabels {
-				log.Debug("MLU labels are missing, now as ignoreMissingLabels is false, should try to get labels again")
+				log.Debug("MLU labels or MLULinks are missing, now as ignoreMissingLabels is false, should try to get labels again")
 				continue
 			}
 		} else {

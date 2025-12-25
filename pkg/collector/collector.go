@@ -86,7 +86,7 @@ func NewCollectors(enabled []string, metricConfig map[string]metrics.CollectorMe
 		bi.client = initClientSet()
 	}
 	for _, name := range enabled {
-		c := factories[name](metricConfig[name], bi)
+		c := factories[name](m[name], bi)
 		cs[name] = c
 	}
 	c := &Collectors{

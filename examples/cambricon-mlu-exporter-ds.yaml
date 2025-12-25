@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: cambricon-mlu-monitor
-        image: cambricon-mlu-exporter:v2.0.22
+        image: cambricon-mlu-exporter:v2.0.23
         imagePullPolicy: IfNotPresent
         command:
         - /usr/bin/mlu-exporter
@@ -75,6 +75,13 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: status.hostIP
+        resources:
+          limits:
+            cpu: 1
+            memory: 2Gi
+          requests:
+            cpu: 30m
+            memory: 64Mi
         securityContext:
           privileged: true
         volumeMounts:

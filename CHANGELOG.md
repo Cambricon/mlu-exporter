@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.0.23
+
+- Add mlulink fcs metrics
+- Verify mlulink mac state before startup
+- Add resource limits and requests
+
+
 ## v2.0.22
 
 - Add support for node IP labels

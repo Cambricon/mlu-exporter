@@ -15,11 +15,27 @@
 image: yellow.hub.cambricon.com/caip/ci/buildpack:20250311
 variables:
   GOPROXY: http://10.3.68.2:8080
+  CNDEV_HEADER_URL: "http://10.3.68.83:9000/public/release/cndev/include/v6.5.24/cndev.h"
+  HEADER_DEST_PATH: "${CI_PROJECT_DIR}/pkg/cndev/include/cndev.h"
 
 .only-mr-refs: &only-mr-refs
   refs:
     - merge_requests
     - master
+
+.get-header: &get-header
+  before_script:
+    - |
+      echo "Downloading cndev.h from file server..."
+      cd "${CI_PROJECT_DIR}"
+      echo "Working in: $(pwd)"
+      mkdir -p pkg/cndev/include
+      if wget -q "${CNDEV_HEADER_URL}" -O "${HEADER_DEST_PATH}"; then
+        echo "✓ Successfully downloaded cndev.h"
+      else
+        echo "✗ Failed to download cndev.h"
+        exit 1
+      fi
 
 stages:
   - lint
@@ -28,6 +44,7 @@ stages:
 
 run-shellcheck-lint:
   stage: lint
+  extends: .get-header
   image: 10.3.68.2:5001/cambricon/shellcheck-alpine:v0.7.0
   script:
     - find . -name '*.sh' -exec shellcheck {} +
@@ -39,6 +56,7 @@ run-shellcheck-lint:
 
 run-mlu-exporter-lint:
   stage: lint
+  extends: .get-header
   script:
     - make lint
   only:
@@ -46,6 +64,7 @@ run-mlu-exporter-lint:
 
 run-mlu-exporter-build:
   stage: build
+  extends: .get-header
   script:
     - make build
   only:
@@ -53,6 +72,7 @@ run-mlu-exporter-build:
 
 run-mlu-exporter-test:
   stage: test
+  extends: .get-header
   script:
     - make test
   only:

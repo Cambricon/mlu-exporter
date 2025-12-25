@@ -28,6 +28,8 @@ git clone https://github.com/Cambricon/mlu-exporter.git
 cd mlu-exporter
 ```
 
+Note: when building the mlu exporter you must obtain the cndev.h header file (version 6.5.24) and place it into the repository at pkg/cndev/include/. This file is provided with Cambricon driver packages.
+
 Set the following environment variables if you need.
 
 | env        | description                                                                   |
@@ -69,7 +71,7 @@ docker run -d \
 --privileged=true \
 --pid=host \
 -e ENV_NODE_NAME={nodeName} \
-cambricon-mlu-exporter:v2.0.22
+cambricon-mlu-exporter:v2.0.23
 ```
 
 Then use the following command to get the metrics.
@@ -86,7 +88,7 @@ docker run -d \
 -v examples/metrics.yaml:/etc/mlu-exporter/metrics.yaml \
 --privileged=true \
 --pid=host \
-cambricon-mlu-exporter:v2.0.22 \
+cambricon-mlu-exporter:v2.0.23 \
 mlu-exporter \
 --metrics-config=/etc/mlu-exporter/metrics.yaml \
 --metrics-path=/metrics \

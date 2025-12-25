@@ -133,8 +133,8 @@ type Cndev interface {
 	GetDeviceMimProfileMaxInstanceCount(idx, profile uint) (int, error)
 	GetDeviceMLULinkCapability(idx, link uint) (uint, uint, error)
 	GetDeviceMLULinkCounter(idx, link uint) (uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, error)
-	GetDeviceMLULinkErrorCounter(idx, link uint) (uint64, uint64, uint64, error)
-	GetDeviceMLULinkEventCounter(idx, link uint) (uint64, error)
+	GetDeviceMLULinkErrorCounter(idx, link uint) (uint64, uint64, uint64, uint64, uint64, error)
+	GetDeviceMLULinkEventCounter(idx, link uint) (uint64, uint64, uint64, error)
 	GetDeviceMLULinkPortMode(idx, link uint) (int, error)
 	GetDeviceMLULinkPortNumber(idx uint) int
 	GetDeviceMLULinkPPI(idx, link uint) (string, error)
@@ -874,24 +874,24 @@ func (c *cndev) GetDeviceMLULinkCounter(idx, link uint) (uint64, uint64, uint64,
 		uint64(cardMLULinkCount.cntrPfcPackage), errorString(r)
 }
 
-func (c *cndev) GetDeviceMLULinkErrorCounter(idx, link uint) (uint64, uint64, uint64, error) {
+func (c *cndev) GetDeviceMLULinkErrorCounter(idx, link uint) (uint64, uint64, uint64, uint64, uint64, error) {
 	if ret := dl.checkExist("cndevGetMLULinkErrorCounter"); ret != C.CNDEV_SUCCESS {
-		return 0, 0, 0, errorString(ret)
+		return 0, 0, 0, 0, 0, errorString(ret)
 	}
 
 	var cardMLULinkErrorCounter C.cndevMLULinkErrorCounter_t
 	r := C.cndevGetMLULinkErrorCounter(&cardMLULinkErrorCounter, c.Load(idx), C.int(link))
-	return uint64(cardMLULinkErrorCounter.illegalAccessCnt), uint64(cardMLULinkErrorCounter.correctFecCnt), uint64(cardMLULinkErrorCounter.uncorrectFecCnt), errorString(r)
+	return uint64(cardMLULinkErrorCounter.illegalAccessCnt), uint64(cardMLULinkErrorCounter.correctFecCnt), uint64(cardMLULinkErrorCounter.uncorrectFecCnt), uint64(cardMLULinkErrorCounter.rxBadFcsPkt), uint64(cardMLULinkErrorCounter.txBadFcsPkt), errorString(r)
 }
 
-func (c *cndev) GetDeviceMLULinkEventCounter(idx, link uint) (uint64, error) {
+func (c *cndev) GetDeviceMLULinkEventCounter(idx, link uint) (uint64, uint64, uint64, error) {
 	if ret := dl.checkExist("cndevGetMLULinkEventCounter"); ret != C.CNDEV_SUCCESS {
-		return 0, errorString(ret)
+		return 0, 0, 0, errorString(ret)
 	}
 
 	var cardMLULinkEventCounter C.cndevMLULinkEventCounter_t
 	r := C.cndevGetMLULinkEventCounter(&cardMLULinkEventCounter, c.Load(idx), C.int(link))
-	return uint64(cardMLULinkEventCounter.linkDown), errorString(r)
+	return uint64(cardMLULinkEventCounter.linkDown), uint64(cardMLULinkEventCounter.replay), uint64(cardMLULinkEventCounter.replayFail), errorString(r)
 }
 
 func (c *cndev) GetDeviceMLULinkPortMode(idx, link uint) (int, error) {

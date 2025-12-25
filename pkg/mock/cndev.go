@@ -559,14 +559,16 @@ func (mr *CndevMockRecorder) GetDeviceMLULinkCounter(idx, link any) *gomock.Call
 }
 
 // GetDeviceMLULinkErrorCounter mocks base method.
-func (m *Cndev) GetDeviceMLULinkErrorCounter(idx, link uint) (uint64, uint64, uint64, error) {
+func (m *Cndev) GetDeviceMLULinkErrorCounter(idx, link uint) (uint64, uint64, uint64, uint64, uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDeviceMLULinkErrorCounter", idx, link)
 	ret0, _ := ret[0].(uint64)
 	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(uint64)
-	ret3, _ := ret[3].(error)
-	return ret0, ret1, ret2, ret3
+	ret3, _ := ret[3].(uint64)
+	ret4, _ := ret[4].(uint64)
+	ret5, _ := ret[5].(error)
+	return ret0, ret1, ret2, ret3, ret4, ret5
 }
 
 // GetDeviceMLULinkErrorCounter indicates an expected call of GetDeviceMLULinkErrorCounter.
@@ -576,12 +578,14 @@ func (mr *CndevMockRecorder) GetDeviceMLULinkErrorCounter(idx, link any) *gomock
 }
 
 // GetDeviceMLULinkEventCounter mocks base method.
-func (m *Cndev) GetDeviceMLULinkEventCounter(idx, link uint) (uint64, error) {
+func (m *Cndev) GetDeviceMLULinkEventCounter(idx, link uint) (uint64, uint64, uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDeviceMLULinkEventCounter", idx, link)
 	ret0, _ := ret[0].(uint64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(uint64)
+	ret2, _ := ret[2].(uint64)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
 }
 
 // GetDeviceMLULinkEventCounter indicates an expected call of GetDeviceMLULinkEventCounter.
