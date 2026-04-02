@@ -203,6 +203,7 @@ const (
 	MLULinkRead  = "mlulink_read"
 	MLULinkWrite = "mlulink_write"
 
+	HostBootTime = "host_boot_time"
 	HostCPUTotal = "host_cpu_total"
 	HostCPUIdle  = "host_cpu_idle"
 	HostMemTotal = "host_memory_total"

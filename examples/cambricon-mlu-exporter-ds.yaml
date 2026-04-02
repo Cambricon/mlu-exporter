@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: cambricon-mlu-monitor
-        image: cambricon-mlu-exporter:v2.0.23
+        image: cambricon-mlu-exporter:v2.0.24
         imagePullPolicy: IfNotPresent
         command:
         - /usr/bin/mlu-exporter

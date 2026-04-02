@@ -39,6 +39,21 @@ func (m *Host) EXPECT() *HostMockRecorder {
 	return m.recorder
 }
 
+// GetBootTime mocks base method.
+func (m *Host) GetBootTime() (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBootTime")
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBootTime indicates an expected call of GetBootTime.
+func (mr *HostMockRecorder) GetBootTime() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBootTime", reflect.TypeOf((*Host)(nil).GetBootTime))
+}
+
 // GetCPUStats mocks base method.
 func (m *Host) GetCPUStats() (float64, float64, error) {
 	m.ctrl.T.Helper()

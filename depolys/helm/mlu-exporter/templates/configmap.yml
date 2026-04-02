@@ -2450,6 +2450,12 @@ data:
           xid_mlu_instance_id: xid_mlu_instance_id
         name: last_xid_error
     host:
+      host_boot_time:
+        help: The boot time of host machine, unit is 's'
+        labels:
+          node: node
+          node_ip: node_ip
+        name: host_boot_time
       host_cpu_idle:
         help: The cpu idle metric of host machine, unit is the same as which in /proc/stat
         labels:

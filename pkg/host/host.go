@@ -17,12 +17,14 @@ package host
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
 
 type Host interface {
+	GetBootTime() (int64, error)
 	GetCPUStats() (float64, float64, error)
 	GetMemoryStats() (float64, float64, error)
 }
@@ -32,6 +34,28 @@ type host struct {
 
 func NewHostClient() Host {
 	return &host{}
+}
+
+func (h *host) GetBootTime() (int64, error) {
+	contents, err := os.ReadFile("/proc/stat")
+	if err != nil {
+		return 0, err
+	}
+	lines := strings.Split(string(contents), "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "btime") {
+			parts := strings.Fields(line)
+			if len(parts) >= 2 {
+				btime, err := strconv.ParseInt(parts[1], 10, 64)
+				if err != nil {
+					return 0, fmt.Errorf("parse btime error: %v", err)
+				}
+				return btime, nil
+			}
+			return 0, fmt.Errorf("invalid btime line: %s", line)
+		}
+	}
+	return 0, fmt.Errorf("btime not found")
 }
 
 func (h *host) GetCPUStats() (float64, float64, error) {

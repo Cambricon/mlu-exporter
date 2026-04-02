@@ -43,6 +43,7 @@ func NewHostCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 		client:  host.NewHostClient(),
 	}
 	c.fnMap = map[string]interface{}{
+		HostBootTime: c.collectBootTime,
 		HostCPUIdle:  c.collectCPUIdle,
 		HostCPUTotal: c.collectCPUTotal,
 		HostMemTotal: c.collectMemoryTotal,
@@ -74,6 +75,15 @@ func (c *hostCollector) collect(ch chan<- prometheus.Metric) {
 			f(ch, m)
 		}
 	}
+}
+
+func (c *hostCollector) collectBootTime(ch chan<- prometheus.Metric, m metrics.Metric) {
+	btime, err := c.client.GetBootTime()
+	if err != nil {
+		log.Errorln(errors.Wrap(err, "GetBootTime"))
+		return
+	}
+	ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(btime), c.host, c.hostIP)
 }
 
 func (c *hostCollector) collectCPUIdle(ch chan<- prometheus.Metric, m metrics.Metric) {

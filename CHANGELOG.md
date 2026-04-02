@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.0.24
+
+- Add host boot time metrics
+
 ## v2.0.23
 
 - Add mlulink fcs metrics

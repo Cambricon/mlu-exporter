@@ -20520,6 +20520,24 @@
     }
   },
   {
+    "Desc": "Desc{fqName: \"host_boot_time\", help: \"The boot time of host machine, unit is 's'\", constLabels: {}, variableLabels: [node node_ip]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        }
+      ],
+      "gauge": {
+        "value": 1764929552
+      }
+    }
+  },
+  {
     "Desc": "Desc{fqName: \"host_cpu_idle\", help: \"The cpu idle metric of host machine, unit is the same as which in /proc/stat\", constLabels: {}, variableLabels: [node node_ip]}",
     "Metric": {
       "label": [

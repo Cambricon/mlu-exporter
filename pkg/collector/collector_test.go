@@ -95,6 +95,7 @@ func TestCollect(t *testing.T) {
 		// fake node info
 		node         = "machine1"
 		nodeIP       = "machineip1"
+		hostBootTime = int64(1764929552)
 		hostCPUTotal = float64(6185912)
 		hostCPUIdle  = float64(34459)
 		hostMemTotal = float64(24421820)
@@ -779,6 +780,7 @@ func TestCollect(t *testing.T) {
 
 	// host mock response
 	host := mock.NewHost(ctrl)
+	host.EXPECT().GetBootTime().Return(hostBootTime, nil).AnyTimes()
 	host.EXPECT().GetCPUStats().Return(hostCPUTotal, hostCPUIdle, nil).AnyTimes()
 	host.EXPECT().GetMemoryStats().Return(hostMemTotal, hostMemFree, nil).AnyTimes()
 
