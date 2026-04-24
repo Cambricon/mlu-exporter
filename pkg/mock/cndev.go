@@ -1449,3 +1449,17 @@ func (mr *CndevMockRecorder) Release() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Release", reflect.TypeOf((*Cndev)(nil).Release))
 }
+
+// ReleaseCndev mocks base method.
+func (m *Cndev) ReleaseCndev() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReleaseCndev")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ReleaseCndev indicates an expected call of ReleaseCndev.
+func (mr *CndevMockRecorder) ReleaseCndev() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReleaseCndev", reflect.TypeOf((*Cndev)(nil).ReleaseCndev))
+}

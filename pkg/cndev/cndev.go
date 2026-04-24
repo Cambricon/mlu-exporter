@@ -98,6 +98,7 @@ type ChassisDevInfo struct {
 type Cndev interface {
 	Init(healthCheck bool) error
 	Release() error
+	ReleaseCndev() error
 
 	DeviceMimModeEnabled(idx uint) (bool, error)
 	DeviceSmluModeEnabled(idx uint) (bool, error)
@@ -218,6 +219,11 @@ func (c *cndev) Init(healthCheck bool) error {
 func (c *cndev) Release() error {
 	r := dl.cndevRelease()
 	return errorString(r)
+}
+
+func (c *cndev) ReleaseCndev() error {
+	ret := C.cndevRelease()
+	return errorString(ret)
 }
 
 func (c *cndev) DeviceMimModeEnabled(idx uint) (bool, error) {

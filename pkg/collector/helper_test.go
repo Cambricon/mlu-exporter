@@ -14,6 +14,7 @@ func TestEnsureMLUAllOK(t *testing.T) {
 	defer ctrl.Finish()
 
 	mcndev := mock.NewCndev(ctrl)
+	mcndev.EXPECT().ReleaseCndev().Return(nil).AnyTimes()
 	mcndev.EXPECT().Init(false).Return(nil).AnyTimes()
 	mcndev.EXPECT().Init(true).Return(nil).AnyTimes()
 	mcndev.EXPECT().GetDeviceCount().Return(uint(2), nil).AnyTimes()

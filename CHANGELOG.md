@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.0
+
+- Optimize cndev initialization retry logic
+
 ## v2.0.24
 
 - Add host boot time metrics

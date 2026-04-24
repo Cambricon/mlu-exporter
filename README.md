@@ -6,12 +6,11 @@ Prometheus exporter for Cambricon MLU metrics, written in Go with pluggable metr
 
 The prerequisites for running Cambricon MLU Exporter:
 
-- MLU270, MLU270-X5K, MLU220, MLU290, MLU370 devices
-- For MLU 2xx needs driver >= 4.9.13
-- For MLU 3xx needs driver >= 4.20.9
-- For MLU 5xx needs driver >= 5.0.0
-- For MLU 2xx、3xx needs cndev >= 2.8.2 on your building machine
-- For MLU 5xx needs cndev >= 3.0.1 on your building machine
+- For mtp_270、mtp_290 needs driver >= 4.9.13
+- For mtp_372 needs driver >= 4.20.9
+- For mtp_592 needs driver >= 5.0.0
+- For mtp_270、mtp_290、mtp_372 needs cndev >= 2.8.2 on your building machine
+- For mtp_592 needs cndev >= 3.0.1 on your building machine
 
 For MLU driver version before 4.9.13, please use [release v1.5.3].
 
@@ -71,7 +70,7 @@ docker run -d \
 --privileged=true \
 --pid=host \
 -e ENV_NODE_NAME={nodeName} \
-cambricon-mlu-exporter:v2.0.24
+cambricon-mlu-exporter:v2.1.0
 ```
 
 Then use the following command to get the metrics.
@@ -88,7 +87,7 @@ docker run -d \
 -v examples/metrics.yaml:/etc/mlu-exporter/metrics.yaml \
 --privileged=true \
 --pid=host \
-cambricon-mlu-exporter:v2.0.24 \
+cambricon-mlu-exporter:v2.1.0 \
 mlu-exporter \
 --metrics-config=/etc/mlu-exporter/metrics.yaml \
 --metrics-path=/metrics \

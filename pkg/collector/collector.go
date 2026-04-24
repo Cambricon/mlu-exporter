@@ -17,6 +17,7 @@ package collector
 import (
 	"sync"
 
+	"github.com/Cambricon/mlu-exporter/pkg/cndev"
 	"github.com/Cambricon/mlu-exporter/pkg/metrics"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -57,22 +58,24 @@ type rdmaDevice struct {
 }
 
 type BaseInfo struct {
-	client     kubernetes.Interface
-	host       string
-	hostIP     string
-	mode       string
-	num        uint
-	rdmaDevice []rdmaDevice
+	client      kubernetes.Interface
+	cndevClient cndev.Cndev
+	host        string
+	hostIP      string
+	mode        string
+	num         uint
+	rdmaDevice  []rdmaDevice
 }
 
-func NewCollectors(enabled []string, metricConfig map[string]metrics.CollectorMetrics, num uint, host string, hostIP string, mode string, shareInfo *MLUStatMap, filterPush bool) *Collectors {
+func NewCollectors(enabled []string, metricConfig map[string]metrics.CollectorMetrics, num uint, host string, hostIP string, mode string, shareInfo *MLUStatMap, cndevClient cndev.Cndev, filterPush bool) *Collectors {
 	m := filter(metricConfig, filterPush)
 	cs := make(map[string]Collector)
 	bi := BaseInfo{
-		host:       host,
-		hostIP:     hostIP,
-		mode:       mode,
-		rdmaDevice: getRDMAPCIeInfo(),
+		cndevClient: cndevClient,
+		host:        host,
+		hostIP:      hostIP,
+		mode:        mode,
+		rdmaDevice:  getRDMAPCIeInfo(),
 	}
 	if mode == "env-share" {
 		bi.num = num

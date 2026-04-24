@@ -865,7 +865,25 @@ func collectMLUInfo(mluInfo *MLUStatMap, cli cndev.Cndev, count uint) {
 			dis["activityDisabled"] = true
 		}
 
-		mluInfo.StatMap.Store(uuid, MLUStat{
+		// Use slot as key when uuid is empty to avoid duplicate metrics
+		key := uuid
+		if key == "" {
+			key = strconv.FormatUint(uint64(i), 10)
+		}
+
+		// Delete old entry with the same slot to avoid duplicate metrics when UUID changes
+		mluInfo.StatMap.Range(func(k, value interface{}) bool {
+			if stat := value.(MLUStat); stat.slot == i {
+				if k.(string) != key {
+					log.Warnf("Slot %d key changed from '%s' to '%s', deleting old entry", i, k.(string), key)
+					mluInfo.StatMap.Delete(k)
+				}
+				return false
+			}
+			return true
+		})
+
+		mluInfo.StatMap.Store(key, MLUStat{
 			cndevInterfaceDisabled:   dis,
 			mlulinkInterfaceDisabled: mlulinkDis,
 			driver:                   calcVersion(driverMajor, driverMinor, driverBuild),
@@ -1123,6 +1141,10 @@ func EnsureMLUAllOK(cli cndev.Cndev, mluInfo *MLUStatMap, ignoreMissingLabels bo
 				continue
 			}
 		} else {
+			if err := cli.ReleaseCndev(); err != nil {
+				log.Errorf("Release cndev client failed with err: %v", err)
+				continue
+			}
 			if err := cli.Init(true); err != nil {
 				log.Errorf("Init cndev client failed with err: %v", err)
 				continue

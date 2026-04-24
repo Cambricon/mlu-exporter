@@ -48,6 +48,7 @@ func NewCallback(
 	metricName, metricPrefix, host, hostIP, logFile string,
 	retryTimes int,
 	jobName string,
+	cndevClient cndev.Cndev,
 ) (*Callback, error) {
 
 	// xid callback was disabled
@@ -75,12 +76,8 @@ func NewCallback(
 		return nil, err
 	}
 
-	cndevcli := cndev.NewCndevClient()
-	if err := cndevcli.Init(true); err != nil {
-		return nil, err
-	}
 	c := &Callback{
-		cndevcli:   cndevcli,
+		cndevcli:   cndevClient,
 		client:     client,
 		sharedInfo: info,
 		metric:     m,

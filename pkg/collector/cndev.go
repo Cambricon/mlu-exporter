@@ -46,7 +46,7 @@ type cndevCollector struct {
 func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 	c := &cndevCollector{
 		baseInfo:      bi,
-		client:        cndev.NewCndevClient(),
+		client:        bi.cndevClient,
 		metrics:       m,
 		mluXIDCounter: map[cndev.XIDInfo]int{},
 		lastXID:       map[cndev.DeviceInfo]cndev.XIDInfo{},
@@ -230,9 +230,6 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 
 func (c *cndevCollector) init(info *MLUStatMap) error {
 	c.sharedInfo = info
-	if err := c.client.Init(true); err != nil {
-		return err
-	}
 
 	slots := []int{}
 	for _, stat := range c.sharedInfo.Range {

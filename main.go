@@ -108,18 +108,18 @@ func main() {
 	}
 
 	log.Info("Start loading cndev")
-	cndevcli := cndev.NewCndevClient()
+	cndevClient := cndev.NewCndevClient()
 	if err := collector.EnsureCndevLib(); err != nil {
 		log.Panicf("Failed to ensure CNDEV lib %v", err)
 	}
 
 	mluInfo := &collector.MLUStatMap{}
-	collector.EnsureMLUAllOK(cndevcli, mluInfo, true)
+	collector.EnsureMLUAllOK(cndevClient, mluInfo, true)
 	if mluInfo.InProblem.Load() {
 		log.Warn("MLU is in problem state")
-		go collector.EnsureMLUAllOK(cndevcli, mluInfo, false)
+		go collector.EnsureMLUAllOK(cndevClient, mluInfo, false)
 	}
-	defer func() { log.Println("Shutdown of CNDEV returned:", cndevcli.Release()) }()
+	defer func() { log.Println("Shutdown of CNDEV returned:", cndevClient.Release()) }()
 
 	metricConfig := metrics.GetMetrics(options.MetricsConfig, options.MetricsPrefix)
 	log.Debug("Start WatchMetrics")
@@ -134,8 +134,8 @@ func main() {
 				log.Panicf("Build push client %v", err)
 			}
 		}
-		startPushMode(client, options, metricConfig, mluInfo)
-		startCallbackMode(client, options, metricConfig, mluInfo)
+		startPushMode(client, options, metricConfig, mluInfo, cndevClient)
+		startCallbackMode(client, options, metricConfig, mluInfo, cndevClient)
 	}
 
 	c := collector.NewCollectors(
@@ -146,6 +146,7 @@ func main() {
 		options.HostIP,
 		options.VirtualMode,
 		mluInfo,
+		cndevClient,
 		false,
 	)
 	log.Debug("Start RegisterWatcher")
@@ -156,8 +157,7 @@ func main() {
 	http.Handle(options.MetricsPath, promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
 
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
-		cli := cndev.NewCndevClient()
-		if err := cli.Init(true); err != nil {
+		if err := cndevClient.Init(true); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("error: %v", errors.Wrap(err, "Init"))))
 			log.Errorln(errors.Wrap(err, "Init"))
@@ -186,7 +186,7 @@ func main() {
 	log.Fatal(server.ListenAndServe())
 }
 
-func startPushMode(client *http.Client, options Options, metricConfig map[string]metrics.CollectorMetrics, mluInfo *collector.MLUStatMap) {
+func startPushMode(client *http.Client, options Options, metricConfig map[string]metrics.CollectorMetrics, mluInfo *collector.MLUStatMap, cndevClient cndev.Cndev) {
 	if options.PushIntervalMS < 100 {
 		log.Fatal("Minimum of push-interval-ms is 100")
 	}
@@ -199,6 +199,7 @@ func startPushMode(client *http.Client, options Options, metricConfig map[string
 		options.HostIP,
 		options.VirtualMode,
 		mluInfo,
+		cndevClient,
 		true,
 	)
 
@@ -228,7 +229,7 @@ func startPushMode(client *http.Client, options Options, metricConfig map[string
 	}()
 }
 
-func startCallbackMode(client *http.Client, options Options, metricConfig map[string]metrics.CollectorMetrics, mluInfo *collector.MLUStatMap) {
+func startCallbackMode(client *http.Client, options Options, metricConfig map[string]metrics.CollectorMetrics, mluInfo *collector.MLUStatMap, cndevClient cndev.Cndev) {
 	cb, err := collector.NewCallback(
 		client,
 		options.PushGatewayURL,
@@ -241,6 +242,7 @@ func startCallbackMode(client *http.Client, options Options, metricConfig map[st
 		options.LogFileForXIDMetricFailed,
 		options.XIDErrorRetryTimes,
 		options.PushJobName,
+		cndevClient,
 	)
 	if err != nil {
 		log.Debugln("XID Callback not enabled")
