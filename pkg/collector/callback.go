@@ -113,7 +113,7 @@ func (c *Callback) Start() {
 	sort.Ints(slots)
 
 	if len(slots) > 0 {
-		manager := GetXIDEventManager(c.cndevcli)
+		manager := GetXIDEventManager(c.cndevcli, c.sharedInfo)
 		manager.RegisterHandler(c)
 		manager.SetSlots(slots)
 		go manager.Start()

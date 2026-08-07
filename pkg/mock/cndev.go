@@ -1422,18 +1422,60 @@ func (mr *CndevMockRecorder) Init(healthCheck any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*Cndev)(nil).Init), healthCheck)
 }
 
-// RegisterEventsHandleAndWait mocks base method.
-func (m *Cndev) RegisterEventsHandleAndWait(slots []int, ch chan cndev.XIDInfoWithTimestamp) error {
+// MpmCollect mocks base method.
+func (m *Cndev) MpmCollect(idx uint, metricIDs []cndev.MpmMetricID) ([]cndev.MpmMetricResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RegisterEventsHandleAndWait", slots, ch)
+	ret := m.ctrl.Call(m, "MpmCollect", idx, metricIDs)
+	ret0, _ := ret[0].([]cndev.MpmMetricResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MpmCollect indicates an expected call of MpmCollect.
+func (mr *CndevMockRecorder) MpmCollect(idx, metricIDs any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MpmCollect", reflect.TypeOf((*Cndev)(nil).MpmCollect), idx, metricIDs)
+}
+
+// MpmQueryDeviceSupport mocks base method.
+func (m *Cndev) MpmQueryDeviceSupport(idx uint) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MpmQueryDeviceSupport", idx)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MpmQueryDeviceSupport indicates an expected call of MpmQueryDeviceSupport.
+func (mr *CndevMockRecorder) MpmQueryDeviceSupport(idx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MpmQueryDeviceSupport", reflect.TypeOf((*Cndev)(nil).MpmQueryDeviceSupport), idx)
+}
+
+// MpmRelease mocks base method.
+func (m *Cndev) MpmRelease() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "MpmRelease")
+}
+
+// MpmRelease indicates an expected call of MpmRelease.
+func (mr *CndevMockRecorder) MpmRelease() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MpmRelease", reflect.TypeOf((*Cndev)(nil).MpmRelease))
+}
+
+// RegisterEventsHandleAndWait mocks base method.
+func (m *Cndev) RegisterEventsHandleAndWait(slots []int, ch chan cndev.XIDInfoWithTimestamp, stopCh chan struct{}) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RegisterEventsHandleAndWait", slots, ch, stopCh)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RegisterEventsHandleAndWait indicates an expected call of RegisterEventsHandleAndWait.
-func (mr *CndevMockRecorder) RegisterEventsHandleAndWait(slots, ch any) *gomock.Call {
+func (mr *CndevMockRecorder) RegisterEventsHandleAndWait(slots, ch, stopCh any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterEventsHandleAndWait", reflect.TypeOf((*Cndev)(nil).RegisterEventsHandleAndWait), slots, ch)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterEventsHandleAndWait", reflect.TypeOf((*Cndev)(nil).RegisterEventsHandleAndWait), slots, ch, stopCh)
 }
 
 // Release mocks base method.

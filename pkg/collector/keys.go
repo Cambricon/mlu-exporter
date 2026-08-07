@@ -16,6 +16,7 @@ package collector
 
 const (
 	Cndev        = "cndev"
+	Mpm          = "mpm"
 	PodResources = "podresources"
 	Host         = "host"
 
@@ -295,4 +296,15 @@ const (
 	Namespace = "namespace"
 	Pod       = "pod"
 	VF        = "vf"
+
+	// MPM metric keys
+	MpmIPUUtil              = "mpm_ipu_utilization"
+	MpmMLUUtil              = "mpm_mlu_utilization"
+	MpmTensorUtil           = "mpm_tensor_utilization"
+	MpmPCIeTxPerSec         = "mpm_pcie_tx_bandwidth"
+	MpmPCIeRxPerSec         = "mpm_pcie_rx_bandwidth"
+	MpmMLULinkTotalTxPerSec = "mpm_mlulink_total_tx_bandwidth"
+	MpmMLULinkTotalRxPerSec = "mpm_mlulink_total_rx_bandwidth"
+	MpmMLULinkTxPerSec      = "mpm_mlulink_tx_bandwidth"
+	MpmMLULinkRxPerSec      = "mpm_mlulink_rx_bandwidth"
 )

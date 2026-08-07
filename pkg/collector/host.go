@@ -62,6 +62,9 @@ func (c *hostCollector) updateMetrics(m metrics.CollectorMetrics) {
 	c.metrics = m
 }
 
+func (c *hostCollector) start() {}
+func (c *hostCollector) stop()  {}
+
 func (c *hostCollector) collect(ch chan<- prometheus.Metric) {
 	for name, m := range c.metrics {
 		fn, ok := c.fnMap[name]

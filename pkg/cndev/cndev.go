@@ -95,6 +95,35 @@ type ChassisDevInfo struct {
 	Mfc   string
 }
 
+type MpmMetricID int
+
+var (
+	MpmMetricIPUUtil              MpmMetricID = MpmMetricID(C.CNDEV_MPM_METRIC_IPU_UTIL)
+	MpmMetricMLUUtil              MpmMetricID = MpmMetricID(C.CNDEV_MPM_METRIC_MLU_UTIL)
+	MpmMetricTensorUtil           MpmMetricID = MpmMetricID(C.CNDEV_MPM_METRIC_TENSOR_UTIL)
+	MpmMetricPCIeTxPerSec         MpmMetricID = MpmMetricID(C.CNDEV_MPM_METRIC_PCIE_TX_PER_SEC)
+	MpmMetricPCIeRxPerSec         MpmMetricID = MpmMetricID(C.CNDEV_MPM_METRIC_PCIE_RX_PER_SEC)
+	MpmMetricMLULinkTotalTxPerSec MpmMetricID = MpmMetricID(C.CNDEV_MPM_METRIC_MLULINK_TOTAL_TX_PER_SEC)
+	MpmMetricMLULinkTotalRxPerSec MpmMetricID = MpmMetricID(C.CNDEV_MPM_METRIC_MLULINK_TOTAL_RX_PER_SEC)
+)
+
+// Maximum number of MLULinks per device (L0..L17, see cndev.h CNDEV_MPM_METRIC_MLULINK_L0_TX_PER_SEC .. CNDEV_MPM_METRIC_MLULINK_L17_RX_PER_SEC)
+const MpmMaxLinks = 18
+
+// Per-link MLULink metric IDs start at 62 (L0Tx, see cndev.h CNDEV_MPM_METRIC_MLULINK_L0_TX_PER_SEC)
+// and follow the pattern: L{n}Tx = 62 + 2*n, L{n}Rx = 63 + 2*n.
+func MpmLinkTxMetricID(linkIdx int) MpmMetricID { return MpmMetricID(62 + 2*linkIdx) }
+func MpmLinkRxMetricID(linkIdx int) MpmMetricID { return MpmMetricID(63 + 2*linkIdx) }
+
+type MpmMetricResult struct {
+	MetricID  MpmMetricID
+	Value     float64
+	Ret       int
+	LongName  string
+	ShortName string
+	Unit      string
+}
+
 type Cndev interface {
 	Init(healthCheck bool) error
 	Release() error
@@ -181,9 +210,12 @@ type Cndev interface {
 	GetDeviceVideoCodecUtil(idx uint) ([]int, []int, error)
 	GetDeviceVoltageInfo(idx uint) (int, int, int, error)
 	GetDeviceFrequencyStatus(idx uint) (int, error)
-	RegisterEventsHandleAndWait(slots []int, ch chan XIDInfoWithTimestamp) error
+	RegisterEventsHandleAndWait(slots []int, ch chan XIDInfoWithTimestamp, stopCh chan struct{}) error
 	GetTopologyRelationship(domain1, bus1, device1, function1, domain2, bus2, device2, function2 uint) (int, error)
 	GetSupportedEventTypes(idx uint) error
+	MpmQueryDeviceSupport(idx uint) (bool, error)
+	MpmCollect(idx uint, metricIDs []MpmMetricID) ([]MpmMetricResult, error)
+	MpmRelease()
 }
 
 var (
@@ -192,6 +224,7 @@ var (
 
 type cndev struct {
 	cndevHandleMap *sync.Map
+	mpmSamplesMap  *sync.Map
 }
 
 func (c *cndev) Load(key uint) C.cndevDevice_t {
@@ -206,6 +239,7 @@ func (c *cndev) Load(key uint) C.cndevDevice_t {
 func NewCndevClient() Cndev {
 	return &cndev{
 		cndevHandleMap: cndevGlobalHandleMap,
+		mpmSamplesMap:  &sync.Map{},
 	}
 }
 
@@ -217,6 +251,7 @@ func (c *cndev) Init(healthCheck bool) error {
 }
 
 func (c *cndev) Release() error {
+	c.MpmRelease()
 	r := dl.cndevRelease()
 	return errorString(r)
 }
@@ -1720,7 +1755,12 @@ func (c *cndev) GetSupportedEventTypes(idx uint) error {
 	return errorString(r)
 }
 
-func (c *cndev) RegisterEventsHandleAndWait(slots []int, ch chan XIDInfoWithTimestamp) error {
+// eventWaitTimeout is the timeout in milliseconds for cndevEventWait.
+// Using a finite timeout instead of infinite (-1) allows the goroutine to
+// periodically check stopCh, ensuring timely shutdown even when no events arrive.
+const eventWaitTimeout = 60000 // 60 seconds
+
+func (c *cndev) RegisterEventsHandleAndWait(slots []int, ch chan XIDInfoWithTimestamp, stopCh chan struct{}) error {
 	if ret := dl.checkExist("cndevEventHandleCreate", "cndevRegisterEvents"); ret != C.CNDEV_SUCCESS {
 		return errorString(ret)
 	}
@@ -1738,23 +1778,55 @@ func (c *cndev) RegisterEventsHandleAndWait(slots []int, ch chan XIDInfoWithTime
 		}
 	}
 
-	go waitEvents(handle, ch)
+	go waitEvents(handle, ch, stopCh)
 	return nil
 }
 
-func waitEvents(handle C.cndevEventHandle, ch chan XIDInfoWithTimestamp) {
+func waitEvents(handle C.cndevEventHandle, ch chan XIDInfoWithTimestamp, stopCh chan struct{}) {
 	if ret := dl.checkExist("cndevEventWait"); ret != C.CNDEV_SUCCESS {
 		return
 	}
+	defer func() {
+		if ret := dl.checkExist("cndevEventHandleDestroy"); ret == C.CNDEV_SUCCESS {
+			C.cndevEventHandleDestroy(handle)
+		}
+	}()
 
 	var ret C.cndevRet_t
 	var eventData C.cndevEventData_t
 	for {
-		ret = C.cndevEventWait(handle, &eventData, -1)
+		ret = C.cndevEventWait(handle, &eventData, C.int(eventWaitTimeout))
+
+		// Handle timeout: no event arrived, but we can now check stopCh
+		if ret == C.CNDEV_ERROR_TIMEOUT {
+			select {
+			case <-stopCh:
+				log.Debug("waitEvents exiting on stop signal")
+				return
+			default:
+				continue
+			}
+		}
+
 		if err := errorString(ret); err != nil {
 			log.Errorf("wait event failed: %v", err)
-			continue
+			select {
+			case <-stopCh:
+				log.Debug("waitEvents exiting on stop signal after error")
+				return
+			default:
+				continue
+			}
 		}
+
+		// After a successful event, also check stopCh
+		select {
+		case <-stopCh:
+			log.Debug("waitEvents exiting on stop signal")
+			return
+		default:
+		}
+
 		if eventData.eventType != 1 {
 			log.Debugf("not xid event: %v", eventData)
 			continue
@@ -1879,4 +1951,121 @@ func healthErrorCodeToString(code C.cndevHealthError_t) string {
 	default:
 		return fmt.Sprintf("CNDEV_FR_UNKNOWN_CODE_%d", code)
 	}
+}
+
+func (c *cndev) MpmQueryDeviceSupport(idx uint) (bool, error) {
+	if ret := dl.checkExist("cndevMpmQueryDeviceSupport"); ret != C.CNDEV_SUCCESS {
+		return false, errorString(ret)
+	}
+
+	var mpmSupport C.bool
+	r := C.cndevMpmQueryDeviceSupport(c.Load(idx), &mpmSupport)
+	return bool(mpmSupport), errorString(r)
+}
+
+type mpmDeviceState struct {
+	mu      sync.Mutex
+	prev    C.cndevMpmSample_t
+	curr    C.cndevMpmSample_t
+	hasPrev bool
+}
+
+func (c *cndev) MpmCollect(idx uint, metricIDs []MpmMetricID) ([]MpmMetricResult, error) {
+	if ret := dl.checkExist("cndevMpmSampleAlloc", "cndevMpmSampleGet", "cndevMpmMetricsGet"); ret != C.CNDEV_SUCCESS {
+		return nil, errorString(ret)
+	}
+
+	state, _ := c.mpmSamplesMap.Load(idx)
+	if state == nil {
+		var prev, curr C.cndevMpmSample_t
+		r1 := C.cndevMpmSampleAlloc(&prev)
+		if err := errorString(r1); err != nil {
+			return nil, err
+		}
+		r2 := C.cndevMpmSampleAlloc(&curr)
+		if err := errorString(r2); err != nil {
+			C.cndevMpmSampleFree(prev)
+			return nil, err
+		}
+		r3 := C.cndevMpmSampleGet(prev, c.Load(idx))
+		if err := errorString(r3); err != nil {
+			log.Debugf("Initial MpmSampleGet for slot %d failed: %v", idx, err)
+		}
+		newState := &mpmDeviceState{
+			prev:    prev,
+			curr:    curr,
+			hasPrev: errorString(r3) == nil,
+		}
+		c.mpmSamplesMap.Store(idx, newState)
+		return nil, nil
+	}
+
+	ds := state.(*mpmDeviceState)
+	ds.mu.Lock()
+	defer ds.mu.Unlock()
+
+	r := C.cndevMpmSampleGet(ds.curr, c.Load(idx))
+	if err := errorString(r); err != nil {
+		return nil, err
+	}
+
+	if !ds.hasPrev {
+		ds.prev, ds.curr = ds.curr, ds.prev
+		ds.hasPrev = true
+		return nil, nil
+	}
+
+	metricsGetSize := C.size_t(C.sizeof_cndevMpmMetricsGet_t)
+	metricsGet := (*C.cndevMpmMetricsGet_t)(C.malloc(metricsGetSize))
+	if metricsGet == nil {
+		return nil, fmt.Errorf("malloc failed for cndevMpmMetricsGet_t")
+	}
+	defer C.free(unsafe.Pointer(metricsGet))
+
+	C.memset(unsafe.Pointer(metricsGet), 0, metricsGetSize)
+	metricsGet.version = C.CNDEV_MPM_METRICS_GET_VERSION
+	metricsGet.numMetrics = C.uint(len(metricIDs))
+	metricsGet.sample1 = ds.prev
+	metricsGet.sample2 = ds.curr
+
+	for i, id := range metricIDs {
+		metricsGet.metrics[i].metricId = C.cndevMpmMetricId_t(id)
+	}
+
+	r = C.cndevMpmMetricsGet(metricsGet)
+	if err := errorString(r); err != nil {
+		ds.prev, ds.curr = ds.curr, ds.prev
+		return nil, err
+	}
+
+	results := make([]MpmMetricResult, len(metricIDs))
+	for i := range metricIDs {
+		m := metricsGet.metrics[i]
+		results[i] = MpmMetricResult{
+			MetricID:  metricIDs[i],
+			Value:     float64(m.value),
+			Ret:       int(m.ret),
+			LongName:  C.GoString(m.metricInfo.longName),
+			ShortName: C.GoString(m.metricInfo.shortName),
+			Unit:      C.GoString(m.metricInfo.unit),
+		}
+	}
+
+	ds.prev, ds.curr = ds.curr, ds.prev
+	return results, nil
+}
+
+func (c *cndev) MpmRelease() {
+	c.mpmSamplesMap.Range(func(key, value interface{}) bool {
+		ds := value.(*mpmDeviceState)
+		ds.mu.Lock()
+		C.cndevMpmSampleFree(ds.prev)
+		C.cndevMpmSampleFree(ds.curr)
+		ds.prev = nil
+		ds.curr = nil
+		ds.hasPrev = false
+		ds.mu.Unlock()
+		c.mpmSamplesMap.Delete(key)
+		return true
+	})
 }

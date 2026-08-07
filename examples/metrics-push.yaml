@@ -2521,3 +2521,134 @@ podresources:
       uuid: uuid
     name: env_share_exhausted
     push: true
+mpm:
+  mpm_ipu_utilization:
+    help: MLU core average utilization via MPM, unit is '%'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      node_ip: node_ip
+      sn: sn
+      type: type
+      uuid: uuid
+    name: mpm_ipu_utilization
+    push: true
+  mpm_mlu_utilization:
+    help: MLU utilization via MPM, unit is '%'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      node_ip: node_ip
+      sn: sn
+      type: type
+      uuid: uuid
+    name: mpm_mlu_utilization
+    push: true
+  mpm_tensor_utilization:
+    help: MLU tensor average utilization via MPM, unit is '%'
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      node_ip: node_ip
+      sn: sn
+      type: type
+      uuid: uuid
+    name: mpm_tensor_utilization
+    push: true
+  mpm_pcie_tx_bandwidth:
+    help: PCIe TX bandwidth via MPM, unit is MiB/sec
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      node_ip: node_ip
+      sn: sn
+      type: type
+      uuid: uuid
+    name: mpm_pcie_tx_bandwidth
+    push: true
+  mpm_pcie_rx_bandwidth:
+    help: PCIe RX bandwidth via MPM, unit is MiB/sec
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      node_ip: node_ip
+      sn: sn
+      type: type
+      uuid: uuid
+    name: mpm_pcie_rx_bandwidth
+    push: true
+  mpm_mlulink_total_tx_bandwidth:
+    help: MLULink total TX bandwidth via MPM, unit is MiB/sec
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      node_ip: node_ip
+      sn: sn
+      type: type
+      uuid: uuid
+    name: mpm_mlulink_total_tx_bandwidth
+    push: true
+  mpm_mlulink_total_rx_bandwidth:
+    help: MLULink total RX bandwidth via MPM, unit is MiB/sec
+    labels:
+      driver: driver
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      node_ip: node_ip
+      sn: sn
+      type: type
+      uuid: uuid
+    name: mpm_mlulink_total_rx_bandwidth
+    push: true
+  mpm_mlulink_tx_bandwidth:
+    help: MLULink per-link TX bandwidth via MPM, unit is MiB/sec
+    labels:
+      driver: driver
+      link: link
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      node_ip: node_ip
+      ppi: ppi
+      sn: sn
+      type: type
+      uuid: uuid
+    name: mpm_mlulink_tx_bandwidth
+    push: true
+  mpm_mlulink_rx_bandwidth:
+    help: MLULink per-link RX bandwidth via MPM, unit is MiB/sec
+    labels:
+      driver: driver
+      link: link
+      mcu: mcu
+      mlu: mlu
+      model: model
+      node: node
+      node_ip: node_ip
+      ppi: ppi
+      sn: sn
+      type: type
+      uuid: uuid
+    name: mpm_mlulink_rx_bandwidth
+    push: true

@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.3.0
+
+- Add MPM collector
+
 ## v2.1.0
 
 - Optimize cndev initialization retry logic

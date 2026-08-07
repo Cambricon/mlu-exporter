@@ -38624,6 +38624,2158 @@
     }
   },
   {
+    "Desc": "Desc{fqName: \"mpm_ipu_utilization\", help: \"MLU core average utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 60
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_ipu_utilization\", help: \"MLU core average utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 60
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_ipu_utilization\", help: \"MLU core average utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 60
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_ipu_utilization\", help: \"MLU core average utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 60
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlu_utilization\", help: \"MLU utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 50
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlu_utilization\", help: \"MLU utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 50
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlu_utilization\", help: \"MLU utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 50
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlu_utilization\", help: \"MLU utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 50
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_rx_bandwidth\", help: \"MLULink per-link RX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 11
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_rx_bandwidth\", help: \"MLULink per-link RX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 11
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_rx_bandwidth\", help: \"MLULink per-link RX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 11
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_rx_bandwidth\", help: \"MLULink per-link RX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 11
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_rx_bandwidth\", help: \"MLULink per-link RX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 21
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_rx_bandwidth\", help: \"MLULink per-link RX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 21
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_rx_bandwidth\", help: \"MLULink per-link RX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 21
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_rx_bandwidth\", help: \"MLULink per-link RX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 21
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_total_rx_bandwidth\", help: \"MLULink total RX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 85
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_total_rx_bandwidth\", help: \"MLULink total RX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 85
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_total_rx_bandwidth\", help: \"MLULink total RX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 85
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_total_rx_bandwidth\", help: \"MLULink total RX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 85
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_total_tx_bandwidth\", help: \"MLULink total TX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 90
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_total_tx_bandwidth\", help: \"MLULink total TX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 90
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_total_tx_bandwidth\", help: \"MLULink total TX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 90
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_total_tx_bandwidth\", help: \"MLULink total TX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 90
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_tx_bandwidth\", help: \"MLULink per-link TX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 10
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_tx_bandwidth\", help: \"MLULink per-link TX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 10
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_tx_bandwidth\", help: \"MLULink per-link TX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 10
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_tx_bandwidth\", help: \"MLULink per-link TX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 10
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_tx_bandwidth\", help: \"MLULink per-link TX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 20
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_tx_bandwidth\", help: \"MLULink per-link TX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 20
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_tx_bandwidth\", help: \"MLULink per-link TX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 20
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_mlulink_tx_bandwidth\", help: \"MLULink per-link TX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 20
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_pcie_rx_bandwidth\", help: \"PCIe RX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 70
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_pcie_rx_bandwidth\", help: \"PCIe RX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 70
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_pcie_rx_bandwidth\", help: \"PCIe RX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 70
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_pcie_rx_bandwidth\", help: \"PCIe RX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 70
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_pcie_tx_bandwidth\", help: \"PCIe TX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 80
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_pcie_tx_bandwidth\", help: \"PCIe TX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 80
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_pcie_tx_bandwidth\", help: \"PCIe TX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 80
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_pcie_tx_bandwidth\", help: \"PCIe TX bandwidth via MPM, unit is MiB/sec\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 80
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_tensor_utilization\", help: \"MLU tensor average utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 30
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_tensor_utilization\", help: \"MLU tensor average utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 30
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_tensor_utilization\", help: \"MLU tensor average utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 30
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_tensor_utilization\", help: \"MLU tensor average utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 30
+      }
+    }
+  },
+  {
     "Desc": "Desc{fqName: \"numa_node_id\", help: \"The NUMA node id of Cambricon MLU\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
     "Metric": {
       "label": [

@@ -558,7 +558,97 @@ func TestCollect(t *testing.T) {
 		}
 
 		// tensor util
-		tensorUtil = []int{80, 81, 82, 102}
+		tensorUtil      = []int{80, 81, 82, 102}
+		mpmMetricResult = []cndev.MpmMetricResult{
+			{
+				MetricID:  cndev.MpmMetricIPUUtil,
+				Value:     60,
+				Ret:       0,
+				LongName:  "IPU_UTIL",
+				ShortName: "ipuutil",
+				Unit:      "%",
+			},
+			{
+				MetricID:  cndev.MpmMetricMLUUtil,
+				Value:     50,
+				Ret:       0,
+				LongName:  "MLU_UTIL",
+				ShortName: "mluutil",
+				Unit:      "%",
+			},
+			{
+				MetricID:  cndev.MpmMetricTensorUtil,
+				Value:     30,
+				Ret:       0,
+				LongName:  "TENSOR_UTIL",
+				ShortName: "tensorutil",
+				Unit:      "%",
+			},
+			{
+				MetricID:  cndev.MpmMetricPCIeTxPerSec,
+				Value:     80,
+				Ret:       0,
+				LongName:  "PCIE_TX_PER_SEC",
+				ShortName: "pcietx",
+				Unit:      "MiB/sec",
+			},
+			{
+				MetricID:  cndev.MpmMetricPCIeRxPerSec,
+				Value:     70,
+				Ret:       0,
+				LongName:  "PCIE_RX_PER_SEC",
+				ShortName: "pcierx",
+				Unit:      "MiB/sec",
+			},
+			{
+				MetricID:  cndev.MpmMetricMLULinkTotalTxPerSec,
+				Value:     90,
+				Ret:       0,
+				LongName:  "MLULINK_TOTAL_TX_PER_SEC",
+				ShortName: "mlulinktottx",
+				Unit:      "MiB/sec",
+			},
+			{
+				MetricID:  cndev.MpmMetricMLULinkTotalRxPerSec,
+				Value:     85,
+				Ret:       0,
+				LongName:  "MLULINK_TOTAL_RX_PER_SEC",
+				ShortName: "mlulinktotrx",
+				Unit:      "MiB/sec",
+			},
+			{
+				MetricID:  cndev.MpmLinkTxMetricID(0),
+				Value:     10,
+				Ret:       0,
+				LongName:  "MLULINK_L0_TX_PER_SEC",
+				ShortName: "mlulinkl0tx",
+				Unit:      "MiB/sec",
+			},
+			{
+				MetricID:  cndev.MpmLinkRxMetricID(0),
+				Value:     11,
+				Ret:       0,
+				LongName:  "MLULINK_L0_RX_PER_SEC",
+				ShortName: "mlulinkl0rx",
+				Unit:      "MiB/sec",
+			},
+			{
+				MetricID:  cndev.MpmLinkTxMetricID(1),
+				Value:     20,
+				Ret:       0,
+				LongName:  "MLULINK_L1_TX_PER_SEC",
+				ShortName: "mlulinkl1tx",
+				Unit:      "MiB/sec",
+			},
+			{
+				MetricID:  cndev.MpmLinkRxMetricID(1),
+				Value:     21,
+				Ret:       0,
+				LongName:  "MLULINK_L1_RX_PER_SEC",
+				ShortName: "mlulinkl1rx",
+				Unit:      "MiB/sec",
+			},
+		}
 	)
 
 	mst.StatMap.Store(uuid1, MLUStat{
@@ -766,13 +856,15 @@ func TestCollect(t *testing.T) {
 		mcndev.EXPECT().GetDeviceComputeMode(stat.slot).Return(computeMode[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceChassisInfo(stat.slot).Return(chassisSn, chassisProductDate, chassisProductName, chassisVendorName, chassisPartNumber, chassisBmcIP, chassisNvme, chassisIb, chassisPsu, nil).AnyTimes()
 
+		mcndev.EXPECT().MpmQueryDeviceSupport(stat.slot).Return(true, nil).AnyTimes()
+		mcndev.EXPECT().MpmCollect(stat.slot, gomock.Any()).Return(mpmMetricResult, nil).AnyTimes()
 		slots = append(slots, int(stat.slot))
 	}
 
 	mcndev.EXPECT().GetTopologyRelationship(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(2, nil).AnyTimes()
 	mcndev.EXPECT().GetDeviceCndevVersion().Return(cndevVersion[0], cndevVersion[1], cndevVersion[2], nil).AnyTimes()
 	sort.Ints(slots)
-	mcndev.EXPECT().RegisterEventsHandleAndWait(slots, gomock.Any()).Return(nil).Times(1)
+	mcndev.EXPECT().RegisterEventsHandleAndWait(slots, gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 	// pres mock response
 	pres := mock.NewPodResources(ctrl)
@@ -867,11 +959,15 @@ func collectMetrics(node, nodeIP string, rdmaDevice []rdmaDevice, mst *MLUStatMa
 
 	bi.mode = ""
 	bi.num = 0
+	mpmCollector := NewMpmCollector(m[Mpm], bi).(*mpmCollector)
+	mpmCollector.client = cndv
+
 	hostCollector := NewHostCollector(m[Host], bi).(*hostCollector)
 	hostCollector.client = host
 	c := &Collectors{
 		collectors: map[string]Collector{
 			Cndev:        cndevCollector,
+			Mpm:          mpmCollector,
 			PodResources: podResourcesCollector,
 			Host:         hostCollector,
 		},

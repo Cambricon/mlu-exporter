@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/Cambricon/mlu-exporter/pkg/mock"
@@ -8,6 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
+
+func ResetXIDManager() {
+	managerOnce = sync.Once{}
+	globalXIDManager = nil
+}
 
 func TestEnsureMLUAllOK(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -19,12 +25,14 @@ func TestEnsureMLUAllOK(t *testing.T) {
 	mcndev.EXPECT().Init(true).Return(nil).AnyTimes()
 	mcndev.EXPECT().GetDeviceCount().Return(uint(2), nil).AnyTimes()
 	mcndev.EXPECT().GenerateDeviceHandleMap(uint(2)).Return(nil).AnyTimes()
+	mcndev.EXPECT().RegisterEventsHandleAndWait(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	patches := gomonkey.ApplyFunc(fetchMLUCounts, func() (uint, error) {
 		return 2, nil
 	})
 	defer patches.Reset()
 	t.Run("All ok", func(t *testing.T) {
+		ResetXIDManager()
 		mluInfo := &MLUStatMap{}
 		mluInfo.StatMap.Store("uuid-0", MLUStat{model: "mlu0"})
 		patches.ApplyFunc(isDriverRunning, func() bool {
@@ -48,6 +56,7 @@ func TestEnsureMLUAllOK(t *testing.T) {
 	})
 
 	t.Run("Label missing", func(t *testing.T) {
+		ResetXIDManager()
 		mluInfo := &MLUStatMap{}
 
 		cn := 0

@@ -30,6 +30,8 @@ type Collector interface {
 	collect(ch chan<- prometheus.Metric)
 	init(info *MLUStatMap) error
 	updateMetrics(m metrics.CollectorMetrics)
+	start()
+	stop()
 }
 
 var factories = make(map[string]func(m metrics.CollectorMetrics, bi BaseInfo) Collector)
@@ -58,24 +60,26 @@ type rdmaDevice struct {
 }
 
 type BaseInfo struct {
-	client      kubernetes.Interface
-	cndevClient cndev.Cndev
-	host        string
-	hostIP      string
-	mode        string
-	num         uint
-	rdmaDevice  []rdmaDevice
+	client        kubernetes.Interface
+	cndevClient   cndev.Cndev
+	host          string
+	hostIP        string
+	mode          string
+	num           uint
+	rdmaDevice    []rdmaDevice
+	mpmIntervalMS uint
 }
 
-func NewCollectors(enabled []string, metricConfig map[string]metrics.CollectorMetrics, num uint, host string, hostIP string, mode string, shareInfo *MLUStatMap, cndevClient cndev.Cndev, filterPush bool) *Collectors {
+func NewCollectors(enabled []string, metricConfig map[string]metrics.CollectorMetrics, num uint, host string, hostIP string, mode string, shareInfo *MLUStatMap, cndevClient cndev.Cndev, filterPush bool, mpmIntervalMS uint) *Collectors {
 	m := filter(metricConfig, filterPush)
 	cs := make(map[string]Collector)
 	bi := BaseInfo{
-		cndevClient: cndevClient,
-		host:        host,
-		hostIP:      hostIP,
-		mode:        mode,
-		rdmaDevice:  getRDMAPCIeInfo(),
+		cndevClient:   cndevClient,
+		host:          host,
+		hostIP:        hostIP,
+		mode:          mode,
+		rdmaDevice:    getRDMAPCIeInfo(),
+		mpmIntervalMS: mpmIntervalMS,
 	}
 	if mode == "env-share" {
 		bi.num = num
@@ -142,6 +146,13 @@ func (c *Collectors) init(info *MLUStatMap) {
 		if err := collector.init(info); err != nil {
 			log.Error(errors.Wrapf(err, "init collector %s", name))
 		}
+		collector.start()
+	}
+}
+
+func (c *Collectors) Stop() {
+	for _, collector := range c.collectors {
+		collector.stop()
 	}
 }
 

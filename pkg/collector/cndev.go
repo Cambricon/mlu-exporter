@@ -240,7 +240,7 @@ func (c *cndevCollector) init(info *MLUStatMap) error {
 	}
 	sort.Ints(slots)
 	if len(slots) > 0 {
-		manager := GetXIDEventManager(c.client)
+		manager := GetXIDEventManager(c.client, c.sharedInfo)
 		manager.RegisterHandler(c)
 		manager.SetSlots(slots)
 		go manager.Start()
@@ -253,7 +253,12 @@ func (c *cndevCollector) updateMetrics(m metrics.CollectorMetrics) {
 	c.metrics = m
 }
 
+func (c *cndevCollector) start() {}
+func (c *cndevCollector) stop()  {}
+
 func (c *cndevCollector) collect(ch chan<- prometheus.Metric) {
+	c.sharedInfo.CndevMu.RLock()
+	defer c.sharedInfo.CndevMu.RUnlock()
 	for name, m := range c.metrics {
 		fn, ok := c.fnMap[name]
 		if !ok {

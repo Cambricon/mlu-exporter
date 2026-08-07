@@ -81,6 +81,9 @@ func (c *podResourcesCollector) updateMetrics(m metrics.CollectorMetrics) {
 	c.metrics = m
 }
 
+func (c *podResourcesCollector) start() {}
+func (c *podResourcesCollector) stop()  {}
+
 func (c *podResourcesCollector) collect(ch chan<- prometheus.Metric) {
 	info, err := c.client.GetDeviceToPodInfo()
 	log.Debugf("GetDeviceToPodInfo: %+v", info)

@@ -40,7 +40,7 @@ import (
 var version string
 
 type Options struct {
-	Collector     []string `long:"collector" description:"enabled collectors" choice:"cndev" choice:"podresources" choice:"host" default:"cndev"`
+	Collector     []string `long:"collector" description:"enabled collectors" choice:"cndev" choice:"podresources" choice:"host" choice:"mpm" default:"cndev"`
 	EnvShareNum   uint     `long:"env-share-num" description:"numbers of vfs under env share mode, 0 means env share disabled" default:"0"`
 	Hostname      string   `long:"hostname" description:"machine hostname" env:"ENV_NODE_NAME"`
 	HostIP        string   `long:"host-ip" description:"machine host ip" env:"ENV_NODE_IP"`
@@ -59,6 +59,8 @@ type Options struct {
 	PushCAFile     string `long:"push-ca-file" description:"Optional,CA certificate for pushing data" env:"PUSH_CA_FILE"`
 	PushTLSFile    string `long:"push-tls-file" description:"Optional,TLS certificate for pushing data" env:"PUSH_TLS_FILE"`
 	PushKeyFile    string `long:"push-key-file" description:"Optional,Key certificate for pushing data" env:"PUSH_KEY_FILE"`
+
+	MpmIntervalMS uint `long:"mpm-interval-ms" description:"MPM collection interval in ms; 0 means collect on every scrape" default:"0" env:"MPM_INTERVAL_MS"`
 
 	XIDErrorMetricName        string `long:"xid-error-metric-name" description:"xid error metric name in config, if not set, not push this metric data" env:"XID_ERROR_METRIC_NAME"`
 	XIDErrorRetryTimes        int    `long:"xid-error-retry-times" description:"retry times when push xid error metric failed" default:"10" env:"XID_ERROR_RETRY_TIMES"`
@@ -107,6 +109,10 @@ func main() {
 		log.SetLevel(log.PanicLevel)
 	}
 
+	if options.MpmIntervalMS > 0 && options.MpmIntervalMS < 110 {
+		log.Fatal("Minimum of mpm-interval-ms is 110 when set")
+	}
+
 	log.Info("Start loading cndev")
 	cndevClient := cndev.NewCndevClient()
 	if err := collector.EnsureCndevLib(); err != nil {
@@ -148,7 +154,9 @@ func main() {
 		mluInfo,
 		cndevClient,
 		false,
+		options.MpmIntervalMS,
 	)
+	defer c.Stop()
 	log.Debug("Start RegisterWatcher")
 	metrics.RegisterWatcher(c.UpdateMetrics)
 	r := prometheus.NewRegistry()
@@ -201,6 +209,7 @@ func startPushMode(client *http.Client, options Options, metricConfig map[string
 		mluInfo,
 		cndevClient,
 		true,
+		0,
 	)
 
 	metrics.RegisterWatcher(pushc.UpdateMetrics)

@@ -390,6 +390,7 @@ type MLUStat struct {
 	mcu                      string
 	mimEnabled               bool
 	mimInfos                 []cndev.MimInfo
+	mpmDisabled              bool
 	model                    string
 	opticalPresent           map[int]uint8
 	slot                     uint
@@ -402,6 +403,7 @@ type MLUStat struct {
 type MLUStatMap struct {
 	StatMap   sync.Map
 	InProblem atomic.Bool
+	CndevMu   sync.RWMutex
 }
 
 func (m *MLUStatMap) Range(f func(key string, value MLUStat) bool) {
@@ -468,6 +470,14 @@ func collectMLUInfo(mluInfo *MLUStatMap, cli cndev.Cndev, count uint) {
 		smluEnabled, err := cli.DeviceSmluModeEnabled(i)
 		if err != nil {
 			log.Warn(errors.Wrapf(err, "DeviceSmluModeEnabled for slot %d", i))
+		}
+
+		log.Debugf("Start slot %d MpmQueryDeviceSupport", i)
+		var mpmDisabled bool
+		mpmSupport, err := cli.MpmQueryDeviceSupport(i)
+		if err != nil || !mpmSupport {
+			log.Debugf("Slot %d MPM not supported or query failed: %v", i, err)
+			mpmDisabled = true
 		}
 
 		log.Debugf("Start slot %d GetDeviceMLULinkPortNumber", i)
@@ -892,6 +902,7 @@ func collectMLUInfo(mluInfo *MLUStatMap, cli cndev.Cndev, count uint) {
 			mcu:                      calcVersion(mcuMajor, mcuMinor, mcuBuild),
 			mimEnabled:               mimEnabled,
 			mimInfos:                 mimInfos,
+			mpmDisabled:              mpmDisabled,
 			model:                    model,
 			opticalPresent:           opticalPresent,
 			slot:                     i,
@@ -1141,14 +1152,20 @@ func EnsureMLUAllOK(cli cndev.Cndev, mluInfo *MLUStatMap, ignoreMissingLabels bo
 				continue
 			}
 		} else {
+			mluInfo.CndevMu.Lock()
 			if err := cli.ReleaseCndev(); err != nil {
+				mluInfo.CndevMu.Unlock()
 				log.Errorf("Release cndev client failed with err: %v", err)
 				continue
 			}
 			if err := cli.Init(true); err != nil {
+				mluInfo.CndevMu.Unlock()
 				log.Errorf("Init cndev client failed with err: %v", err)
 				continue
 			}
+			mluInfo.CndevMu.Unlock()
+			manager := GetXIDEventManager(cli, mluInfo)
+			manager.ReRegister()
 		}
 
 		log.Debug("Start GetDeviceCount")

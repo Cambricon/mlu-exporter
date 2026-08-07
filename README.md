@@ -70,7 +70,7 @@ docker run -d \
 --privileged=true \
 --pid=host \
 -e ENV_NODE_NAME={nodeName} \
-cambricon-mlu-exporter:v2.2.0
+cambricon-mlu-exporter:v2.3.0
 ```
 
 Then use the following command to get the metrics.
@@ -87,7 +87,7 @@ docker run -d \
 -v examples/metrics.yaml:/etc/mlu-exporter/metrics.yaml \
 --privileged=true \
 --pid=host \
-cambricon-mlu-exporter:v2.2.0 \
+cambricon-mlu-exporter:v2.3.0 \
 mlu-exporter \
 --metrics-config=/etc/mlu-exporter/metrics.yaml \
 --metrics-path=/metrics \
@@ -103,7 +103,7 @@ Command Args Description
 
 | arg                            | description                                                                                                                                          |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| collector                      | collector names, cndev by default                                                                                                                    |
+| collector                      | collector names, cndev by default, available: cndev, mpm, podresources, host                                                                         |
 | env-share-num                  | vf numbers under env share mode, should set virtual-mode to env-share                                                                                |
 | hostname                       | machine hostname, or env:"ENV_NODE_NAME"                                                                                                             |
 | log-level                      | set log level: trace/debug/info/warn/error/fatal/panic" default:"info"                                                                               |
@@ -111,7 +111,12 @@ Command Args Description
 | metrics-path                   | metrics path of the exporter service                                                                                                                 |
 | metrics-prefix                 | prefix of all metric names                                                                                                                           |
 | port                           | exporter service port                                                                                                                                |
+<<<<<<< HEAD
 | virtual-mode                   | virtual mode, default "", support env-share                                                                                                          |
+=======
+| virtual-mode                   | virtual mode, default "", support dynamic-smlu, env-share                                                                                            |
+| mpm-interval-ms                | MPM collection interval in milliseconds; 0 means collect on every scrape, minimum 100 when set, default 0                                            |
+>>>>>>> 4bb6326 (feat: add mpm collector)
 | push-gateway-url               | If set, metrics with push enabled will push to this server via prometheus push gateway protocol                                                      |
 | push-interval-ms               | numbers of metrics push interval in milliseconds, minimum 100, default 500                                                                           |
 | push-ca-file                   | Optional, CA certificate for pushing data                                                                                                            |
@@ -126,6 +131,7 @@ Command Args Description
 available collectors:
 
 - cndev: collects basic MLU metrics
+- mpm: collects rate-based MLU metrics (IPU/MLU/Tensor utilization, PCIe/MLULink bandwidth) that require two samples to compute the delta
 - podresources: collects MLU usage metrics in containers managed by Kubernetes. For Kubernetes lower than 1.15, make sure `KubeletPodResources` [feature gate] is enabled by setting the `feature-gates` [kubelet option] in your kubelet configuration.
 - host: collects host machine metrics
 
@@ -204,6 +210,13 @@ And for env-share VFs:
 ```text
 mlu_utilization * on(uuid,vf) group_right mlu_container
 ```
+
+#### MPM Metrics
+
+MPM metrics are rate-based metrics (IPU/MLU/Tensor utilization, PCIe/MLULink bandwidth) that require two samples to compute the delta. The exporter supports two collection modes controlled by `--mpm-interval-ms`:
+
+- **`--mpm-interval-ms=0` (default)**: Collect on every Prometheus scrape. The exporter takes two samples separated by the scrape interval and computes the rate. This is the recommended mode when Prometheus has a fixed scrape interval, as no CPU is wasted on intermediate samples that are never consumed.
+- **`--mpm-interval-ms=N`**: Collect in a background loop every N milliseconds. Useful when the scrape interval is variable or unpredictable. However, note that if the interval is much shorter than the scrape interval (e.g., 100ms interval with 15s scrape), most intermediate results are discarded, wasting CPU resources. In this case, consider setting the interval closer to your scrape interval or using 0.
 
 #### Metrics and Labels
 

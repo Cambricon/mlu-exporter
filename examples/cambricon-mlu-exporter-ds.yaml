@@ -30,12 +30,12 @@ spec:
     spec:
       containers:
       - name: cambricon-mlu-monitor
-        image: cambricon-mlu-exporter:v2.2.0
+        image: cambricon-mlu-exporter:v2.3.0
         imagePullPolicy: IfNotPresent
         command:
         - /usr/bin/mlu-exporter
         args:
-        - --collector=cndev # enabled collectors, choice:"cndev"', "podresources", "host", default:"cndev"
+        - --collector=cndev # enabled collectors, choice:"cndev", "mpm", "podresources", "host", default:"cndev"
         - --collector=podresources
         - --log-level=info # set log level: trace/debug/info/warn/error/fatal/panic", default:"info"
         - --metrics-config=/etc/mlu-exporter/metrics.yaml # configuration file of MLU exporter metrics, default:"/etc/mlu-exporter/metrics.yaml"
@@ -45,6 +45,7 @@ spec:
         # - --virtual-mode # virtual mode for devices, choice: "env-share", default:""
         # - --push-gateway-url=http://vmagent-vmagent.monitoring:8429/api/v1/import/prometheus # If set, metrics will push to this server via prometheus push gateway protocol
         # - --push-interval-ms=200 # numbers of metrics push interval in milliseconds, minimum 100
+        # - --mpm-interval-ms=0 # MPM collection interval in milliseconds; 0 means collect on every scrape, minimum 110 when set
         # - --push-ca-file="/path/to/ca/file" # Optional, CA certificate for pushing data
         # - --push-tls-file="/path/to/tls/file" # Optional, TLS certificate for pushing data
         # - --push-key-file="/path/to/key/file" # Optional, Key certificate for pushing data
