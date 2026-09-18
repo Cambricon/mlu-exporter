@@ -392,7 +392,6 @@ type MLUStat struct {
 	mimInfos                 []cndev.MimInfo
 	mpmDisabled              bool
 	model                    string
-	opticalPresent           map[int]uint8
 	slot                     uint
 	smluEnabled              bool
 	smluInfos                []cndev.SmluInfo
@@ -488,7 +487,6 @@ func collectMLUInfo(mluInfo *MLUStatMap, cli cndev.Cndev, count uint) {
 		}
 		log.Debugf("Slot %d mlulink num %d", i, link)
 		linkPPI := map[int]string{}
-		opticalPresent := map[int]uint8{}
 		mlulinkDis := make(map[int]map[string]bool)
 		for j := 0; j < link; j++ {
 			mlulinkDis[j] = make(map[string]bool)
@@ -527,9 +525,9 @@ func collectMLUInfo(mluInfo *MLUStatMap, cli cndev.Cndev, count uint) {
 				mlulinkDis[j]["mluLinkVersionDisabled"] = true
 			}
 
-			log.Debugf("Start slot %d link %d GetDeviceMLULinkEventCounter", i, j)
-			if _, _, _, err = cli.GetDeviceMLULinkEventCounter(i, uint(j)); err != nil {
-				log.Debug(errors.Wrapf(err, "Slot %d GetDeviceMLULinkEventCounter", i))
+			log.Debugf("Start slot %d link %d GetDeviceMLULinkEventCounterV2", i, j)
+			if _, _, _, _, err = cli.GetDeviceMLULinkEventCounterV2(i, uint(j)); err != nil {
+				log.Debug(errors.Wrapf(err, "Slot %d GetDeviceMLULinkEventCounterV2", i))
 				mlulinkDis[j]["mluLinkEventCounterDisabled"] = true
 			}
 
@@ -566,12 +564,17 @@ func collectMLUInfo(mluInfo *MLUStatMap, cli cndev.Cndev, count uint) {
 			if ppi != "N/A" {
 				linkPPI[j] = ppi
 				log.Debugf("Start slot %d link %d GetDeviceOpticalInfo", i, j)
-				present, _, _, _, _, err := cli.GetDeviceOpticalInfo(i, uint(j))
-				if err != nil {
+				if _, _, _, _, _, err := cli.GetDeviceOpticalInfo(i, uint(j)); err != nil {
 					log.Warn(errors.Wrapf(err, "Slot %d link %d GetDeviceOpticalInfo", i, j))
+					mlulinkDis[j]["opticalInfoDisabled"] = true
+				}
+
+				log.Debugf("Start slot %d link %d GetDeviceTransceiverInfo", i, j)
+				if _, err = cli.GetDeviceTransceiverInfo(i, uint(j)); err != nil {
+					log.Warn(errors.Wrapf(err, "Slot %d link %d GetDeviceTransceiverInfo", i, j))
+					mlulinkDis[j]["transceiverInfoDisabled"] = true
 					continue
 				}
-				opticalPresent[j] = present
 			}
 		}
 
@@ -875,6 +878,18 @@ func collectMLUInfo(mluInfo *MLUStatMap, cli cndev.Cndev, count uint) {
 			dis["activityDisabled"] = true
 		}
 
+		log.Debugf("Start slot %d GetDeviceAllCoreUtil", i)
+		if _, err = cli.GetDeviceAllCoreUtil(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceAllCoreUtil", i))
+			dis["allCoreUtilDisabled"] = true
+		}
+
+		log.Debugf("Start slot %d GetDeviceTNCUtil", i)
+		if _, err = cli.GetDeviceTNCUtil(i); err != nil {
+			log.Warn(errors.Wrapf(err, "Slot %d GetDeviceTNCUtil", i))
+			dis["tncUtilDisabled"] = true
+		}
+
 		// Use slot as key when uuid is empty to avoid duplicate metrics
 		key := uuid
 		if key == "" {
@@ -904,7 +919,6 @@ func collectMLUInfo(mluInfo *MLUStatMap, cli cndev.Cndev, count uint) {
 			mimInfos:                 mimInfos,
 			mpmDisabled:              mpmDisabled,
 			model:                    model,
-			opticalPresent:           opticalPresent,
 			slot:                     i,
 			smluEnabled:              smluEnabled,
 			sn:                       sn,

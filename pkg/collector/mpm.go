@@ -44,6 +44,8 @@ func NewMpmCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 		MpmIPUUtil:              c.collectMpmIPUUtil,
 		MpmMLUUtil:              c.collectMpmMLUUtil,
 		MpmTensorUtil:           c.collectMpmTensorUtil,
+		MpmCoreUtil:             c.collectMpmCoreUtil,
+		MpmTNCUtil:              c.collectMpmTNCUtil,
 		MpmPCIeTxPerSec:         c.collectMpmPCIeTxPerSec,
 		MpmPCIeRxPerSec:         c.collectMpmPCIeRxPerSec,
 		MpmMLULinkTotalTxPerSec: c.collectMpmMLULinkTotalTxPerSec,
@@ -59,6 +61,8 @@ var metricKeyToCIdMap = map[string]cndev.MpmMetricID{
 	MpmIPUUtil:              cndev.MpmMetricIPUUtil,
 	MpmMLUUtil:              cndev.MpmMetricMLUUtil,
 	MpmTensorUtil:           cndev.MpmMetricTensorUtil,
+	MpmCoreUtil:             cndev.MpmMetricCoreUtil,
+	MpmTNCUtil:              cndev.MpmMetricTNCUtil,
 	MpmPCIeTxPerSec:         cndev.MpmMetricPCIeTxPerSec,
 	MpmPCIeRxPerSec:         cndev.MpmMetricPCIeRxPerSec,
 	MpmMLULinkTotalTxPerSec: cndev.MpmMetricMLULinkTotalTxPerSec,
@@ -340,6 +344,14 @@ func (c *mpmCollector) collectMpmMLUUtil(ch chan<- prometheus.Metric, m metrics.
 
 func (c *mpmCollector) collectMpmTensorUtil(ch chan<- prometheus.Metric, m metrics.Metric, deviceResults map[uint]map[string]float64) {
 	c.collectMpmMetric(ch, m, deviceResults, MpmTensorUtil)
+}
+
+func (c *mpmCollector) collectMpmCoreUtil(ch chan<- prometheus.Metric, m metrics.Metric, deviceResults map[uint]map[string]float64) {
+	c.collectMpmMetric(ch, m, deviceResults, MpmCoreUtil)
+}
+
+func (c *mpmCollector) collectMpmTNCUtil(ch chan<- prometheus.Metric, m metrics.Metric, deviceResults map[uint]map[string]float64) {
+	c.collectMpmMetric(ch, m, deviceResults, MpmTNCUtil)
 }
 
 func (c *mpmCollector) collectMpmPCIeTxPerSec(ch chan<- prometheus.Metric, m metrics.Metric, deviceResults map[uint]map[string]float64) {

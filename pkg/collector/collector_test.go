@@ -439,7 +439,13 @@ func TestCollect(t *testing.T) {
 		mluLinkEventCounterLinkDown   = mluLinkEventCounter
 		mluLinkEventCounterReplay     = mluLinkEventCounter
 		mluLinkEventCounterReplayFail = mluLinkEventCounter
-		mluLinkPortMode               = [][]int{
+		mluLinkEventCounterLinkFlap   = [][]uint64{
+			{1, 0},
+			{0, 2},
+			{3, 1},
+			{1, 4},
+		}
+		mluLinkPortMode = [][]int{
 			{1, 1},
 			{1, 1},
 			{1, 1},
@@ -559,6 +565,8 @@ func TestCollect(t *testing.T) {
 
 		// tensor util
 		tensorUtil      = []int{80, 81, 82, 102}
+		allCoreUtil     = []int{75, 76, 77, 88}
+		tncUtil         = []int{60, 61, 62, 73}
 		mpmMetricResult = []cndev.MpmMetricResult{
 			{
 				MetricID:  cndev.MpmMetricIPUUtil,
@@ -582,6 +590,22 @@ func TestCollect(t *testing.T) {
 				Ret:       0,
 				LongName:  "TENSOR_UTIL",
 				ShortName: "tensorutil",
+				Unit:      "%",
+			},
+			{
+				MetricID:  cndev.MpmMetricCoreUtil,
+				Value:     40,
+				Ret:       0,
+				LongName:  "CORE_UTIL",
+				ShortName: "coreutil",
+				Unit:      "%",
+			},
+			{
+				MetricID:  cndev.MpmMetricTNCUtil,
+				Value:     35,
+				Ret:       0,
+				LongName:  "TNC_UTIL",
+				ShortName: "tncutil",
 				Unit:      "%",
 			},
 			{
@@ -762,6 +786,87 @@ func TestCollect(t *testing.T) {
 		cndevInterfaceDisabled: map[string]bool{"crcDisabled": true},
 	})
 
+	// Define transceiver info for cable metrics testing
+	// Slot 0 link 0 and slot 1 links 0-1 are cable type to test cable_* metrics
+	transceiverInfos := map[uint]map[int]cndev.TransceiverInfo{
+		0: {
+			0: {
+				Present: int(mluLinkOpticalPresent[0][0]),
+				Type:    1, // cable type
+				CableInfo: cndev.CableInfo{
+					LinkLength:         2.0,
+					LaneNumber:         4,
+					ModuleMediaType:    3, // Passive CU
+					ModuleState:        2, // Ready
+					TempMonitorSupport: 1,
+					Temp:               35.5,
+					TempState:          0, // Normal
+					VoltMonitorSupport: 1,
+					Volt:               3.3,
+					VoltState:          0, // Normal
+				},
+			},
+			1: {
+				Present: int(mluLinkOpticalPresent[0][1]),
+				Type:    0, // optical type
+			},
+		},
+		1: {
+			0: {
+				Present: int(mluLinkOpticalPresent[1][0]),
+				Type:    1, // cable type
+				CableInfo: cndev.CableInfo{
+					LinkLength:         3.0,
+					LaneNumber:         8,
+					ModuleMediaType:    1, // Optical MMF
+					ModuleState:        2, // Ready
+					TempMonitorSupport: 1,
+					Temp:               40.2,
+					TempState:          3, // High warn
+					VoltMonitorSupport: 1,
+					Volt:               3.2,
+					VoltState:          1, // High alarm
+				},
+			},
+			1: {
+				Present: int(mluLinkOpticalPresent[1][1]),
+				Type:    1, // cable type
+				CableInfo: cndev.CableInfo{
+					LinkLength:         5.0,
+					LaneNumber:         4,
+					ModuleMediaType:    2, // Optical SMF
+					ModuleState:        3, // PowerDown
+					TempMonitorSupport: 1,
+					Temp:               38.0,
+					TempState:          1, // High alarm
+					VoltMonitorSupport: 1,
+					Volt:               3.1,
+					VoltState:          2, // Low alarm
+				},
+			},
+		},
+		2: {
+			0: {
+				Present: int(mluLinkOpticalPresent[2][0]),
+				Type:    0, // optical type
+			},
+			1: {
+				Present: int(mluLinkOpticalPresent[2][1]),
+				Type:    0, // optical type
+			},
+		},
+		3: {
+			0: {
+				Present: int(mluLinkOpticalPresent[3][0]),
+				Type:    0, // optical type
+			},
+			1: {
+				Present: int(mluLinkOpticalPresent[3][1]),
+				Type:    0, // optical type
+			},
+		},
+	}
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -812,6 +917,8 @@ func TestCollect(t *testing.T) {
 		mcndev.EXPECT().GetDeviceHeartbeatCount(stat.slot).Return(heartbeatCount[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceCount().Return(deviceCount[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceTensorUtil(stat.slot).Return(tensorUtil[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceAllCoreUtil(stat.slot).Return(allCoreUtil[stat.slot], nil).AnyTimes()
+		mcndev.EXPECT().GetDeviceTNCUtil(stat.slot).Return(tncUtil[stat.slot], nil).AnyTimes()
 		mcndev.EXPECT().GetDeviceActivity(stat.slot).Return(activity[stat.slot], nil).AnyTimes()
 		for link := 0; link < mluLinkPortNumber; link++ {
 			mcndev.EXPECT().GetDeviceMLULinkCapability(stat.slot, uint(link)).Return(mluLinkCapabilityP2PTransfer[stat.slot][link], mluLinkCapabilityInterlakenSerdes[stat.slot][link], nil).AnyTimes()
@@ -819,8 +926,9 @@ func TestCollect(t *testing.T) {
 				mluLinkCounterErrCorrected[stat.slot][link], mluLinkCounterErrCRC24[stat.slot][link], mluLinkCounterErrCRC32[stat.slot][link], mluLinkCounterErrEccDouble[stat.slot][link], mluLinkCounterErrFatal[stat.slot][link], mluLinkCounterErrReplay[stat.slot][link],
 				mluLinkCounterErrUncorrected[stat.slot][link], mluLinkCounterCntrCnpPackage[stat.slot][link], mluLinkCounterCntrPfcPackage[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkErrorCounter(stat.slot, uint(link)).Return(mluLinkErrorCounter[stat.slot][link], mluLinkCorrectFecCounter[stat.slot][link], mluLinkUncorrectFecCounter[stat.slot][link], mluLinkRxBadFcsCounter[stat.slot][link], mluLinkTxBadFcsCounter[stat.slot][link], nil).AnyTimes()
-			mcndev.EXPECT().GetDeviceMLULinkEventCounter(stat.slot, uint(link)).Return(mluLinkEventCounterLinkDown[stat.slot][link], mluLinkEventCounterReplay[stat.slot][link], mluLinkEventCounterReplayFail[stat.slot][link], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceMLULinkEventCounterV2(stat.slot, uint(link)).Return(mluLinkEventCounterLinkDown[stat.slot][link], mluLinkEventCounterLinkFlap[stat.slot][link], mluLinkEventCounterReplay[stat.slot][link], mluLinkEventCounterReplayFail[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceOpticalInfo(stat.slot, uint(link)).Return(mluLinkOpticalPresent[stat.slot][link], mluLinkOpticalTemp[stat.slot][link], mluLinkOpticalVolt[stat.slot][link], mluLinkOpticalTxpwr[stat.slot][link], mluLinkOpticalRxpwr[stat.slot][link], nil).AnyTimes()
+			mcndev.EXPECT().GetDeviceTransceiverInfo(stat.slot, uint(link)).Return(transceiverInfos[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkPortMode(stat.slot, uint(link)).Return(mluLinkPortMode[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkPPI(stat.slot, uint(link)).Return(mluLinkPortPPI[stat.slot][link], nil).AnyTimes()
 			mcndev.EXPECT().GetDeviceMLULinkRemoteInfo(stat.slot, uint(link)).Return(mluLinkRemoteMcSn[stat.slot][link], mluLinkRemoteBaSn[stat.slot][link], mluLinkRemoteSlotID[stat.slot][link], mluLinkRemotePortID[stat.slot][link], mluLinkRemoteConnectType[stat.slot][link],

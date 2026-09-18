@@ -68,6 +68,14 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 		BAR4MemoryTotal:                   c.collectBAR4MemoryTotal,
 		BAR4MemoryUsed:                    c.collectBAR4MemoryUsed,
 		BAR4MemoryFree:                    c.collectBAR4MemoryFree,
+		CableLaneNumber:                   c.collectCableLaneNumber,
+		CableLinkLength:                   c.collectCableLinkLength,
+		CableModuleMediaType:              c.collectCableModuleMediaType,
+		CableModuleState:                  c.collectCableModuleState,
+		CableTemperature:                  c.collectCableTemperature,
+		CableTempState:                    c.collectCableTempState,
+		CableVoltage:                      c.collectCableVoltage,
+		CableVoltState:                    c.collectCableVoltState,
 		ChassisInfo:                       c.collectChassisInfo,
 		ChassisNvmeInfo:                   c.collectChassisNvmeInfo,
 		ChassisIbInfo:                     c.collectChassisIbInfo,
@@ -81,6 +89,7 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 		ChipTemperature:                   c.collectChipTemperature,
 		ClusterTemperature:                c.collectClusterTemperature,
 		ComputeMode:                       c.collectComputeMode,
+		CoreAverageUtil:                   c.collectAllCoreUtil,
 		CoreCurrent:                       c.collectCoreCurrent,
 		CoreUtil:                          c.collectCoreUtil,
 		CoreVoltage:                       c.collectCoreVoltage,
@@ -144,6 +153,7 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 		MLULinkCounterErrUncorrected:      c.collectMLULinkCounterErrUncorrected,
 		MLULinkCounterIllegalAccess:       c.collectMLULinkCounterIllegalAccess,
 		MLULinkCounterLinkDown:            c.collectMLULinkCounterLinkDown,
+		MLULinkCounterLinkFlap:            c.collectMLULinkCounterLinkFlap,
 		MLULinkCounterRxBadFcs:            c.collectMLULinkCounterRxBadFcs,
 		MLULinkCounterTxBadFcs:            c.collectMLULinkCounterTxBadFcs,
 		MLULinkInboundState:               c.collectMLULinkInboundState,
@@ -209,6 +219,9 @@ func NewCndevCollector(m metrics.CollectorMetrics, bi BaseInfo) Collector {
 		TensorUtil:                        c.collectTensorUtil,
 		ThermalSlowdown:                   c.collectThermalSlowdown,
 		TinyCoreUtil:                      c.collectTinyCoreUtil,
+		TNCUtil:                           c.collectTNCUtil,
+		TransceiverStatus:                 c.collectTransceiverStatus,
+		TransceiverType:                   c.collectTransceiverType,
 		Util:                              c.collectUtil,
 		Version:                           c.collectVersion,
 		VideoCodecUtil:                    c.collectVideoCodecUtil,
@@ -457,6 +470,25 @@ func (c *cndevCollector) collectAggregateSramEccThresholdExceed(ch chan<- promet
 	}
 }
 
+func (c *cndevCollector) collectAllCoreUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo.Range {
+		if stat.cndevInterfaceDisabled["allCoreUtilDisabled"] {
+			continue
+		}
+		util, err := c.client.GetDeviceAllCoreUtil(stat.slot)
+		if err != nil {
+			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceAllCoreUtil", stat.slot))
+			continue
+		}
+		if util < 0 || util > 100 {
+			log.Debugf("Slot %d all core util %d is abnormal", stat.slot, util)
+			continue
+		}
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
+	}
+}
+
 func (c *cndevCollector) collectBAR4MemoryTotal(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo.Range {
 		if stat.cndevInterfaceDisabled["bar4MemoryInfoDisabled"] {
@@ -499,6 +531,186 @@ func (c *cndevCollector) collectBAR4MemoryFree(ch chan<- prometheus.Metric, m me
 		}
 		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
 		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(free), labelValues...)
+	}
+}
+
+func (c *cndevCollector) collectCableLaneNumber(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo.Range {
+		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["transceiverInfoDisabled"] {
+				continue
+			}
+			transceiverInfo, err := c.client.GetDeviceTransceiverInfo(stat.slot, uint(i))
+			if err != nil {
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceTransceiverInfo", stat.slot, i))
+				continue
+			}
+			if transceiverInfo.Present != cndev.TransceiverPresent || transceiverInfo.Type != cndev.TransceiverTypeCable {
+				continue
+			}
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(transceiverInfo.CableInfo.LaneNumber), labelValues...)
+		}
+	}
+}
+
+func (c *cndevCollector) collectCableLinkLength(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo.Range {
+		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["transceiverInfoDisabled"] {
+				continue
+			}
+			transceiverInfo, err := c.client.GetDeviceTransceiverInfo(stat.slot, uint(i))
+			if err != nil {
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceTransceiverInfo", stat.slot, i))
+				continue
+			}
+			if transceiverInfo.Present != cndev.TransceiverPresent || transceiverInfo.Type != cndev.TransceiverTypeCable {
+				continue
+			}
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(transceiverInfo.CableInfo.LinkLength), labelValues...)
+		}
+	}
+}
+
+func (c *cndevCollector) collectCableModuleMediaType(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo.Range {
+		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["transceiverInfoDisabled"] {
+				continue
+			}
+			transceiverInfo, err := c.client.GetDeviceTransceiverInfo(stat.slot, uint(i))
+			if err != nil {
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceTransceiverInfo", stat.slot, i))
+				continue
+			}
+			if transceiverInfo.Present != cndev.TransceiverPresent || transceiverInfo.Type != cndev.TransceiverTypeCable {
+				continue
+			}
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(transceiverInfo.CableInfo.ModuleMediaType), labelValues...)
+		}
+	}
+}
+
+func (c *cndevCollector) collectCableModuleState(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo.Range {
+		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["transceiverInfoDisabled"] {
+				continue
+			}
+			transceiverInfo, err := c.client.GetDeviceTransceiverInfo(stat.slot, uint(i))
+			if err != nil {
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceTransceiverInfo", stat.slot, i))
+				continue
+			}
+			if transceiverInfo.Present != cndev.TransceiverPresent || transceiverInfo.Type != cndev.TransceiverTypeCable {
+				continue
+			}
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(transceiverInfo.CableInfo.ModuleState), labelValues...)
+		}
+	}
+}
+
+func (c *cndevCollector) collectCableTemperature(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo.Range {
+		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["transceiverInfoDisabled"] {
+				continue
+			}
+			transceiverInfo, err := c.client.GetDeviceTransceiverInfo(stat.slot, uint(i))
+			if err != nil {
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceTransceiverInfo", stat.slot, i))
+				continue
+			}
+			if transceiverInfo.Present != cndev.TransceiverPresent || transceiverInfo.Type != cndev.TransceiverTypeCable {
+				continue
+			}
+			ci := transceiverInfo.CableInfo
+			if ci.TempMonitorSupport == cndev.MonitorNotSupported || ci.Temp < 0 {
+				log.Debugf("Slot %d link %d skip cable temperature: TempMonitorSupport=%d, Temp=%f", stat.slot, i, ci.TempMonitorSupport, ci.Temp)
+				continue
+			}
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(ci.Temp), labelValues...)
+		}
+	}
+}
+
+func (c *cndevCollector) collectCableTempState(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo.Range {
+		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["transceiverInfoDisabled"] {
+				continue
+			}
+			transceiverInfo, err := c.client.GetDeviceTransceiverInfo(stat.slot, uint(i))
+			if err != nil {
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceTransceiverInfo", stat.slot, i))
+				continue
+			}
+			if transceiverInfo.Present != cndev.TransceiverPresent || transceiverInfo.Type != cndev.TransceiverTypeCable {
+				continue
+			}
+			ci := transceiverInfo.CableInfo
+			if ci.TempMonitorSupport == cndev.MonitorNotSupported {
+				log.Debugf("Slot %d link %d skip cable temp state: TempMonitorSupport=%d", stat.slot, i, ci.TempMonitorSupport)
+				continue
+			}
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(ci.TempState), labelValues...)
+		}
+	}
+}
+
+func (c *cndevCollector) collectCableVoltage(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo.Range {
+		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["transceiverInfoDisabled"] {
+				continue
+			}
+			transceiverInfo, err := c.client.GetDeviceTransceiverInfo(stat.slot, uint(i))
+			if err != nil {
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceTransceiverInfo", stat.slot, i))
+				continue
+			}
+			if transceiverInfo.Present != cndev.TransceiverPresent || transceiverInfo.Type != cndev.TransceiverTypeCable {
+				continue
+			}
+			ci := transceiverInfo.CableInfo
+			if ci.VoltMonitorSupport == cndev.MonitorNotSupported || ci.Volt < 0 {
+				log.Debugf("Slot %d link %d skip cable voltage: VoltMonitorSupport=%d, Volt=%f", stat.slot, i, ci.VoltMonitorSupport, ci.Volt)
+				continue
+			}
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(ci.Volt), labelValues...)
+		}
+	}
+}
+
+func (c *cndevCollector) collectCableVoltState(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo.Range {
+		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["transceiverInfoDisabled"] {
+				continue
+			}
+			transceiverInfo, err := c.client.GetDeviceTransceiverInfo(stat.slot, uint(i))
+			if err != nil {
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceTransceiverInfo", stat.slot, i))
+				continue
+			}
+			if transceiverInfo.Present != cndev.TransceiverPresent || transceiverInfo.Type != cndev.TransceiverTypeCable {
+				continue
+			}
+			ci := transceiverInfo.CableInfo
+			if ci.VoltMonitorSupport == cndev.MonitorNotSupported {
+				log.Debugf("Slot %d link %d skip cable volt state: VoltMonitorSupport=%d", stat.slot, i, ci.VoltMonitorSupport)
+				continue
+			}
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(ci.VoltState), labelValues...)
+		}
 	}
 }
 
@@ -1797,9 +2009,9 @@ func (c *cndevCollector) collectMLULinkCounterErrReplay(ch chan<- prometheus.Met
 			if stat.mlulinkInterfaceDisabled[i]["mluLinkEventCounterDisabled"] {
 				continue
 			}
-			_, replay, _, err := c.client.GetDeviceMLULinkEventCounter(stat.slot, uint(i))
+			_, _, replay, _, err := c.client.GetDeviceMLULinkEventCounterV2(stat.slot, uint(i))
 			if err != nil {
-				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkEventCounter", stat.slot, i))
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkEventCounterV2", stat.slot, i))
 				continue
 			}
 			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
@@ -1814,9 +2026,9 @@ func (c *cndevCollector) collectMLULinkCounterErrReplayFail(ch chan<- prometheus
 			if stat.mlulinkInterfaceDisabled[i]["mluLinkEventCounterDisabled"] {
 				continue
 			}
-			_, _, replayFail, err := c.client.GetDeviceMLULinkEventCounter(stat.slot, uint(i))
+			_, _, _, replayFail, err := c.client.GetDeviceMLULinkEventCounterV2(stat.slot, uint(i))
 			if err != nil {
-				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkEventCounter", stat.slot, i))
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkEventCounterV2", stat.slot, i))
 				continue
 			}
 			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
@@ -1865,13 +2077,30 @@ func (c *cndevCollector) collectMLULinkCounterLinkDown(ch chan<- prometheus.Metr
 			if stat.mlulinkInterfaceDisabled[i]["mluLinkEventCounterDisabled"] {
 				continue
 			}
-			counter, _, _, err := c.client.GetDeviceMLULinkEventCounter(stat.slot, uint(i))
+			counter, _, _, _, err := c.client.GetDeviceMLULinkEventCounterV2(stat.slot, uint(i))
 			if err != nil {
-				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkEventCounter", stat.slot, i))
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkEventCounterV2", stat.slot, i))
 				continue
 			}
 			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(counter), labelValues...)
+		}
+	}
+}
+
+func (c *cndevCollector) collectMLULinkCounterLinkFlap(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo.Range {
+		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["mluLinkEventCounterDisabled"] {
+				continue
+			}
+			_, flap, _, _, err := c.client.GetDeviceMLULinkEventCounterV2(stat.slot, uint(i))
+			if err != nil {
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceMLULinkEventCounterV2", stat.slot, i))
+				continue
+			}
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i, ppi: stat.linkPPI[i]})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.CounterValue, float64(flap), labelValues...)
 		}
 	}
 }
@@ -2140,21 +2369,32 @@ func (c *cndevCollector) collectNUMANodeID(ch chan<- prometheus.Metric, m metric
 func (c *cndevCollector) collectOpticalIsPresent(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo.Range {
 		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["opticalInfoDisabled"] {
+				continue
+			}
+			present, _, _, _, _, err := c.client.GetDeviceOpticalInfo(stat.slot, uint(i))
+			if err != nil {
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceOpticalInfo", stat.slot, i))
+				continue
+			}
 			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i})
-			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(stat.opticalPresent[i]), labelValues...)
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(present), labelValues...)
 		}
 	}
 }
 
 func (c *cndevCollector) collectOpticalRxpwr(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo.Range {
-		for i, present := range stat.opticalPresent {
-			if present != uint8(1) {
+		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["opticalInfoDisabled"] {
 				continue
 			}
-			_, _, _, _, rxpwrs, err := c.client.GetDeviceOpticalInfo(stat.slot, uint(i))
+			present, _, _, _, rxpwrs, err := c.client.GetDeviceOpticalInfo(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceOpticalInfo", stat.slot, i))
+				continue
+			}
+			if present != uint8(1) {
 				continue
 			}
 
@@ -2168,13 +2408,16 @@ func (c *cndevCollector) collectOpticalRxpwr(ch chan<- prometheus.Metric, m metr
 
 func (c *cndevCollector) collectOpticalTemp(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo.Range {
-		for i, present := range stat.opticalPresent {
-			if present != uint8(1) {
+		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["opticalInfoDisabled"] {
 				continue
 			}
-			_, temp, _, _, _, err := c.client.GetDeviceOpticalInfo(stat.slot, uint(i))
+			present, temp, _, _, _, err := c.client.GetDeviceOpticalInfo(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceOpticalInfo", stat.slot, i))
+				continue
+			}
+			if present != uint8(1) {
 				continue
 			}
 			if temp < 0 {
@@ -2189,13 +2432,16 @@ func (c *cndevCollector) collectOpticalTemp(ch chan<- prometheus.Metric, m metri
 
 func (c *cndevCollector) collectOpticalTxpwr(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo.Range {
-		for i, present := range stat.opticalPresent {
-			if present != uint8(1) {
+		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["opticalInfoDisabled"] {
 				continue
 			}
-			_, _, _, txpwrs, _, err := c.client.GetDeviceOpticalInfo(stat.slot, uint(i))
+			present, _, _, txpwrs, _, err := c.client.GetDeviceOpticalInfo(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceOpticalInfo", stat.slot, i))
+				continue
+			}
+			if present != uint8(1) {
 				continue
 			}
 
@@ -2209,13 +2455,16 @@ func (c *cndevCollector) collectOpticalTxpwr(ch chan<- prometheus.Metric, m metr
 
 func (c *cndevCollector) collectOpticalVolt(ch chan<- prometheus.Metric, m metrics.Metric) {
 	for _, stat := range c.sharedInfo.Range {
-		for i, present := range stat.opticalPresent {
-			if present != uint8(1) {
+		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["opticalInfoDisabled"] {
 				continue
 			}
-			_, _, volt, _, _, err := c.client.GetDeviceOpticalInfo(stat.slot, uint(i))
+			present, _, volt, _, _, err := c.client.GetDeviceOpticalInfo(stat.slot, uint(i))
 			if err != nil {
 				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceOpticalInfo", stat.slot, i))
+				continue
+			}
+			if present != uint8(1) {
 				continue
 			}
 			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i})
@@ -3063,6 +3312,59 @@ func (c *cndevCollector) collectTinyCoreUtil(ch chan<- prometheus.Metric, m metr
 		for core, util := range vpuUtil {
 			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, core: core})
 			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
+		}
+	}
+}
+
+func (c *cndevCollector) collectTNCUtil(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo.Range {
+		if stat.cndevInterfaceDisabled["tncUtilDisabled"] {
+			continue
+		}
+		util, err := c.client.GetDeviceTNCUtil(stat.slot)
+		if err != nil {
+			log.Errorln(errors.Wrapf(err, "Slot %d GetDeviceTNCUtil", stat.slot))
+			continue
+		}
+		if util < 0 || util > 100 {
+			log.Debugf("Slot %d tnc util %d is abnormal", stat.slot, util)
+			continue
+		}
+		labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP})
+		ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(util), labelValues...)
+	}
+}
+
+func (c *cndevCollector) collectTransceiverStatus(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo.Range {
+		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["transceiverInfoDisabled"] {
+				continue
+			}
+			transceiverInfo, err := c.client.GetDeviceTransceiverInfo(stat.slot, uint(i))
+			if err != nil {
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceTransceiverInfo", stat.slot, i))
+				continue
+			}
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(transceiverInfo.Present), labelValues...)
+		}
+	}
+}
+
+func (c *cndevCollector) collectTransceiverType(ch chan<- prometheus.Metric, m metrics.Metric) {
+	for _, stat := range c.sharedInfo.Range {
+		for i := 0; i < stat.link; i++ {
+			if stat.mlulinkInterfaceDisabled[i]["transceiverInfoDisabled"] {
+				continue
+			}
+			transceiverInfo, err := c.client.GetDeviceTransceiverInfo(stat.slot, uint(i))
+			if err != nil {
+				log.Errorln(errors.Wrapf(err, "Slot %d link %d GetDeviceTransceiverInfo", stat.slot, i))
+				continue
+			}
+			labelValues := getLabelValues(m.Labels, labelInfo{stat: stat, host: c.baseInfo.host, hostIP: c.baseInfo.hostIP, link: i})
+			ch <- prometheus.MustNewConstMetric(m.Desc, prometheus.GaugeValue, float64(transceiverInfo.Type), labelValues...)
 		}
 	}
 }

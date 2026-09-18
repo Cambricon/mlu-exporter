@@ -3158,6 +3158,1206 @@
     }
   },
   {
+    "Desc": "Desc{fqName: \"cable_lane_number\", help: \"The number of lanes that are in use of Cambricon MLU MLULink cable\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 4
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_lane_number\", help: \"The number of lanes that are in use of Cambricon MLU MLULink cable\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 8
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_lane_number\", help: \"The number of lanes that are in use of Cambricon MLU MLULink cable\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 4
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_link_length\", help: \"The cable link length of Cambricon MLU MLULink, unit is 'm'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 2
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_link_length\", help: \"The cable link length of Cambricon MLU MLULink, unit is 'm'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 3
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_link_length\", help: \"The cable link length of Cambricon MLU MLULink, unit is 'm'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 5
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_module_media_type\", help: \"The cable module media type of Cambricon MLU MLULink (0=Undefined, 1=Optical MMF, 2=Optical SMF, 3=Passive CU, 4=Active Cables, 5=Base-T)\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 3
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_module_media_type\", help: \"The cable module media type of Cambricon MLU MLULink (0=Undefined, 1=Optical MMF, 2=Optical SMF, 3=Passive CU, 4=Active Cables, 5=Base-T)\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_module_media_type\", help: \"The cable module media type of Cambricon MLU MLULink (0=Undefined, 1=Optical MMF, 2=Optical SMF, 3=Passive CU, 4=Active Cables, 5=Base-T)\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 2
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_module_state\", help: \"The cable module state of Cambricon MLU MLULink (0=LowPower, 1=PowerUp, 2=Ready, 3=PowerDown, 4=Fault)\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 2
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_module_state\", help: \"The cable module state of Cambricon MLU MLULink (0=LowPower, 1=PowerUp, 2=Ready, 3=PowerDown, 4=Fault)\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 2
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_module_state\", help: \"The cable module state of Cambricon MLU MLULink (0=LowPower, 1=PowerUp, 2=Ready, 3=PowerDown, 4=Fault)\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 3
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_temp_state\", help: \"The cable module temperature state of Cambricon MLU MLULink, '0' means 'normal', '1' means 'high alarm', '2' means 'low alarm', '3' means 'high warn', '4' means 'low warn'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_temp_state\", help: \"The cable module temperature state of Cambricon MLU MLULink, '0' means 'normal', '1' means 'high alarm', '2' means 'low alarm', '3' means 'high warn', '4' means 'low warn'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 3
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_temp_state\", help: \"The cable module temperature state of Cambricon MLU MLULink, '0' means 'normal', '1' means 'high alarm', '2' means 'low alarm', '3' means 'high warn', '4' means 'low warn'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_temperature\", help: \"The cable module temperature of Cambricon MLU, unit is 'celsius'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 35.5
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_temperature\", help: \"The cable module temperature of Cambricon MLU, unit is 'celsius'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 40.20000076293945
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_temperature\", help: \"The cable module temperature of Cambricon MLU, unit is 'celsius'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 38
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_volt_state\", help: \"The cable module voltage state of Cambricon MLU MLULink, '0' means 'normal', '1' means 'high alarm', '2' means 'low alarm', '3' means 'high warn', '4' means 'low warn'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_volt_state\", help: \"The cable module voltage state of Cambricon MLU MLULink, '0' means 'normal', '1' means 'high alarm', '2' means 'low alarm', '3' means 'high warn', '4' means 'low warn'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_volt_state\", help: \"The cable module voltage state of Cambricon MLU MLULink, '0' means 'normal', '1' means 'high alarm', '2' means 'low alarm', '3' means 'high warn', '4' means 'low warn'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 2
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_voltage\", help: \"The cable module voltage of Cambricon MLU, unit is 'V'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 3.299999952316284
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_voltage\", help: \"The cable module voltage of Cambricon MLU, unit is 'V'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 3.200000047683716
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"cable_voltage\", help: \"The cable module voltage of Cambricon MLU, unit is 'V'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 3.0999999046325684
+      }
+    }
+  },
+  {
     "Desc": "Desc{fqName: \"chassis_ib_info\", help: \"The ib info of Cambricon MLU chassis\", constLabels: {}, variableLabels: [chassis_bmc_ip chassis_dev chassis_dev_fw chassis_dev_mfc chassis_dev_model chassis_dev_sn chassis_ib_num chassis_nvme_num chassis_part_number chassis_product_date chassis_product_name chassis_psu_num chassis_sn chassis_vendor_name driver mcu mlu model node node_ip sn type uuid]}",
     "Metric": {
       "label": [
@@ -12208,6 +13408,190 @@
       ],
       "gauge": {
         "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"core_average_utilization\", help: \"The core average utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 75
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"core_average_utilization\", help: \"The core average utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 76
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"core_average_utilization\", help: \"The core average utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 77
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"core_average_utilization\", help: \"The core average utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 88
       }
     }
   },
@@ -33368,6 +34752,438 @@
     }
   },
   {
+    "Desc": "Desc{fqName: \"mlulink_link_flap_total\", help: \"The link flap counts of Cambricon MLU MLULink\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "counter": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mlulink_link_flap_total\", help: \"The link flap counts of Cambricon MLU MLULink\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "counter": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mlulink_link_flap_total\", help: \"The link flap counts of Cambricon MLU MLULink\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "counter": {
+        "value": 3
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mlulink_link_flap_total\", help: \"The link flap counts of Cambricon MLU MLULink\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "counter": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mlulink_link_flap_total\", help: \"The link flap counts of Cambricon MLU MLULink\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "counter": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mlulink_link_flap_total\", help: \"The link flap counts of Cambricon MLU MLULink\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "counter": {
+        "value": 2
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mlulink_link_flap_total\", help: \"The link flap counts of Cambricon MLU MLULink\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "counter": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mlulink_link_flap_total\", help: \"The link flap counts of Cambricon MLU MLULink\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "ppi",
+          "value": ""
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "counter": {
+        "value": 4
+      }
+    }
+  },
+  {
     "Desc": "Desc{fqName: \"mlulink_outbound_state\", help: \"The outbound command info of Cambricon MLU MLULink, '0' means 'disable', '1' means 'enable'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip ppi sn type uuid]}",
     "Metric": {
       "label": [
@@ -38624,6 +40440,190 @@
     }
   },
   {
+    "Desc": "Desc{fqName: \"mpm_core_utilization\", help: \"MLU core average utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 40
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_core_utilization\", help: \"MLU core average utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 40
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_core_utilization\", help: \"MLU core average utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 40
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_core_utilization\", help: \"MLU core average utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 40
+      }
+    }
+  },
+  {
     "Desc": "Desc{fqName: \"mpm_ipu_utilization\", help: \"MLU core average utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
     "Metric": {
       "label": [
@@ -40772,6 +42772,190 @@
       ],
       "gauge": {
         "value": 30
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_tnc_utilization\", help: \"MLU TNC average utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 35
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_tnc_utilization\", help: \"MLU TNC average utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 35
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_tnc_utilization\", help: \"MLU TNC average utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 35
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"mpm_tnc_utilization\", help: \"MLU TNC average utilization via MPM, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 35
       }
     }
   },
@@ -40960,6 +43144,330 @@
     }
   },
   {
+    "Desc": "Desc{fqName: \"optical_rx_power\", help: \"The input optical power of Cambricon MLU MLULink, unit is 'dBm'\", constLabels: {}, variableLabels: [driver lane link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "lane",
+          "value": "0"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 0.5
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"optical_rx_power\", help: \"The input optical power of Cambricon MLU MLULink, unit is 'dBm'\", constLabels: {}, variableLabels: [driver lane link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "lane",
+          "value": "0"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 0.5
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"optical_rx_power\", help: \"The input optical power of Cambricon MLU MLULink, unit is 'dBm'\", constLabels: {}, variableLabels: [driver lane link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "lane",
+          "value": "0"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1.5
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"optical_rx_power\", help: \"The input optical power of Cambricon MLU MLULink, unit is 'dBm'\", constLabels: {}, variableLabels: [driver lane link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "lane",
+          "value": "1"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 0.699999988079071
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"optical_rx_power\", help: \"The input optical power of Cambricon MLU MLULink, unit is 'dBm'\", constLabels: {}, variableLabels: [driver lane link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "lane",
+          "value": "1"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1.7000000476837158
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"optical_rx_power\", help: \"The input optical power of Cambricon MLU MLULink, unit is 'dBm'\", constLabels: {}, variableLabels: [driver lane link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "lane",
+          "value": "1"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 0.699999988079071
+      }
+    }
+  },
+  {
     "Desc": "Desc{fqName: \"optical_status\", help: \"The optical module or cable status of Cambricon MLU MLULink, '0' means 'absent', '1' means 'present', '2' means 'not supported'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
     "Metric": {
       "label": [
@@ -41005,7 +43513,7 @@
         }
       ],
       "gauge": {
-        "value": 0
+        "value": 1
       }
     }
   },
@@ -41055,7 +43563,7 @@
         }
       ],
       "gauge": {
-        "value": 0
+        "value": 1
       }
     }
   },
@@ -41255,7 +43763,7 @@
         }
       ],
       "gauge": {
-        "value": 0
+        "value": 1
       }
     }
   },
@@ -41305,7 +43813,7 @@
         }
       ],
       "gauge": {
-        "value": 0
+        "value": 2
       }
     }
   },
@@ -41356,6 +43864,630 @@
       ],
       "gauge": {
         "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"optical_temperature\", help: \"The optical module temperature of Cambricon MLU, unit is 'celsius'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 12
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"optical_temperature\", help: \"The optical module temperature of Cambricon MLU, unit is 'celsius'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 22
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"optical_temperature\", help: \"The optical module temperature of Cambricon MLU, unit is 'celsius'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 23
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"optical_tx_power\", help: \"The output optical power of Cambricon MLU MLULink, unit is 'dBm'\", constLabels: {}, variableLabels: [driver lane link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "lane",
+          "value": "0"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 0.5
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"optical_tx_power\", help: \"The output optical power of Cambricon MLU MLULink, unit is 'dBm'\", constLabels: {}, variableLabels: [driver lane link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "lane",
+          "value": "0"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 0.5
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"optical_tx_power\", help: \"The output optical power of Cambricon MLU MLULink, unit is 'dBm'\", constLabels: {}, variableLabels: [driver lane link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "lane",
+          "value": "0"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1.5
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"optical_tx_power\", help: \"The output optical power of Cambricon MLU MLULink, unit is 'dBm'\", constLabels: {}, variableLabels: [driver lane link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "lane",
+          "value": "1"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 0.699999988079071
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"optical_tx_power\", help: \"The output optical power of Cambricon MLU MLULink, unit is 'dBm'\", constLabels: {}, variableLabels: [driver lane link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "lane",
+          "value": "1"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1.7000000476837158
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"optical_tx_power\", help: \"The output optical power of Cambricon MLU MLULink, unit is 'dBm'\", constLabels: {}, variableLabels: [driver lane link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "lane",
+          "value": "1"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 0.699999988079071
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"optical_voltage\", help: \"The optical module voltage of Cambricon MLU, unit is 'V'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 12
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"optical_voltage\", help: \"The optical module voltage of Cambricon MLU, unit is 'V'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 22
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"optical_voltage\", help: \"The optical module voltage of Cambricon MLU, unit is 'V'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 23
       }
     }
   },
@@ -52242,6 +55374,990 @@
       ],
       "gauge": {
         "value": 12
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"tnc_utilization\", help: \"The TNC average utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 60
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"tnc_utilization\", help: \"The TNC average utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 61
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"tnc_utilization\", help: \"The TNC average utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 62
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"tnc_utilization\", help: \"The TNC average utilization of Cambricon MLU, unit is '%'\", constLabels: {}, variableLabels: [driver mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 73
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"transceiver_status\", help: \"The transceiver module presence status of Cambricon MLU MLULink, '0' means 'absent', '1' means 'present', '2' means 'not supported'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"transceiver_status\", help: \"The transceiver module presence status of Cambricon MLU MLULink, '0' means 'absent', '1' means 'present', '2' means 'not supported'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"transceiver_status\", help: \"The transceiver module presence status of Cambricon MLU MLULink, '0' means 'absent', '1' means 'present', '2' means 'not supported'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"transceiver_status\", help: \"The transceiver module presence status of Cambricon MLU MLULink, '0' means 'absent', '1' means 'present', '2' means 'not supported'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"transceiver_status\", help: \"The transceiver module presence status of Cambricon MLU MLULink, '0' means 'absent', '1' means 'present', '2' means 'not supported'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"transceiver_status\", help: \"The transceiver module presence status of Cambricon MLU MLULink, '0' means 'absent', '1' means 'present', '2' means 'not supported'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"transceiver_status\", help: \"The transceiver module presence status of Cambricon MLU MLULink, '0' means 'absent', '1' means 'present', '2' means 'not supported'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 2
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"transceiver_status\", help: \"The transceiver module presence status of Cambricon MLU MLULink, '0' means 'absent', '1' means 'present', '2' means 'not supported'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"transceiver_type\", help: \"The transceiver module type of Cambricon MLU MLULink, '0' means 'optical', '1' means 'cable', '2' means 'unknown'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"transceiver_type\", help: \"The transceiver module type of Cambricon MLU MLULink, '0' means 'optical', '1' means 'cable', '2' means 'unknown'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"transceiver_type\", help: \"The transceiver module type of Cambricon MLU MLULink, '0' means 'optical', '1' means 'cable', '2' means 'unknown'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"transceiver_type\", help: \"The transceiver module type of Cambricon MLU MLULink, '0' means 'optical', '1' means 'cable', '2' means 'unknown'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "0"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"transceiver_type\", help: \"The transceiver module type of Cambricon MLU MLULink, '0' means 'optical', '1' means 'cable', '2' means 'unknown'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "0"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn1"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid1"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"transceiver_type\", help: \"The transceiver module type of Cambricon MLU MLULink, '0' means 'optical', '1' means 'cable', '2' means 'unknown'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "1"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn2"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid2"
+        }
+      ],
+      "gauge": {
+        "value": 1
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"transceiver_type\", help: \"The transceiver module type of Cambricon MLU MLULink, '0' means 'optical', '1' means 'cable', '2' means 'unknown'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "2"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn3"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid3"
+        }
+      ],
+      "gauge": {
+        "value": 0
+      }
+    }
+  },
+  {
+    "Desc": "Desc{fqName: \"transceiver_type\", help: \"The transceiver module type of Cambricon MLU MLULink, '0' means 'optical', '1' means 'cable', '2' means 'unknown'\", constLabels: {}, variableLabels: [driver link mcu mlu model node node_ip sn type uuid]}",
+    "Metric": {
+      "label": [
+        {
+          "name": "driver",
+          "value": "v2.2.2"
+        },
+        {
+          "name": "link",
+          "value": "1"
+        },
+        {
+          "name": "mcu",
+          "value": "v1.1.1"
+        },
+        {
+          "name": "mlu",
+          "value": "3"
+        },
+        {
+          "name": "model",
+          "value": "MLU370"
+        },
+        {
+          "name": "node",
+          "value": "machine1"
+        },
+        {
+          "name": "node_ip",
+          "value": "machineip1"
+        },
+        {
+          "name": "sn",
+          "value": "sn4"
+        },
+        {
+          "name": "type",
+          "value": "mlu370"
+        },
+        {
+          "name": "uuid",
+          "value": "uuid4"
+        }
+      ],
+      "gauge": {
+        "value": 0
       }
     }
   },

@@ -148,6 +148,21 @@ func (mr *CndevMockRecorder) GetDeviceAddressSwaps(idx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceAddressSwaps", reflect.TypeOf((*Cndev)(nil).GetDeviceAddressSwaps), idx)
 }
 
+// GetDeviceAllCoreUtil mocks base method.
+func (m *Cndev) GetDeviceAllCoreUtil(idx uint) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceAllCoreUtil", idx)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceAllCoreUtil indicates an expected call of GetDeviceAllCoreUtil.
+func (mr *CndevMockRecorder) GetDeviceAllCoreUtil(idx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceAllCoreUtil", reflect.TypeOf((*Cndev)(nil).GetDeviceAllCoreUtil), idx)
+}
+
 // GetDeviceBAR4MemoryInfo mocks base method.
 func (m *Cndev) GetDeviceBAR4MemoryInfo(idx uint) (uint64, uint64, uint64, error) {
 	m.ctrl.T.Helper()
@@ -577,21 +592,22 @@ func (mr *CndevMockRecorder) GetDeviceMLULinkErrorCounter(idx, link any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceMLULinkErrorCounter", reflect.TypeOf((*Cndev)(nil).GetDeviceMLULinkErrorCounter), idx, link)
 }
 
-// GetDeviceMLULinkEventCounter mocks base method.
-func (m *Cndev) GetDeviceMLULinkEventCounter(idx, link uint) (uint64, uint64, uint64, error) {
+// GetDeviceMLULinkEventCounterV2 mocks base method.
+func (m *Cndev) GetDeviceMLULinkEventCounterV2(idx, link uint) (uint64, uint64, uint64, uint64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDeviceMLULinkEventCounter", idx, link)
+	ret := m.ctrl.Call(m, "GetDeviceMLULinkEventCounterV2", idx, link)
 	ret0, _ := ret[0].(uint64)
 	ret1, _ := ret[1].(uint64)
 	ret2, _ := ret[2].(uint64)
-	ret3, _ := ret[3].(error)
-	return ret0, ret1, ret2, ret3
+	ret3, _ := ret[3].(uint64)
+	ret4, _ := ret[4].(error)
+	return ret0, ret1, ret2, ret3, ret4
 }
 
-// GetDeviceMLULinkEventCounter indicates an expected call of GetDeviceMLULinkEventCounter.
-func (mr *CndevMockRecorder) GetDeviceMLULinkEventCounter(idx, link any) *gomock.Call {
+// GetDeviceMLULinkEventCounterV2 indicates an expected call of GetDeviceMLULinkEventCounterV2.
+func (mr *CndevMockRecorder) GetDeviceMLULinkEventCounterV2(idx, link any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceMLULinkEventCounter", reflect.TypeOf((*Cndev)(nil).GetDeviceMLULinkEventCounter), idx, link)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceMLULinkEventCounterV2", reflect.TypeOf((*Cndev)(nil).GetDeviceMLULinkEventCounterV2), idx, link)
 }
 
 // GetDeviceMLULinkPPI mocks base method.
@@ -1231,6 +1247,21 @@ func (mr *CndevMockRecorder) GetDeviceSN(idx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceSN", reflect.TypeOf((*Cndev)(nil).GetDeviceSN), idx)
 }
 
+// GetDeviceTNCUtil mocks base method.
+func (m *Cndev) GetDeviceTNCUtil(idx uint) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceTNCUtil", idx)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceTNCUtil indicates an expected call of GetDeviceTNCUtil.
+func (mr *CndevMockRecorder) GetDeviceTNCUtil(idx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceTNCUtil", reflect.TypeOf((*Cndev)(nil).GetDeviceTNCUtil), idx)
+}
+
 // GetDeviceTemperature mocks base method.
 func (m *Cndev) GetDeviceTemperature(idx uint) (int, int, int, []int, []int, error) {
 	m.ctrl.T.Helper()
@@ -1278,6 +1309,21 @@ func (m *Cndev) GetDeviceTinyCoreUtil(idx uint) ([]int, error) {
 func (mr *CndevMockRecorder) GetDeviceTinyCoreUtil(idx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceTinyCoreUtil", reflect.TypeOf((*Cndev)(nil).GetDeviceTinyCoreUtil), idx)
+}
+
+// GetDeviceTransceiverInfo mocks base method.
+func (m *Cndev) GetDeviceTransceiverInfo(idx, link uint) (cndev.TransceiverInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceTransceiverInfo", idx, link)
+	ret0, _ := ret[0].(cndev.TransceiverInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceTransceiverInfo indicates an expected call of GetDeviceTransceiverInfo.
+func (mr *CndevMockRecorder) GetDeviceTransceiverInfo(idx, link any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceTransceiverInfo", reflect.TypeOf((*Cndev)(nil).GetDeviceTransceiverInfo), idx, link)
 }
 
 // GetDeviceUUID mocks base method.

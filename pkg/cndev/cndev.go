@@ -16,6 +16,12 @@ package cndev
 
 // #cgo LDFLAGS: -ldl -Wl,--export-dynamic -Wl,--unresolved-symbols=ignore-in-object-files
 // #include "include/cndev.h"
+//
+// // Helper functions to access C union members from Go (CGo cannot access union fields directly)
+// static cndevCableInfo_t* getTransceiverCableInfo(cndevTransceiverInfo_t *t) { return &t->media.cable_info; }
+// static cndevOpticalInfo_t* getTransceiverOpticalInfo(cndevTransceiverInfo_t *t) { return &t->media.optical_info; }
+// static int getTransceiverPresent(cndevTransceiverInfo_t *t) { return (int)t->present; }
+// static int getTransceiverType(cndevTransceiverInfo_t *t) { return (int)t->type; }
 import "C"
 
 import (
@@ -95,12 +101,33 @@ type ChassisDevInfo struct {
 	Mfc   string
 }
 
+type CableInfo struct {
+	LinkLength         float32
+	LaneNumber         uint8
+	ModuleMediaType    int
+	ModuleState        int
+	TempMonitorSupport uint8
+	Temp               float32
+	TempState          int
+	VoltMonitorSupport uint8
+	Volt               float32
+	VoltState          int
+}
+
+type TransceiverInfo struct {
+	Present   int
+	Type      int
+	CableInfo CableInfo
+}
+
 type MpmMetricID int
 
 var (
 	MpmMetricIPUUtil              MpmMetricID = MpmMetricID(C.CNDEV_MPM_METRIC_IPU_UTIL)
 	MpmMetricMLUUtil              MpmMetricID = MpmMetricID(C.CNDEV_MPM_METRIC_MLU_UTIL)
 	MpmMetricTensorUtil           MpmMetricID = MpmMetricID(C.CNDEV_MPM_METRIC_TENSOR_UTIL)
+	MpmMetricCoreUtil             MpmMetricID = MpmMetricID(C.CNDEV_MPM_METRIC_CORE_UTIL)
+	MpmMetricTNCUtil              MpmMetricID = MpmMetricID(C.CNDEV_MPM_METRIC_TNC_UTIL)
 	MpmMetricPCIeTxPerSec         MpmMetricID = MpmMetricID(C.CNDEV_MPM_METRIC_PCIE_TX_PER_SEC)
 	MpmMetricPCIeRxPerSec         MpmMetricID = MpmMetricID(C.CNDEV_MPM_METRIC_PCIE_RX_PER_SEC)
 	MpmMetricMLULinkTotalTxPerSec MpmMetricID = MpmMetricID(C.CNDEV_MPM_METRIC_MLULINK_TOTAL_TX_PER_SEC)
@@ -109,6 +136,22 @@ var (
 
 // Maximum number of MLULinks per device (L0..L17, see cndev.h CNDEV_MPM_METRIC_MLULINK_L0_TX_PER_SEC .. CNDEV_MPM_METRIC_MLULINK_L17_RX_PER_SEC)
 const MpmMaxLinks = 18
+
+// Transceiver presence state (from cndev.h CNDEV_MLULINK_PRESENCE_STATE_*)
+const (
+	TransceiverAbsent  = 0
+	TransceiverPresent = 1
+)
+
+// Transceiver type (from cndev.h CNDEV_MLULINK_TRANSCEIVER_*)
+const (
+	TransceiverTypeOptical = 0
+	TransceiverTypeCable   = 1
+	TransceiverTypeUnknown = 2
+)
+
+// Cable monitor support flag (from cndev.h cndevCableInfo_t)
+const MonitorNotSupported = 0
 
 // Per-link MLULink metric IDs start at 62 (L0Tx, see cndev.h CNDEV_MPM_METRIC_MLULINK_L0_TX_PER_SEC)
 // and follow the pattern: L{n}Tx = 62 + 2*n, L{n}Rx = 63 + 2*n.
@@ -136,6 +179,7 @@ type Cndev interface {
 	GetAllSMluInfo(idx uint) ([]SmluInfo, error)
 	GetDeviceActivity(idx uint) (int, error)
 	GetDeviceAddressSwaps(idx uint) (uint32, uint32, uint32, uint32, uint32, error)
+	GetDeviceAllCoreUtil(idx uint) (int, error)
 	GetDeviceBAR4MemoryInfo(idx uint) (uint64, uint64, uint64, error)
 	GetDeviceChassisInfo(idx uint) (uint64, string, string, string, string, string, []ChassisDevInfo, []ChassisDevInfo, []ChassisDevInfo, error)
 	GetDeviceClusterCount(idx uint) (int, error)
@@ -164,7 +208,7 @@ type Cndev interface {
 	GetDeviceMLULinkCapability(idx, link uint) (uint, uint, error)
 	GetDeviceMLULinkCounter(idx, link uint) (uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, error)
 	GetDeviceMLULinkErrorCounter(idx, link uint) (uint64, uint64, uint64, uint64, uint64, error)
-	GetDeviceMLULinkEventCounter(idx, link uint) (uint64, uint64, uint64, error)
+	GetDeviceMLULinkEventCounterV2(idx, link uint) (uint64, uint64, uint64, uint64, error)
 	GetDeviceMLULinkPortMode(idx, link uint) (int, error)
 	GetDeviceMLULinkPortNumber(idx uint) int
 	GetDeviceMLULinkPPI(idx, link uint) (string, error)
@@ -177,6 +221,7 @@ type Cndev interface {
 	GetDeviceModel(idx uint) string
 	GetDeviceNUMANodeID(idx uint) (int, error)
 	GetDeviceOpticalInfo(idx, link uint) (uint8, float32, float32, []float32, []float32, error)
+	GetDeviceTransceiverInfo(idx, link uint) (TransceiverInfo, error)
 	GetDeviceOsMemory(idx uint) (int64, int64, error)
 	GetDeviceOverTemperatureInfo(idx uint) (uint32, uint32, error)
 	GetDeviceOverTemperatureShutdownThreshold(idx uint) (int, error)
@@ -202,6 +247,7 @@ type Cndev interface {
 	GetDeviceTemperature(idx uint) (int, int, int, []int, []int, error)
 	GetDeviceTensorUtil(idx uint) (int, error)
 	GetDeviceTinyCoreUtil(idx uint) ([]int, error)
+	GetDeviceTNCUtil(idx uint) (int, error)
 	GetDeviceUtil(idx uint) (int, []int, error)
 	GetDeviceFrequency(idx uint) (int, int, int, error)
 	GetDeviceUUID(idx uint) (string, error)
@@ -433,7 +479,7 @@ func (c *cndev) GetDeviceActivity(idx uint) (int, error) {
 		return 0, errorString(ret)
 	}
 
-	type fieldVaule struct {
+	type fieldValue struct {
 		fieldID     int32
 		ret         int32
 		value       int
@@ -442,8 +488,8 @@ func (c *cndev) GetDeviceActivity(idx uint) (int, error) {
 		timestamp   int64
 		scopeID     uint
 	}
-	var fieldVauleInfo fieldVaule
-	value := (*C.cndevFieldVaule_t)(C.malloc(C.size_t(unsafe.Sizeof(fieldVauleInfo))))
+	var fieldValueInfo fieldValue
+	value := (*C.cndevFieldValue_t)(C.malloc(C.size_t(unsafe.Sizeof(fieldValueInfo))))
 	if value == nil {
 		return 0, fmt.Errorf("malloc failed for cndevDeviceGetFieldValues")
 	}
@@ -458,7 +504,7 @@ func (c *cndev) GetDeviceActivity(idx uint) (int, error) {
 	if err := errorString(value.ret); err != nil {
 		return 0, err
 	}
-	activity := *(*int)(unsafe.Pointer(uintptr(unsafe.Pointer(value)) + unsafe.Sizeof(fieldVauleInfo.fieldID) + unsafe.Sizeof(fieldVauleInfo.ret)))
+	activity := *(*int)(unsafe.Pointer(uintptr(unsafe.Pointer(value)) + unsafe.Sizeof(fieldValueInfo.fieldID) + unsafe.Sizeof(fieldValueInfo.ret)))
 	return int(activity), nil
 }
 
@@ -471,6 +517,40 @@ func (c *cndev) GetDeviceAddressSwaps(idx uint) (uint32, uint32, uint32, uint32,
 	addressSwap.version = C.CNDEV_VERSION_6
 	r := C.cndevGetAddressSwaps(&addressSwap, c.Load(idx))
 	return uint32(addressSwap.correctCounts), uint32(addressSwap.uncorrectCounts), uint32(addressSwap.histogram[C.CNDEV_AVAILABILITY_XLABLE_NONE]), uint32(addressSwap.histogram[C.CNDEV_AVAILABILITY_XLABLE_PARTIAL]), uint32(addressSwap.histogram[C.CNDEV_AVAILABILITY_XLABLE_MAX]), errorString(r)
+}
+
+func (c *cndev) GetDeviceAllCoreUtil(idx uint) (int, error) {
+	if ret := dl.checkExist("cndevDeviceGetFieldValues"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
+	type fieldValue struct {
+		fieldID     int32
+		ret         int32
+		value       int
+		valueType   int
+		latencyUsec int64
+		timestamp   int64
+		scopeID     uint
+	}
+	var fieldValueInfo fieldValue
+	value := (*C.cndevFieldValue_t)(C.malloc(C.size_t(unsafe.Sizeof(fieldValueInfo))))
+	if value == nil {
+		return 0, fmt.Errorf("malloc failed for cndevDeviceGetFieldValues")
+	}
+	defer C.free(unsafe.Pointer(value))
+
+	value.fieldId = C.cndevFieldAllCoreUtilization
+
+	r := C.cndevDeviceGetFieldValues(c.Load(idx), C.int(1), value)
+	if err := errorString(r); err != nil {
+		return 0, err
+	}
+	if err := errorString(value.ret); err != nil {
+		return 0, err
+	}
+	allCoreUtil := *(*int)(unsafe.Pointer(uintptr(unsafe.Pointer(value)) + unsafe.Sizeof(fieldValueInfo.fieldID) + unsafe.Sizeof(fieldValueInfo.ret)))
+	return int(allCoreUtil), nil
 }
 
 func (c *cndev) GetDeviceOsMemory(idx uint) (int64, int64, error) {
@@ -925,14 +1005,14 @@ func (c *cndev) GetDeviceMLULinkErrorCounter(idx, link uint) (uint64, uint64, ui
 	return uint64(cardMLULinkErrorCounter.illegalAccessCnt), uint64(cardMLULinkErrorCounter.correctFecCnt), uint64(cardMLULinkErrorCounter.uncorrectFecCnt), uint64(cardMLULinkErrorCounter.rxBadFcsPkt), uint64(cardMLULinkErrorCounter.txBadFcsPkt), errorString(r)
 }
 
-func (c *cndev) GetDeviceMLULinkEventCounter(idx, link uint) (uint64, uint64, uint64, error) {
-	if ret := dl.checkExist("cndevGetMLULinkEventCounter"); ret != C.CNDEV_SUCCESS {
-		return 0, 0, 0, errorString(ret)
+func (c *cndev) GetDeviceMLULinkEventCounterV2(idx, link uint) (uint64, uint64, uint64, uint64, error) {
+	if ret := dl.checkExist("cndevGetMLULinkEventCounterV2"); ret != C.CNDEV_SUCCESS {
+		return 0, 0, 0, 0, errorString(ret)
 	}
 
-	var cardMLULinkEventCounter C.cndevMLULinkEventCounter_t
-	r := C.cndevGetMLULinkEventCounter(&cardMLULinkEventCounter, c.Load(idx), C.int(link))
-	return uint64(cardMLULinkEventCounter.linkDown), uint64(cardMLULinkEventCounter.replay), uint64(cardMLULinkEventCounter.replayFail), errorString(r)
+	var cardMLULinkEventCounter C.cndevMLULinkEventCounterV2_t
+	r := C.cndevGetMLULinkEventCounterV2(&cardMLULinkEventCounter, c.Load(idx), C.int(link))
+	return uint64(cardMLULinkEventCounter.linkDown), uint64(cardMLULinkEventCounter.linkFlap), uint64(cardMLULinkEventCounter.replay), uint64(cardMLULinkEventCounter.replayFail), errorString(r)
 }
 
 func (c *cndev) GetDeviceMLULinkPortMode(idx, link uint) (int, error) {
@@ -1086,12 +1166,51 @@ func (c *cndev) GetDeviceOpticalInfo(idx, link uint) (uint8, float32, float32, [
 	return uint8(opticalInfo.present), float32(opticalInfo.temp), float32(opticalInfo.volt), txpwr, rxpwr, errorString(r)
 }
 
+func (c *cndev) GetDeviceTransceiverInfo(idx, link uint) (TransceiverInfo, error) {
+	if ret := dl.checkExist("cndevGetTransceiverInfo"); ret != C.CNDEV_SUCCESS {
+		return TransceiverInfo{}, errorString(ret)
+	}
+
+	var transceiverInfo C.cndevTransceiverInfo_t
+	r := C.cndevGetTransceiverInfo(&transceiverInfo, c.Load(idx), C.int(link))
+	if err := errorString(r); err != nil {
+		return TransceiverInfo{}, err
+	}
+
+	present := C.getTransceiverPresent(&transceiverInfo)
+	ttype := C.getTransceiverType(&transceiverInfo)
+
+	result := TransceiverInfo{
+		Present: int(present),
+		Type:    int(ttype),
+	}
+
+	// Only fill CableInfo when transceiver type is cable
+	if ttype == C.CNDEV_MLULINK_TRANSCEIVER_CABLE {
+		ci := C.getTransceiverCableInfo(&transceiverInfo)
+		result.CableInfo = CableInfo{
+			LinkLength:         float32(ci.link_length),
+			LaneNumber:         uint8(ci.lane_number),
+			ModuleMediaType:    int(ci.module_media_type),
+			ModuleState:        int(ci.module_state),
+			TempMonitorSupport: uint8(ci.temp_monitor_support),
+			Temp:               float32(ci.temp),
+			TempState:          int(ci.temp_state),
+			VoltMonitorSupport: uint8(ci.volt_monitor_support),
+			Volt:               float32(ci.volt),
+			VoltState:          int(ci.volt_state),
+		}
+	}
+
+	return result, nil
+}
+
 func (c *cndev) GetDeviceOverTemperatureShutdownThreshold(idx uint) (int, error) {
 	if ret := dl.checkExist("cndevDeviceGetFieldValues"); ret != C.CNDEV_SUCCESS {
 		return 0, errorString(ret)
 	}
 
-	type fieldVaule struct {
+	type fieldValue struct {
 		fieldID     int32
 		ret         int32
 		value       int
@@ -1100,8 +1219,8 @@ func (c *cndev) GetDeviceOverTemperatureShutdownThreshold(idx uint) (int, error)
 		timestamp   int64
 		scopeID     uint
 	}
-	var fieldVauleInfo fieldVaule
-	value := (*C.cndevFieldVaule_t)(C.malloc(C.size_t(unsafe.Sizeof(fieldVauleInfo))))
+	var fieldValueInfo fieldValue
+	value := (*C.cndevFieldValue_t)(C.malloc(C.size_t(unsafe.Sizeof(fieldValueInfo))))
 	if value == nil {
 		return 0, fmt.Errorf("malloc failed for cndevDeviceGetFieldValues")
 	}
@@ -1115,7 +1234,7 @@ func (c *cndev) GetDeviceOverTemperatureShutdownThreshold(idx uint) (int, error)
 	if err := errorString(value.ret); err != nil {
 		return 0, err
 	}
-	shutdown := *(*int)(unsafe.Pointer(uintptr(unsafe.Pointer(value)) + unsafe.Sizeof(fieldVauleInfo.fieldID) + unsafe.Sizeof(fieldVauleInfo.ret)))
+	shutdown := *(*int)(unsafe.Pointer(uintptr(unsafe.Pointer(value)) + unsafe.Sizeof(fieldValueInfo.fieldID) + unsafe.Sizeof(fieldValueInfo.ret)))
 	return int(shutdown), nil
 }
 
@@ -1124,7 +1243,7 @@ func (c *cndev) GetDeviceOverTemperatureSlowdownThreshold(idx uint) (int, error)
 		return 0, errorString(ret)
 	}
 
-	type fieldVaule struct {
+	type fieldValue struct {
 		fieldID     int32
 		ret         int32
 		value       int
@@ -1133,8 +1252,8 @@ func (c *cndev) GetDeviceOverTemperatureSlowdownThreshold(idx uint) (int, error)
 		timestamp   int64
 		scopeID     uint
 	}
-	var fieldVauleInfo fieldVaule
-	value := (*C.cndevFieldVaule_t)(C.malloc(C.size_t(unsafe.Sizeof(fieldVauleInfo))))
+	var fieldValueInfo fieldValue
+	value := (*C.cndevFieldValue_t)(C.malloc(C.size_t(unsafe.Sizeof(fieldValueInfo))))
 	if value == nil {
 		return 0, fmt.Errorf("malloc failed for cndevDeviceGetFieldValues")
 	}
@@ -1148,7 +1267,7 @@ func (c *cndev) GetDeviceOverTemperatureSlowdownThreshold(idx uint) (int, error)
 	if err := errorString(value.ret); err != nil {
 		return 0, err
 	}
-	slowDown := *(*int)(unsafe.Pointer(uintptr(unsafe.Pointer(value)) + unsafe.Sizeof(fieldVauleInfo.fieldID) + unsafe.Sizeof(fieldVauleInfo.ret)))
+	slowDown := *(*int)(unsafe.Pointer(uintptr(unsafe.Pointer(value)) + unsafe.Sizeof(fieldValueInfo.fieldID) + unsafe.Sizeof(fieldValueInfo.ret)))
 	return int(slowDown), nil
 }
 
@@ -1569,7 +1688,7 @@ func (c *cndev) GetDeviceTensorUtil(idx uint) (int, error) {
 		return 0, errorString(ret)
 	}
 
-	type fieldVaule struct {
+	type fieldValue struct {
 		fieldID     int32
 		ret         int32
 		value       int
@@ -1578,8 +1697,8 @@ func (c *cndev) GetDeviceTensorUtil(idx uint) (int, error) {
 		timestamp   int64
 		scopeID     uint
 	}
-	var fieldVauleInfo fieldVaule
-	value := (*C.cndevFieldVaule_t)(C.malloc(C.size_t(unsafe.Sizeof(fieldVauleInfo))))
+	var fieldValueInfo fieldValue
+	value := (*C.cndevFieldValue_t)(C.malloc(C.size_t(unsafe.Sizeof(fieldValueInfo))))
 	if value == nil {
 		return 0, fmt.Errorf("malloc failed for cndevDeviceGetFieldValues")
 	}
@@ -1594,7 +1713,7 @@ func (c *cndev) GetDeviceTensorUtil(idx uint) (int, error) {
 	if err := errorString(value.ret); err != nil {
 		return 0, err
 	}
-	tensorUtil := *(*int)(unsafe.Pointer(uintptr(unsafe.Pointer(value)) + unsafe.Sizeof(fieldVauleInfo.fieldID) + unsafe.Sizeof(fieldVauleInfo.ret)))
+	tensorUtil := *(*int)(unsafe.Pointer(uintptr(unsafe.Pointer(value)) + unsafe.Sizeof(fieldValueInfo.fieldID) + unsafe.Sizeof(fieldValueInfo.ret)))
 	return int(tensorUtil), nil
 }
 
@@ -1614,6 +1733,40 @@ func (c *cndev) GetDeviceTinyCoreUtil(idx uint) ([]int, error) {
 		tinyCoreUtil[i] = int(cardTinyCoreUtil.tinyCoreUtilization[i])
 	}
 	return tinyCoreUtil, nil
+}
+
+func (c *cndev) GetDeviceTNCUtil(idx uint) (int, error) {
+	if ret := dl.checkExist("cndevDeviceGetFieldValues"); ret != C.CNDEV_SUCCESS {
+		return 0, errorString(ret)
+	}
+
+	type fieldValue struct {
+		fieldID     int32
+		ret         int32
+		value       int
+		valueType   int
+		latencyUsec int64
+		timestamp   int64
+		scopeID     uint
+	}
+	var fieldValueInfo fieldValue
+	value := (*C.cndevFieldValue_t)(C.malloc(C.size_t(unsafe.Sizeof(fieldValueInfo))))
+	if value == nil {
+		return 0, fmt.Errorf("malloc failed for cndevDeviceGetFieldValues")
+	}
+	defer C.free(unsafe.Pointer(value))
+
+	value.fieldId = C.cndevFieldTNCAverageUtilization
+
+	r := C.cndevDeviceGetFieldValues(c.Load(idx), C.int(1), value)
+	if err := errorString(r); err != nil {
+		return 0, err
+	}
+	if err := errorString(value.ret); err != nil {
+		return 0, err
+	}
+	tncUtil := *(*int)(unsafe.Pointer(uintptr(unsafe.Pointer(value)) + unsafe.Sizeof(fieldValueInfo.fieldID) + unsafe.Sizeof(fieldValueInfo.ret)))
+	return int(tncUtil), nil
 }
 
 func (c *cndev) GetDeviceUtil(idx uint) (int, []int, error) {

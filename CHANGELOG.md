@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.4.0
+
+- Add transceiver info metric
+- Add mlulink link flap metric
+- Add tnc core average metrics
+- Bump cndev to v6.5.50
+- Fix send-on-closed-channel panic in xidevent manager
+
 ## v2.3.0
 
 - Add MPM collector
