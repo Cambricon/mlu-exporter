@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.5.0
+
+- Add listen-address option
+- Add disable-mlulink-state-check option
+
 ## v2.4.0
 
 - Add transceiver info metric

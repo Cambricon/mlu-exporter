@@ -80,3 +80,19 @@ func TestEnsureMLUAllOK(t *testing.T) {
 		assert.False(t, mluInfo.InProblem.Load())
 	})
 }
+
+func TestMLUStatMapRangeSkipsOptions(t *testing.T) {
+	m := &MLUStatMap{}
+	m.StatMap.Store("uuid-0", MLUStat{model: "mlu0", slot: 0})
+	// a non-MLUStat entry (runtime option) lives alongside device stats
+	m.StatMap.Store(OptionKeyDisableMLULinkStateCheck, true)
+
+	var seen []string
+	m.Range(func(key string, stat MLUStat) bool {
+		seen = append(seen, key)
+		_ = stat
+		return true
+	})
+	// Range must skip the option entry and only yield device stats
+	assert.Equal(t, []string{"uuid-0"}, seen)
+}

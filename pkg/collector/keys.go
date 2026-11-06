@@ -322,4 +322,7 @@ const (
 	MpmMLULinkTotalRxPerSec = "mpm_mlulink_total_rx_bandwidth"
 	MpmMLULinkTxPerSec      = "mpm_mlulink_tx_bandwidth"
 	MpmMLULinkRxPerSec      = "mpm_mlulink_rx_bandwidth"
+
+	// StatMap option keys (non-device entries read via StatMap.Load)
+	OptionKeyDisableMLULinkStateCheck = "disable-mlulink-state-check"
 )

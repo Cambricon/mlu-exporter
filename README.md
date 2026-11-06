@@ -70,7 +70,7 @@ docker run -d \
 --privileged=true \
 --pid=host \
 -e ENV_NODE_NAME={nodeName} \
-cambricon-mlu-exporter:v2.4.0
+cambricon-mlu-exporter:v2.5.0
 ```
 
 Then use the following command to get the metrics.
@@ -87,7 +87,7 @@ docker run -d \
 -v examples/metrics.yaml:/etc/mlu-exporter/metrics.yaml \
 --privileged=true \
 --pid=host \
-cambricon-mlu-exporter:v2.4.0 \
+cambricon-mlu-exporter:v2.5.0 \
 mlu-exporter \
 --metrics-config=/etc/mlu-exporter/metrics.yaml \
 --metrics-path=/metrics \
@@ -111,12 +111,10 @@ Command Args Description
 | metrics-path                   | metrics path of the exporter service                                                                                                                 |
 | metrics-prefix                 | prefix of all metric names                                                                                                                           |
 | port                           | exporter service port                                                                                                                                |
-<<<<<<< HEAD
+| listen-address                 | host or IP to listen on, supports IPv4 and IPv6 (e.g. 0.0.0.0, ::, 127.0.0.1). default:"0.0.0.0", env:"ENV_LISTEN_ADDRESS"                           |
 | virtual-mode                   | virtual mode, default "", support env-share                                                                                                          |
-=======
-| virtual-mode                   | virtual mode, default "", support dynamic-smlu, env-share                                                                                            |
 | mpm-interval-ms                | MPM collection interval in milliseconds; 0 means collect on every scrape, minimum 100 when set, default 0                                            |
->>>>>>> 4bb6326 (feat: add mpm collector)
+| disable-mlulink-state-check    | disable the MLULink macState readiness check that marks the device as in-problem when a present cable's MAC state is not ready, env:"DISABLE_MLULINK_STATE_CHECK" |
 | push-gateway-url               | If set, metrics with push enabled will push to this server via prometheus push gateway protocol                                                      |
 | push-interval-ms               | numbers of metrics push interval in milliseconds, minimum 100, default 500                                                                           |
 | push-ca-file                   | Optional, CA certificate for pushing data                                                                                                            |

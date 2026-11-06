@@ -407,7 +407,12 @@ type MLUStatMap struct {
 
 func (m *MLUStatMap) Range(f func(key string, value MLUStat) bool) {
 	m.StatMap.Range(func(key, value interface{}) bool {
-		return f(key.(string), value.(MLUStat))
+		stat, ok := value.(MLUStat)
+		if !ok {
+			// skip non-device entries such as option values
+			return true
+		}
+		return f(key.(string), stat)
 	})
 }
 
@@ -416,11 +421,25 @@ func (m *MLUStatMap) Load(key string) MLUStat {
 	if !ok {
 		return MLUStat{}
 	}
-	return value.(MLUStat)
+	stat, ok := value.(MLUStat)
+	if !ok {
+		log.Errorf("StatMap entry for key %q is not a device stat (type %T), returning zero value", key, value)
+		return MLUStat{}
+	}
+	return stat
 }
 
 func collectMLUInfo(mluInfo *MLUStatMap, cli cndev.Cndev, count uint) {
 	mluInfo.InProblem.Store(false)
+	disableMLULinkStateCheck := false
+	v, ok := mluInfo.StatMap.Load(OptionKeyDisableMLULinkStateCheck)
+	if !ok {
+		log.Errorf("MLULink state check option %q not found in StatMap, defaulting to false", OptionKeyDisableMLULinkStateCheck)
+	} else if disable, isBool := v.(bool); !isBool {
+		log.Errorf("MLULink state check option %q has unexpected type %T, defaulting to false", OptionKeyDisableMLULinkStateCheck, v)
+	} else {
+		disableMLULinkStateCheck = disable
+	}
 
 	for i := uint(0); i < count; i++ {
 		dis := make(map[string]bool)
@@ -497,8 +516,12 @@ func collectMLUInfo(mluInfo *MLUStatMap, cli cndev.Cndev, count uint) {
 				mlulinkDis[j]["mluLinkStatusDisabled"] = true
 			}
 			if cable == 1 && macState != 3 { // CNDEV_MLULINK_PRESENCE_STATE_PRESENT && !CNDEV_MLULINK_MAC_STATE_READY
-				log.Debugf("Start slot %d link %d MLULink State is not ready", i, j)
-				mluInfo.InProblem.Store(true)
+				if disableMLULinkStateCheck {
+					log.Debugf("Start slot %d link %d MLULink State is not ready, but MLULink state check is disabled", i, j)
+				} else {
+					log.Debugf("Start slot %d link %d MLULink State is not ready", i, j)
+					mluInfo.InProblem.Store(true)
+				}
 			}
 
 			log.Debugf("Start slot %d link %d GetDeviceMLULinkState", i, j)
@@ -897,10 +920,10 @@ func collectMLUInfo(mluInfo *MLUStatMap, cli cndev.Cndev, count uint) {
 		}
 
 		// Delete old entry with the same slot to avoid duplicate metrics when UUID changes
-		mluInfo.StatMap.Range(func(k, value interface{}) bool {
-			if stat := value.(MLUStat); stat.slot == i {
-				if k.(string) != key {
-					log.Warnf("Slot %d key changed from '%s' to '%s', deleting old entry", i, k.(string), key)
+		mluInfo.Range(func(k string, stat MLUStat) bool {
+			if stat.slot == i {
+				if k != key {
+					log.Warnf("Slot %d key changed from '%s' to '%s', deleting old entry", i, k, key)
 					mluInfo.StatMap.Delete(k)
 				}
 				return false

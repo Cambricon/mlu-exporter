@@ -18,6 +18,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -49,6 +50,7 @@ type Options struct {
 	MetricsPath   string   `long:"metrics-path" description:"metrics path of the exporter service" default:"/metrics"`
 	MetricsPrefix string   `long:"metrics-prefix" description:"prefix of all metric names" env:"ENV_METRICS_PREFIX"`
 	Port          uint     `long:"port" description:"exporter service port" default:"30108" env:"ENV_SERVE_PORT"`
+	ListenAddress string   `long:"listen-address" description:"host or IP to listen on, supports IPv4 and IPv6 (e.g. 0.0.0.0, ::, 127.0.0.1). :: listens on all interfaces with dual-stack IPv4+IPv6" default:"0.0.0.0" env:"ENV_LISTEN_ADDRESS"`
 	Version       bool     `long:"version" description:"print out version"`
 	VirtualMode   string   `long:"virtual-mode" description:"virtual mode for devices" default:"" choice:"dynamic-smlu" choice:"env-share"`
 
@@ -61,6 +63,8 @@ type Options struct {
 	PushKeyFile    string `long:"push-key-file" description:"Optional,Key certificate for pushing data" env:"PUSH_KEY_FILE"`
 
 	MpmIntervalMS uint `long:"mpm-interval-ms" description:"MPM collection interval in ms; 0 means collect on every scrape" default:"0" env:"MPM_INTERVAL_MS"`
+
+	DisableMLULinkStateCheck bool `long:"disable-mlulink-state-check" description:"disable the MLULink macState readiness check that marks the device as in-problem when a present cable's MAC state is not ready" env:"DISABLE_MLULINK_STATE_CHECK"`
 
 	XIDErrorMetricName        string `long:"xid-error-metric-name" description:"xid error metric name in config, if not set, not push this metric data" env:"XID_ERROR_METRIC_NAME"`
 	XIDErrorRetryTimes        int    `long:"xid-error-retry-times" description:"retry times when push xid error metric failed" default:"10" env:"XID_ERROR_RETRY_TIMES"`
@@ -120,6 +124,7 @@ func main() {
 	}
 
 	mluInfo := &collector.MLUStatMap{}
+	mluInfo.StatMap.Store(collector.OptionKeyDisableMLULinkStateCheck, options.DisableMLULinkStateCheck)
 	collector.EnsureMLUAllOK(cndevClient, mluInfo, true)
 	if mluInfo.InProblem.Load() {
 		log.Warn("MLU is in problem state")
@@ -187,7 +192,7 @@ func main() {
 	})
 
 	server := &http.Server{
-		Addr: fmt.Sprintf("0.0.0.0:%d", options.Port),
+		Addr: net.JoinHostPort(options.ListenAddress, fmt.Sprintf("%d", options.Port)),
 	}
 
 	log.Printf("Start serving at %s", server.Addr)
